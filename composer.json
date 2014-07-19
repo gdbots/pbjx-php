@@ -1,0 +1,16 @@
+{
+    "name": "gdbots/messaging-php",
+    "homepage": "https://github.com/gdbots/messaging-php",
+    "description": "Messaging tools for php.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": ">=5.4.2",
+        "gdbots/common-php": "dev-master",
+        "symfony/event-dispatcher": "~2.5",
+        "symfony/http-foundation": "~2.5"
+    },
+    "autoload": {
+        "psr-0": { "Gdbots\\Messaging\\": "src/" }
+    }
+}
