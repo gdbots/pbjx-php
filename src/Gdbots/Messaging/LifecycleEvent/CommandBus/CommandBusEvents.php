@@ -15,7 +15,7 @@ final class CommandBusEvents
      *
      * @var string
      */
-    const VALIDATE_COMMAND = 'tdn.messaging.command_bus.command.validate';
+    const VALIDATE_COMMAND = 'gdbots.messaging.command_bus.command.validate';
 
     /**
      * Occurs after validation and prior to command being sent to the transport.
@@ -23,7 +23,7 @@ final class CommandBusEvents
      *
      * @var string
      */
-    const ENRICH_COMMAND = 'tdn.messaging.command_bus.command.enrich';
+    const ENRICH_COMMAND = 'gdbots.messaging.command_bus.command.enrich';
 
     /**
      * Occurs before command is sent to the handler.
@@ -31,7 +31,7 @@ final class CommandBusEvents
      *
      * @var string
      */
-    const BEFORE_HANDLE_COMMAND = 'tdn.messaging.command_bus.command.before_handle';
+    const BEFORE_HANDLE_COMMAND = 'gdbots.messaging.command_bus.command.before_handle';
 
     /**
      * Occurs after command has been successfully sent to the handler.
@@ -39,7 +39,7 @@ final class CommandBusEvents
      *
      * @var string
      */
-    const AFTER_HANDLE_COMMAND = 'tdn.messaging.command_bus.command.after_handle';
+    const AFTER_HANDLE_COMMAND = 'gdbots.messaging.command_bus.command.after_handle';
 
     /**
      * Occurs prior to an expection being thrown during the handling phase of a command.  This
@@ -51,5 +51,5 @@ final class CommandBusEvents
      *
      * @var string
      */
-    const EXCEPTION = 'tdn.messaging.command_bus.exception';
+    const EXCEPTION = 'gdbots.messaging.command_bus.exception';
 }

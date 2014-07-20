@@ -27,7 +27,7 @@ interface MessageInterface
     public function actor();
 
     /**
-     * Returns a new command from the provided array.  The array
+     * Returns a new message from the provided array.  The array
      * should be data returned from toArray or at least match
      * that signature.
      *
