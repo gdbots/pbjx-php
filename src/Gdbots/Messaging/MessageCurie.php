@@ -104,7 +104,7 @@ final class MessageCurie implements \JsonSerializable
             throw new \InvalidArgumentException('Invalid MessageCurie: ' . $this);
         }
 
-        self::$curies[(string) $this] = $this;
+        self::$curies[$this->toString()] = $this;
     }
 
     /**
@@ -117,7 +117,7 @@ final class MessageCurie implements \JsonSerializable
      */
     public function __toString()
     {
-        return sprintf('%s:%s:%s:%s', $this->namespace, $this->type, $this->service, $this->message);
+        return $this->toString();
     }
 
     /**
@@ -125,7 +125,7 @@ final class MessageCurie implements \JsonSerializable
      */
     public function jsonSerialize()
     {
-        return (string) $this;
+        return $this->toString();
     }
 
     /**
@@ -133,7 +133,7 @@ final class MessageCurie implements \JsonSerializable
      */
     public function toString()
     {
-        return (string) $this;
+        return sprintf('%s:%s:%s:%s', $this->namespace, $this->type, $this->service, $this->message);
     }
 
     /**
@@ -172,7 +172,7 @@ final class MessageCurie implements \JsonSerializable
 
         if ($message instanceof CommandBus\CommandInterface) {
             $longType = 'Command';
-        } elseif ($message instanceof EventBus\EventInterface) {
+        } elseif ($message instanceof EventBus\DomainEventInterface) {
             $longType = 'Event';
         } elseif ($message instanceof RequestBus\RequestInterface) {
             $longType = 'Request';
@@ -227,11 +227,11 @@ final class MessageCurie implements \JsonSerializable
      * Converts the message curie to a php class name.  This ONLY works if the
      * class name follows the PSR0 convention with classes existing
      * in the provided type namespace of the service and the message class itself
-     * ending in "Command|Event|Request".
+     * ending in "Command|DomainEvent|Request".
      *
      * Examples:
      *      - Namespace\Service\Command\DoSomethingCommand
-     *      - Namespace\Service\Event\DidSomethingEvent
+     *      - Namespace\Service\DomainEvent\DidSomethingDomainEvent
      *      - Namespace\Service\Request\GetSomethingRequest
      *
      * @param string $curie

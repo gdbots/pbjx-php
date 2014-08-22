@@ -89,7 +89,7 @@ abstract class AbstractMessage implements MessageInterface, FromArrayInterface, 
 
     /**
      * @param array $data
-     * @return MessageInterface|CommandBus\CommandInterface|EventBus\EventInterface
+     * @return MessageInterface|CommandBus\CommandInterface|EventBus\DomainEventInterface
      */
     public static function fromArray(array $data = array())
     {

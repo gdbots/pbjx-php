@@ -3,7 +3,7 @@
 namespace Gdbots\Messaging\LifecycleEvent\Transport;
 
 use Gdbots\Messaging\CommandBus\CommandInterface;
-use Gdbots\Messaging\EventBus\EventInterface;
+use Gdbots\Messaging\EventBus\DomainEventInterface;
 use Gdbots\Messaging\LifecycleEvent\MessagingEvent;
 use Gdbots\Messaging\MessageInterface;
 use Gdbots\Messaging\RequestBus\RequestInterface;
@@ -53,9 +53,9 @@ class TransportEvent extends MessagingEvent
     /**
      * @return boolean
      */
-    public function isEventMessage()
+    public function isDomainEventMessage()
     {
-        return $this->message instanceof EventInterface;
+        return $this->message instanceof DomainEventInterface;
     }
 
     /**

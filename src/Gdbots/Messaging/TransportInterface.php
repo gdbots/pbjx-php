@@ -3,7 +3,7 @@
 namespace Gdbots\Messaging;
 
 use Gdbots\Messaging\CommandBus\CommandInterface;
-use Gdbots\Messaging\EventBus\EventInterface;
+use Gdbots\Messaging\EventBus\DomainEventInterface;
 use Gdbots\Messaging\RequestBus\RequestInterface;
 
 interface TransportInterface
@@ -26,10 +26,10 @@ interface TransportInterface
     /**
      * Sends an event via the transport.
      *
-     * @param EventInterface $event
+     * @param DomainEventInterface $event
      * @throws \Exception
      */
-    //public function sendEvent(EventInterface $event);
+    //public function sendEvent(DomainEventInterface $event);
 
     /**
      * Sends a request via the transport.
