@@ -1,4 +1,4 @@
-messaging-php
+pbjx-php
 =============
 
-Messaging tools for php.
+Messaging tools for pbj-php.
