@@ -8,36 +8,30 @@ use Gdbots\Pbj\Extension\Request;
 use Gdbots\Pbj\Extension\Response;
 use Gdbots\Pbjx\Exception\GdbotsPbjxException;
 
-interface Transport
+interface Pbjx
 {
     /**
-     * Sends a command via the transport.
+     * Processes a command asynchronously.
      *
      * @param Command $command
-     *
      * @throws GdbotsPbjxException
-     * @throws \Exception
      */
-    public function sendCommand(Command $command);
+    public function send(Command $command);
 
     /**
-     * Sends an event via the transport.
+     * Publishes events to all subscribers.
      *
      * @param DomainEvent $event
-     *
      * @throws GdbotsPbjxException
-     * @throws \Exception
      */
-    //public function sendEvent(DomainEvent $event);
+    public function publish(DomainEvent $event);
 
     /**
-     * Sends a request via the transport.
+     * Processes a request and returns the response from the handler.
      *
      * @param Request $request
      * @return Response
-     *
      * @throws GdbotsPbjxException
-     * @throws \Exception
      */
-    //public function sendRequest(Request $request);
+    public function request(Request $request);
 }
