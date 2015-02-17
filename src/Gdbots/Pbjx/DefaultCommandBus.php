@@ -82,18 +82,18 @@ class DefaultCommandBus implements CommandBus
             $this->handlers[$curieStr] = $handler;
         }
 
-        $event = new CommandBusEvent($command);
-        $this->dispatcher->dispatch(PbjxEvents::COMMAND_BEFORE_HANDLE, $event);
-        $this->dispatcher->dispatch($curieStr . '.before_handle', $event);
-
         try {
+            $event = new CommandBusEvent($command);
+            $this->dispatcher->dispatch(PbjxEvents::COMMAND_BEFORE_HANDLE, $event);
+            $this->dispatcher->dispatch($curieStr . '.before_handle', $event);
+
             $handler->handleCommand($command, $this->pbjx);
+
+            $this->dispatcher->dispatch(PbjxEvents::COMMAND_AFTER_HANDLE, $event);
+            $this->dispatcher->dispatch($curieStr . '.after_handle', $event);
         } catch (\Exception $e) {
             $this->locator->getExceptionHandler()->onCommandBusException(new CommandBusExceptionEvent($command, $e));
             return;
         }
-
-        $this->dispatcher->dispatch(PbjxEvents::COMMAND_AFTER_HANDLE, $event);
-        $this->dispatcher->dispatch($curieStr . '.after_handle', $event);
     }
 }
