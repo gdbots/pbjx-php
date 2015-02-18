@@ -30,18 +30,18 @@ abstract class AbstractTransport implements Transport
      */
     public function sendCommand(Command $command)
     {
-        $event = new TransportEvent(static::getName(), $command);
-        $this->dispatcher->dispatch(TransportEvents::BEFORE_SEND, $event);
+        //$event = new TransportEvent(static::getName(), $command);
+        //$this->dispatcher->dispatch(TransportEvents::BEFORE_SEND, $event);
 
         try {
             $this->doSendCommand($command);
         } catch (\Exception $e) {
-            $exceptionEvent = new TransportExceptionEvent(static::getName(), $command, $e);
-            $this->dispatcher->dispatch(TransportEvents::EXCEPTION, $exceptionEvent);
+            //$exceptionEvent = new TransportExceptionEvent(static::getName(), $command, $e);
+            //$this->dispatcher->dispatch(TransportEvents::EXCEPTION, $exceptionEvent);
             throw $e;
         }
 
-        $this->dispatcher->dispatch(TransportEvents::AFTER_SEND, $event);
+        //$this->dispatcher->dispatch(TransportEvents::AFTER_SEND, $event);
     }
 
     /**

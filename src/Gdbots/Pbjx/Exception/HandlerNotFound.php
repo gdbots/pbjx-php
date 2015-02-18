@@ -2,29 +2,29 @@
 
 namespace Gdbots\Pbjx\Exception;
 
-use Gdbots\Pbj\SchemaId;
+use Gdbots\Pbj\MessageCurie;
 
 class HandlerNotFound extends \LogicException implements GdbotsPbjxException
 {
-    /** @var SchemaId */
-    private $schemaId;
+    /** @var MessageCurie */
+    private $curie;
 
     /**
-     * @param SchemaId $schemaId
+     * @param MessageCurie $curie
      */
-    public function __construct(SchemaId $schemaId)
+    public function __construct(MessageCurie $curie)
     {
-        $this->schemaId = $schemaId;
+        $this->curie = $curie;
         parent::__construct(
-            sprintf('ServiceLocator did not find a handler for schema id [%s].', $schemaId->toString())
+            sprintf('ServiceLocator did not find a handler for curie [%s].', $curie->toString())
         );
     }
 
     /**
-     * @return SchemaId
+     * @return MessageCurie
      */
-    public function getSchemaId()
+    public function getMessageCurie()
     {
-        return $this->schemaId;
+        return $this->curie;
     }
 }

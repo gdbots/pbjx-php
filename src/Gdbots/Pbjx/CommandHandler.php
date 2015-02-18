@@ -10,6 +10,7 @@ interface CommandHandler
     /**
      * @param Command $command
      * @param Pbjx $pbjx
+     *
      * @throws GdbotsPbjxException
      * @throws \Exception
      */

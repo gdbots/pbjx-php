@@ -14,7 +14,9 @@ interface Pbjx
      * Processes a command asynchronously.
      *
      * @param Command $command
+     *
      * @throws GdbotsPbjxException
+     * @throws \Exception
      */
     public function send(Command $command);
 
@@ -22,7 +24,9 @@ interface Pbjx
      * Publishes events to all subscribers.
      *
      * @param DomainEvent $event
+     *
      * @throws GdbotsPbjxException
+     * @throws \Exception
      */
     public function publish(DomainEvent $event);
 
@@ -31,7 +35,9 @@ interface Pbjx
      *
      * @param Request $request
      * @return Response
+     *
      * @throws GdbotsPbjxException
+     * @throws \Exception
      */
     public function request(Request $request);
 }

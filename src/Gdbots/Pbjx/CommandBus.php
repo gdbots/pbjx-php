@@ -11,7 +11,9 @@ interface CommandBus
      * Processes a command asynchronously.
      *
      * @param Command $command
+     *
      * @throws GdbotsPbjxException
+     * @throws \Exception
      */
     public function send(Command $command);
 
@@ -21,7 +23,9 @@ interface CommandBus
      * and workers of the Pbjx system.
      *
      * @param Command $command
+     *
      * @throws GdbotsPbjxException
+     * @throws \Exception
      */
     public function receiveCommand(Command $command);
 }

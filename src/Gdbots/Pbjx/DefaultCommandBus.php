@@ -71,7 +71,6 @@ class DefaultCommandBus implements CommandBus
                 $handler = $this->locator->getCommandHandler($curie);
                 if (!$handler instanceof CommandHandler) {
                     throw new InvalidHandler(
-                        $command,
                         sprintf('The class "%s" must implement CommandHandler.', get_class($handler))
                     );
                 }
