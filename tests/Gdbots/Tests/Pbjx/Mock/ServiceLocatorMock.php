@@ -14,7 +14,6 @@ use Gdbots\Pbjx\ExceptionHandler;
 use Gdbots\Pbjx\Pbjx;
 use Gdbots\Pbjx\ServiceLocator;
 use Gdbots\Pbjx\Transport;
-use Psr\Log\NullLogger;
 
 class ServiceLocatorMock implements ServiceLocator
 {
@@ -38,11 +37,11 @@ class ServiceLocatorMock implements ServiceLocator
     public function __construct()
     {
         $this->dispatcher = new DispatcherMock();
-        $this->transport = new Transport\MemoryTransport($this->dispatcher, $this);
-        $this->pbjx = new DefaultPbjx($this->dispatcher, $this);
+        $this->transport = new Transport\MemoryTransport($this);
+        $this->pbjx = new DefaultPbjx($this);
 
-        $this->commandBus = new DefaultCommandBus($this->dispatcher, $this, $this->transport);
-        $this->exceptionHandler = new DefaultExceptionHandler($this->dispatcher, $this, new NullLogger());
+        $this->commandBus = new DefaultCommandBus($this, $this->transport);
+        $this->exceptionHandler = new DefaultExceptionHandler($this);
     }
 
     /**

@@ -2,8 +2,12 @@
 
 namespace Gdbots\Pbjx\Transport;
 
+use Gdbots\Common\Util\ClassUtils;
 use Gdbots\Pbj\Extension\Command;
 use Gdbots\Pbjx\Dispatcher;
+use Gdbots\Pbjx\Event\TransportEvent;
+use Gdbots\Pbjx\Event\TransportExceptionEvent;
+use Gdbots\Pbjx\PbjxEvents;
 use Gdbots\Pbjx\ServiceLocator;
 use Gdbots\Pbjx\Transport;
 
@@ -15,14 +19,17 @@ abstract class AbstractTransport implements Transport
     /** @var ServiceLocator */
     protected $locator;
 
+    /* @var string */
+    protected $transportName;
+
     /**
-     * @param Dispatcher $dispatcher
      * @param ServiceLocator $locator
      */
-    public function __construct(Dispatcher $dispatcher, ServiceLocator $locator)
+    public function __construct(ServiceLocator $locator)
     {
-        $this->dispatcher = $dispatcher;
         $this->locator = $locator;
+        $this->dispatcher = $this->locator->getDispatcher();
+        $this->transportName = strtolower(str_replace('Transport', '', ClassUtils::getShortName($this)));
     }
 
     /**
@@ -30,18 +37,19 @@ abstract class AbstractTransport implements Transport
      */
     public function sendCommand(Command $command)
     {
-        //$event = new TransportEvent(static::getName(), $command);
-        //$this->dispatcher->dispatch(TransportEvents::BEFORE_SEND, $event);
+        $event = new TransportEvent($this->transportName, $command);
+        $this->dispatcher->dispatch(PbjxEvents::TRANSPORT_BEFORE_SEND, $event);
 
         try {
             $this->doSendCommand($command);
         } catch (\Exception $e) {
-            //$exceptionEvent = new TransportExceptionEvent(static::getName(), $command, $e);
-            //$this->dispatcher->dispatch(TransportEvents::EXCEPTION, $exceptionEvent);
-            throw $e;
+            $this->locator->getExceptionHandler()->onTransportException(
+                new TransportExceptionEvent($this->transportName, $command, $e)
+            );
+            return;
         }
 
-        //$this->dispatcher->dispatch(TransportEvents::AFTER_SEND, $event);
+        $this->dispatcher->dispatch(PbjxEvents::TRANSPORT_AFTER_SEND, $event);
     }
 
     /**

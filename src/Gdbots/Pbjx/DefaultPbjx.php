@@ -17,13 +17,12 @@ class DefaultPbjx implements Pbjx
     protected $locator;
 
     /**
-     * @param Dispatcher $dispatcher
      * @param ServiceLocator $locator
      */
-    public function __construct(Dispatcher $dispatcher, ServiceLocator $locator)
+    public function __construct(ServiceLocator $locator)
     {
-        $this->dispatcher = $dispatcher;
         $this->locator = $locator;
+        $this->dispatcher = $this->locator->getDispatcher();
     }
 
     /**

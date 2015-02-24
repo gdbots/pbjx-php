@@ -1,23 +1,23 @@
 <?php
 
-namespace Gdbots\PbjxBack\LifecycleEvent\Transport;
+namespace Gdbots\Pbjx\Event;
 
-use Gdbots\PbjxBack\MessageInterface;
+use Gdbots\Pbj\Message;
 
 class TransportExceptionEvent extends TransportEvent
 {
-    /* @var \Exception */
+    /** @var \Exception */
     protected $exception;
 
     /**
      * @param string $transportName
-     * @param MessageInterface $message
-     * @param \Exception $e
+     * @param Message $message
+     * @param \Exception $exception
      */
-    public function __construct($transportName, MessageInterface $message, \Exception $e)
+    public function __construct($transportName, Message $message, \Exception $exception)
     {
         parent::__construct($transportName, $message);
-        $this->exception = $e;
+        $this->exception = $exception;
     }
 
     /**

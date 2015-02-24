@@ -2,12 +2,10 @@
 
 namespace Gdbots\Pbjx;
 
-use Gdbots\Pbj\Extension\Command;
-use Gdbots\Pbj\Message;
-use Gdbots\Pbj\MessageCurie;
 use Gdbots\Pbjx\Event\CommandBusExceptionEvent;
-use Gdbots\Pbjx\Event\PbjxEvent;
+use Gdbots\Pbjx\Event\TransportExceptionEvent;
 use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 class DefaultExceptionHandler implements ExceptionHandler
 {
@@ -24,15 +22,14 @@ class DefaultExceptionHandler implements ExceptionHandler
     protected $pbjx;
 
     /**
-     * @param Dispatcher $dispatcher
      * @param ServiceLocator $locator
      * @param LoggerInterface $logger
      */
-    public function __construct(Dispatcher $dispatcher, ServiceLocator $locator, LoggerInterface $logger)
+    public function __construct(ServiceLocator $locator, LoggerInterface $logger = null)
     {
-        $this->dispatcher = $dispatcher;
         $this->locator = $locator;
-        $this->logger = $logger;
+        $this->logger = $logger ?: new NullLogger();
+        $this->dispatcher = $this->locator->getDispatcher();
         $this->pbjx = $this->locator->getPbjx();
     }
 
@@ -42,38 +39,42 @@ class DefaultExceptionHandler implements ExceptionHandler
     public function onCommandBusException(CommandBusExceptionEvent $event)
     {
         $command = $event->getCommand();
-        $this->logException($command, $event->getException());
-        $this->dispatchEvents(PbjxEvents::COMMAND_HANDLE_EXCEPTION, $event, $command::schema()->getId()->getCurie());
+        $this->logger->error(
+            sprintf(
+                'Command with id [%s] could not be handled.  Reason: %s' . PHP_EOL .
+                'Payload:' . PHP_EOL . '%s',
+                $command->getCommandId(),
+                $event->getException()->getMessage(),
+                $command
+            )
+        );
+        $this->dispatcher->dispatch(PbjxEvents::COMMAND_HANDLE_EXCEPTION, $event);
+        $this->dispatcher->dispatch(
+            $command::schema()->getId()->getCurie()->toString() . '.handle_exception', $event
+        );
     }
 
     /**
-     * @param Message $message
-     * @param \Exception $exception
+     * {@inheritdoc}
      */
-    protected function logException(Message $message, \Exception $exception)
+    public function onTransportException(TransportExceptionEvent $event)
     {
-        if ($message instanceof Command) {
-            $this->logger->error(
-                sprintf(
-                    'Command with id [%s] could not be handled.  Reason: %s' . PHP_EOL .
-                    'Payload:' . PHP_EOL . '%s',
-                    $message->getCommandId(),
-                    $exception->getMessage(),
-                    $message
-                )
-            );
-            return;
-        }
-    }
-
-    /**
-     * @param string $eventName
-     * @param PbjxEvent $event
-     * @param MessageCurie $curie
-     */
-    protected function dispatchEvents($eventName, PbjxEvent $event, MessageCurie $curie)
-    {
-        $this->dispatcher->dispatch($eventName, $event);
-        $this->dispatcher->dispatch($curie->toString() . '.exception', $event);
+        $message = $event->getMessage();
+        $schemaId = $message::schema()->getId();
+        $this->logger->error(
+            sprintf(
+                'Message [%s] could not be sent by transport [%s].  Reason: %s' . PHP_EOL .
+                'Payload:' . PHP_EOL . '%s',
+                $schemaId->toString(),
+                $event->getTransportName(),
+                $event->getException()->getMessage(),
+                $message
+            )
+        );
+        $this->dispatcher->dispatch(PbjxEvents::TRANSPORT_SEND_EXCEPTION, $event);
+        $this->dispatcher->dispatch(
+            $schemaId->getCurie()->toString() . '.send_exception', $event
+        );
+        throw $event->getException();
     }
 }

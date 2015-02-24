@@ -25,15 +25,14 @@ class DefaultCommandBus implements CommandBus
     private $handlers = [];
 
     /**
-     * @param Dispatcher $dispatcher
      * @param ServiceLocator $locator
      * @param Transport $transport
      */
-    public function __construct(Dispatcher $dispatcher, ServiceLocator $locator, Transport $transport)
+    public function __construct(ServiceLocator $locator, Transport $transport)
     {
-        $this->dispatcher = $dispatcher;
         $this->locator = $locator;
         $this->transport = $transport;
+        $this->dispatcher = $this->locator->getDispatcher();
         $this->pbjx = $this->locator->getPbjx();
     }
 
@@ -75,7 +74,9 @@ class DefaultCommandBus implements CommandBus
                     );
                 }
             } catch (\Exception $e) {
-                $this->locator->getExceptionHandler()->onCommandBusException(new CommandBusExceptionEvent($command, $e));
+                $this->locator->getExceptionHandler()->onCommandBusException(
+                    new CommandBusExceptionEvent($command, $e)
+                );
                 return;
             }
             $this->handlers[$curieStr] = $handler;
@@ -91,8 +92,9 @@ class DefaultCommandBus implements CommandBus
             $this->dispatcher->dispatch(PbjxEvents::COMMAND_AFTER_HANDLE, $event);
             $this->dispatcher->dispatch($curieStr . '.after_handle', $event);
         } catch (\Exception $e) {
-            $this->locator->getExceptionHandler()->onCommandBusException(new CommandBusExceptionEvent($command, $e));
-            return;
+            $this->locator->getExceptionHandler()->onCommandBusException(
+                new CommandBusExceptionEvent($command, $e)
+            );
         }
     }
 }
