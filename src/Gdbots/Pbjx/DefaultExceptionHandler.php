@@ -49,9 +49,6 @@ class DefaultExceptionHandler implements ExceptionHandler
             )
         );
         $this->dispatcher->dispatch(PbjxEvents::COMMAND_HANDLE_EXCEPTION, $event);
-        $this->dispatcher->dispatch(
-            $command::schema()->getId()->getCurie()->toString() . '.handle_exception', $event
-        );
     }
 
     /**
@@ -63,7 +60,7 @@ class DefaultExceptionHandler implements ExceptionHandler
         $schemaId = $message::schema()->getId();
         $this->logger->error(
             sprintf(
-                'Message [%s] could not be sent by transport [%s].  Reason: %s' . PHP_EOL .
+                'Message [%s] could not be sent by [%s] transport.  Reason: %s' . PHP_EOL .
                 'Payload:' . PHP_EOL . '%s',
                 $schemaId->toString(),
                 $event->getTransportName(),
@@ -72,9 +69,6 @@ class DefaultExceptionHandler implements ExceptionHandler
             )
         );
         $this->dispatcher->dispatch(PbjxEvents::TRANSPORT_SEND_EXCEPTION, $event);
-        $this->dispatcher->dispatch(
-            $schemaId->getCurie()->toString() . '.send_exception', $event
-        );
         throw $event->getException();
     }
 }
