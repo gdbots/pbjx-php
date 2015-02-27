@@ -6,6 +6,7 @@ use Gdbots\Pbj\Extension\Command;
 use Gdbots\Pbj\Extension\DomainEvent;
 use Gdbots\Pbj\Extension\Request;
 use Gdbots\Pbjx\Event\EnrichCommandEvent;
+use Gdbots\Pbjx\Event\EnrichDomainEventEvent;
 use Gdbots\Pbjx\Event\ValidateCommandEvent;
 
 class DefaultPbjx implements Pbjx
@@ -46,8 +47,12 @@ class DefaultPbjx implements Pbjx
     /**
      * {@inheritdoc}
      */
-    public function publish(DomainEvent $event)
+    public function publish(DomainEvent $domainEvent)
     {
+        $event = new EnrichDomainEventEvent($domainEvent);
+        $this->dispatcher->dispatch(PbjxEvents::COMMAND_ENRICH, $event);
+        $this->dispatcher->dispatch($curie . '.enrich', $event);
+
         $this->locator->getEventBus()->publish($event->freeze());
     }
 

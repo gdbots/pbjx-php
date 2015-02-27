@@ -4,6 +4,7 @@ namespace Gdbots\Pbjx\Transport;
 
 use Gdbots\Common\Util\ClassUtils;
 use Gdbots\Pbj\Extension\Command;
+use Gdbots\Pbj\Extension\DomainEvent;
 use Gdbots\Pbjx\Dispatcher;
 use Gdbots\Pbjx\Event\TransportEvent;
 use Gdbots\Pbjx\Event\TransportExceptionEvent;
@@ -59,4 +60,32 @@ abstract class AbstractTransport implements Transport
      * @throws \Exception
      */
     abstract protected function doSendCommand(Command $command);
+
+    /**
+     * {@inheritdoc}
+     */
+    public function sendEvent(DomainEvent $domainEvent)
+    {
+        $event = new TransportEvent($this->transportName, $domainEvent);
+        $this->dispatcher->dispatch(PbjxEvents::TRANSPORT_BEFORE_SEND, $event);
+
+        try {
+            $this->doSendEvent($domainEvent);
+        } catch (\Exception $e) {
+            $this->locator->getExceptionHandler()->onTransportException(
+                new TransportExceptionEvent($this->transportName, $domainEvent, $e)
+            );
+            return;
+        }
+
+        $this->dispatcher->dispatch(PbjxEvents::TRANSPORT_AFTER_SEND, $event);
+    }
+
+    /**
+     * Override in the transport to handle the actual send.
+     *
+     * @param DomainEvent $domainEvent
+     * @throws \Exception
+     */
+    abstract protected function doSendEvent(DomainEvent $domainEvent);
 }

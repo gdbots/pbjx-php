@@ -23,12 +23,12 @@ interface Transport
     /**
      * Sends an event via the transport.
      *
-     * @param DomainEvent $event
+     * @param DomainEvent $domainEvent
      *
      * @throws GdbotsPbjxException
      * @throws \Exception
      */
-    //public function sendEvent(DomainEvent $event);
+    public function sendEvent(DomainEvent $domainEvent);
 
     /**
      * Sends a request via the transport.

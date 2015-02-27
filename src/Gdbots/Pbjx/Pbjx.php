@@ -23,12 +23,12 @@ interface Pbjx
     /**
      * Publishes events to all subscribers.
      *
-     * @param DomainEvent $event
+     * @param DomainEvent $domainEvent
      *
      * @throws GdbotsPbjxException
      * @throws \Exception
      */
-    public function publish(DomainEvent $event);
+    public function publish(DomainEvent $domainEvent);
 
     /**
      * Processes a request and returns the response from the handler.

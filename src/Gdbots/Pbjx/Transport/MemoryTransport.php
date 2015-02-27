@@ -3,6 +3,7 @@
 namespace Gdbots\Pbjx\Transport;
 
 use Gdbots\Pbj\Extension\Command;
+use Gdbots\Pbj\Extension\DomainEvent;
 
 class MemoryTransport extends AbstractTransport
 {
@@ -15,5 +16,16 @@ class MemoryTransport extends AbstractTransport
     protected function doSendCommand(Command $command)
     {
         $this->locator->getCommandBus()->receiveCommand($command);
+    }
+
+    /**
+     * Processes the domain event in memory synchronously.
+     *
+     * @param DomainEvent $domainEvent
+     * @throws \Exception
+     */
+    protected function doSendEvent(DomainEvent $domainEvent)
+    {
+        $this->locator->getEventBus()->receiveEvent($domainEvent);
     }
 }
