@@ -6,11 +6,13 @@ use Gdbots\Pbj\MessageCurie;
 use Gdbots\Pbjx\CommandBus;
 use Gdbots\Pbjx\CommandHandler;
 use Gdbots\Pbjx\DefaultCommandBus;
+use Gdbots\Pbjx\DefaultEventBus;
 use Gdbots\Pbjx\DefaultExceptionHandler;
 use Gdbots\Pbjx\DefaultPbjx;
 use Gdbots\Pbjx\Dispatcher;
 use Gdbots\Pbjx\Exception\HandlerNotFound;
 use Gdbots\Pbjx\ExceptionHandler;
+use Gdbots\Pbjx\EventBus;
 use Gdbots\Pbjx\Pbjx;
 use Gdbots\Pbjx\ServiceLocator;
 use Gdbots\Pbjx\Transport;
@@ -29,6 +31,9 @@ class ServiceLocatorMock implements ServiceLocator
     /** @var CommandBus */
     private $commandBus;
 
+    /** @var EventBus */
+    private $eventBus;
+
     /** @var ExceptionHandler */
     private $exceptionHandler;
 
@@ -41,6 +46,7 @@ class ServiceLocatorMock implements ServiceLocator
         $this->pbjx = new DefaultPbjx($this);
 
         $this->commandBus = new DefaultCommandBus($this, $this->transport);
+        $this->eventBus = new DefaultEventBus($this, $this->transport);
         $this->exceptionHandler = new DefaultExceptionHandler($this);
     }
 
@@ -82,6 +88,7 @@ class ServiceLocatorMock implements ServiceLocator
      */
     public function getEventBus()
     {
+        return $this->eventBus;
     }
 
     /**

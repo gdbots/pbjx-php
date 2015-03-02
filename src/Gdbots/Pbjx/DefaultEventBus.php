@@ -62,14 +62,6 @@ class DefaultEventBus implements EventBus
         $package = $curie->getPackage();
         $category = $curie->getCategory();
 
-        /*
-         * vendor:package:category:message:v1
-         * vendor:package:category:message
-         * vendor:package:category:*
-         * vendor:package:*
-         * vendor:*
-         */
-
         $this->doDispatch($schemaId->getResolverKey(), $domainEvent);
         $this->doDispatch($curie->toString(), $domainEvent);
         $this->doDispatch(sprintf('%s:%s:%s:*', $vendor, $package, $category), $domainEvent);
@@ -78,7 +70,12 @@ class DefaultEventBus implements EventBus
     }
 
     /**
-     * todo: need to handle symfony event signature by wrapping and unwrapping the domain event in custom dispatcher
+     * todo: need to decouple this dispatch/event subscribing from symfony since our process doesn't
+     * publish events with an Event object and you cannot stop propagation.
+     *
+     * this is left for now with the expectation that we won't subscribe to events and expect to
+     * be called like a symfony event listener.
+     *
      * @param string $eventName
      * @param DomainEvent $domainEvent
      */
@@ -89,7 +86,8 @@ class DefaultEventBus implements EventBus
             try {
                 call_user_func($listener, $domainEvent, $this->pbjx);
             } catch (\Exception $e) {
-                // todo: publish event failed here
+                // todo: publish event failed here (in memory or via pbjx again?)
+                // https://github.com/beberlei/litecqrs-php/blob/master/src/LiteCQRS/Eventing/SynchronousInProcessEventBus.php
             }
         }
     }

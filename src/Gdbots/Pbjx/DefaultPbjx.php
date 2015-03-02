@@ -49,11 +49,13 @@ class DefaultPbjx implements Pbjx
      */
     public function publish(DomainEvent $domainEvent)
     {
+        $curie = $domainEvent::schema()->getId()->getCurie()->toString();
+
         $event = new EnrichDomainEventEvent($domainEvent);
-        $this->dispatcher->dispatch(PbjxEvents::COMMAND_ENRICH, $event);
+        $this->dispatcher->dispatch(PbjxEvents::EVENT_ENRICH, $event);
         $this->dispatcher->dispatch($curie . '.enrich', $event);
 
-        $this->locator->getEventBus()->publish($event->freeze());
+        $this->locator->getEventBus()->publish($domainEvent->freeze());
     }
 
     /**

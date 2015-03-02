@@ -2,4 +2,6 @@
 
 namespace Gdbots\Pbjx;
 
-interface EventSubscriber {}
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+
+interface EventSubscriber extends EventSubscriberInterface {}

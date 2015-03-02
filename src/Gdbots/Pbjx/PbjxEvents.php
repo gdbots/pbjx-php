@@ -50,8 +50,6 @@ final class PbjxEvents
      */
     const COMMAND_HANDLE_EXCEPTION = 'gdbots.pbjx.command.handle_exception';
 
-
-
     /**
      * Occurs prior to an event being sent to the transport.
      *
@@ -59,18 +57,6 @@ final class PbjxEvents
      * @var string
      */
     const EVENT_ENRICH = 'gdbots.pbjx.event.enrich';
-
-    /**
-     * Occurs prior to an expection being thrown during the handling phase of a command.
-     * This is not announced during validate, enrich or the transport send.
-     *
-     * @see Gdbots\Pbjx\Event\EventBusExceptionEvent
-     * @var string
-     */
-    const EVENT_SUBSCRIBER_EXCEPTION = 'gdbots.pbjx.event.subscriber_exception';
-
-
-
 
     /**
      * Occurs prior to the message being sent by the transport.
