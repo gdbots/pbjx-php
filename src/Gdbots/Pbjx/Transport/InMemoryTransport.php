@@ -5,7 +5,7 @@ namespace Gdbots\Pbjx\Transport;
 use Gdbots\Pbj\Extension\Command;
 use Gdbots\Pbj\Extension\DomainEvent;
 
-class MemoryTransport extends AbstractTransport
+class InMemoryTransport extends AbstractTransport
 {
     /**
      * Processes the command in memory synchronously.

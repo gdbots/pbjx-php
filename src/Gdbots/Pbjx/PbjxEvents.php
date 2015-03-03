@@ -59,6 +59,16 @@ final class PbjxEvents
     const EVENT_ENRICH = 'gdbots.pbjx.event.enrich';
 
     /**
+     * Occurs during event dispatching, where events are actually handled.  If the
+     * subscriber throws and exception and the EventExecutionFailedV1 also fails
+     * to be handled, then this event is announced.  This should be very rare.
+     *
+     * @see Gdbots\Pbjx\Event\EventBusExceptionEvent
+     * @var string
+     */
+    const EVENT_EXCEPTION = 'gdbots.pbjx.event.exception';
+
+    /**
      * Occurs prior to the message being sent by the transport.
      *
      * @see Gdbots\Pbjx\Event\TransportEvent

@@ -42,7 +42,7 @@ class ServiceLocatorMock implements ServiceLocator
     public function __construct()
     {
         $this->dispatcher = new DispatcherMock();
-        $this->transport = new Transport\MemoryTransport($this);
+        $this->transport = new Transport\InMemoryTransport($this);
         $this->pbjx = new DefaultPbjx($this);
 
         $this->commandBus = new DefaultCommandBus($this, $this->transport);

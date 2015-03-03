@@ -41,7 +41,7 @@ class DefaultCommandBus implements CommandBus
      */
     public function send(Command $command)
     {
-        $this->transport->sendCommand($command);
+        $this->transport->sendCommand($command->freeze());
     }
 
     /**
@@ -49,7 +49,7 @@ class DefaultCommandBus implements CommandBus
      */
     public function receiveCommand(Command $command)
     {
-        $this->handleCommand($command);
+        $this->handleCommand($command->freeze());
     }
 
     /**

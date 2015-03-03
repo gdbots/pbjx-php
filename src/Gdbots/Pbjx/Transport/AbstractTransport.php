@@ -3,6 +3,7 @@
 namespace Gdbots\Pbjx\Transport;
 
 use Gdbots\Common\Util\ClassUtils;
+use Gdbots\Common\Util\StringUtils;
 use Gdbots\Pbj\Extension\Command;
 use Gdbots\Pbj\Extension\DomainEvent;
 use Gdbots\Pbjx\Dispatcher;
@@ -30,7 +31,9 @@ abstract class AbstractTransport implements Transport
     {
         $this->locator = $locator;
         $this->dispatcher = $this->locator->getDispatcher();
-        $this->transportName = strtolower(str_replace('Transport', '', ClassUtils::getShortName($this)));
+        $this->transportName = StringUtils::toSlugFromCamel(
+            str_replace('Transport', '', ClassUtils::getShortName($this))
+        );
     }
 
     /**

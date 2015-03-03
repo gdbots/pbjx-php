@@ -41,7 +41,7 @@ class DefaultPbjx implements Pbjx
         $this->dispatcher->dispatch(PbjxEvents::COMMAND_ENRICH, $event);
         $this->dispatcher->dispatch($curie . '.enrich', $event);
 
-        $this->locator->getCommandBus()->send($command->freeze());
+        $this->locator->getCommandBus()->send($command);
     }
 
     /**
@@ -55,7 +55,7 @@ class DefaultPbjx implements Pbjx
         $this->dispatcher->dispatch(PbjxEvents::EVENT_ENRICH, $event);
         $this->dispatcher->dispatch($curie . '.enrich', $event);
 
-        $this->locator->getEventBus()->publish($domainEvent->freeze());
+        $this->locator->getEventBus()->publish($domainEvent);
     }
 
     /**
@@ -63,6 +63,6 @@ class DefaultPbjx implements Pbjx
      */
     public function request(Request $request)
     {
-        return $this->locator->getRequestBus()->request($request->freeze());
+        return $this->locator->getRequestBus()->request($request);
     }
 }

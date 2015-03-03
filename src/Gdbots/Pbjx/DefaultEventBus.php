@@ -3,6 +3,9 @@
 namespace Gdbots\Pbjx;
 
 use Gdbots\Pbj\Extension\DomainEvent;
+use Gdbots\Pbj\MessageResolver;
+use Gdbots\Pbjx\Domain\Event\EventExecutionFailedV1;
+use Gdbots\Pbjx\Event\EventBusExceptionEvent;
 
 class DefaultEventBus implements EventBus
 {
@@ -28,6 +31,7 @@ class DefaultEventBus implements EventBus
         $this->transport = $transport;
         $this->dispatcher = $this->locator->getDispatcher();
         $this->pbjx = $this->locator->getPbjx();
+        MessageResolver::registerSchema(EventExecutionFailedV1::schema());
     }
 
     /**
@@ -35,7 +39,7 @@ class DefaultEventBus implements EventBus
      */
     public function publish(DomainEvent $domainEvent)
     {
-        $this->transport->sendEvent($domainEvent);
+        $this->transport->sendEvent($domainEvent->freeze());
     }
 
     /**
@@ -43,7 +47,7 @@ class DefaultEventBus implements EventBus
      */
     public function receiveEvent(DomainEvent $domainEvent)
     {
-        $this->doPublish($domainEvent);
+        $this->doPublish($domainEvent->freeze());
     }
 
     /**
@@ -86,8 +90,19 @@ class DefaultEventBus implements EventBus
             try {
                 call_user_func($listener, $domainEvent, $this->pbjx);
             } catch (\Exception $e) {
-                // todo: publish event failed here (in memory or via pbjx again?)
-                // https://github.com/beberlei/litecqrs-php/blob/master/src/LiteCQRS/Eventing/SynchronousInProcessEventBus.php
+                if ($domainEvent instanceof EventExecutionFailedV1) {
+                    $this->locator->getExceptionHandler()->onEventBusException(
+                        new EventBusExceptionEvent($domainEvent, $e)
+                    );
+                    return;
+                }
+
+                $failedEvent = EventExecutionFailedV1::create()
+                    ->setFailedEvent($domainEvent)
+                    ->setReason($e->getMessage());
+
+                // running in process for now
+                $this->receiveEvent($failedEvent);
             }
         }
     }
