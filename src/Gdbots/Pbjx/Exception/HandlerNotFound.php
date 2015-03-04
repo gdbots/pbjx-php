@@ -4,7 +4,7 @@ namespace Gdbots\Pbjx\Exception;
 
 use Gdbots\Pbj\MessageCurie;
 
-class HandlerNotFound extends \LogicException implements GdbotsPbjxException
+final class HandlerNotFound extends \LogicException implements GdbotsPbjxException
 {
     /** @var MessageCurie */
     private $curie;
