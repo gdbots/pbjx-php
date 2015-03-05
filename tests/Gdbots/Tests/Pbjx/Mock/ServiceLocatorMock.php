@@ -9,11 +9,14 @@ use Gdbots\Pbjx\DefaultCommandBus;
 use Gdbots\Pbjx\DefaultEventBus;
 use Gdbots\Pbjx\DefaultExceptionHandler;
 use Gdbots\Pbjx\DefaultPbjx;
+use Gdbots\Pbjx\DefaultRequestBus;
 use Gdbots\Pbjx\Dispatcher;
 use Gdbots\Pbjx\Exception\HandlerNotFound;
 use Gdbots\Pbjx\ExceptionHandler;
 use Gdbots\Pbjx\EventBus;
 use Gdbots\Pbjx\Pbjx;
+use Gdbots\Pbjx\RequestBus;
+use Gdbots\Pbjx\RequestHandler;
 use Gdbots\Pbjx\ServiceLocator;
 use Gdbots\Pbjx\Transport;
 
@@ -34,6 +37,9 @@ class ServiceLocatorMock implements ServiceLocator
     /** @var EventBus */
     private $eventBus;
 
+    /** @var RequestBus */
+    private $requestBus;
+
     /** @var ExceptionHandler */
     private $exceptionHandler;
 
@@ -47,6 +53,7 @@ class ServiceLocatorMock implements ServiceLocator
 
         $this->commandBus = new DefaultCommandBus($this, $this->transport);
         $this->eventBus = new DefaultEventBus($this, $this->transport);
+        $this->requestBus = new DefaultRequestBus($this, $this->transport);
         $this->exceptionHandler = new DefaultExceptionHandler($this);
     }
 
@@ -55,6 +62,15 @@ class ServiceLocatorMock implements ServiceLocator
      * @param CommandHandler $handler
      */
     public function registerCommandHandler(MessageCurie $curie, CommandHandler $handler)
+    {
+        $this->handlers[$curie->toString()] = $handler;
+    }
+
+    /**
+     * @param MessageCurie $curie
+     * @param RequestHandler $handler
+     */
+    public function registerRequestHandler(MessageCurie $curie, RequestHandler $handler)
     {
         $this->handlers[$curie->toString()] = $handler;
     }
@@ -96,6 +112,7 @@ class ServiceLocatorMock implements ServiceLocator
      */
     public function getRequestBus()
     {
+        return $this->requestBus;
     }
 
     /**
@@ -120,6 +137,11 @@ class ServiceLocatorMock implements ServiceLocator
     /**
      * {@inheritdoc}
      */
-    public function getRequestHandler(MessageCurie $curie){
+    public function getRequestHandler(MessageCurie $curie)
+    {
+        if (isset($this->handlers[$curie->toString()])) {
+            return $this->handlers[$curie->toString()];
+        }
+        throw new HandlerNotFound($curie);
     }
 }

@@ -106,6 +106,7 @@ class DefaultPbjx implements Pbjx
                 return $deferred->promise();
             }
 
+            $deferred->resolve($response);
             $event->setResponse($response);
             $that->dispatcher->dispatch(PbjxEvents::REQUEST_AFTER_HANDLE, $event);
             $that->dispatcher->dispatch($curie . '.after_handle', $event);

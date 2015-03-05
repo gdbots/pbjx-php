@@ -100,7 +100,7 @@ class DefaultEventBus implements EventBus
 
                 $failedEvent = EventExecutionFailedV1::create()
                     ->setFailedEvent($domainEvent)
-                    ->setReason(ClassUtils::getShortName(get_class($e)) . '::' . $e->getMessage());
+                    ->setReason(ClassUtils::getShortName($e) . '::' . $e->getMessage());
 
                 // running in process for now
                 $this->receiveEvent($failedEvent);

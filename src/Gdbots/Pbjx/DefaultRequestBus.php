@@ -83,18 +83,18 @@ class DefaultRequestBus implements RequestBus
                 return RequestHandlingFailedV1::create()
                     ->setRequestId($request->getRequestId())
                     ->setFailedRequest($request)
-                    ->setReason(ClassUtils::getShortName(get_class($e)) . '::' . $e->getMessage());
+                    ->setReason(ClassUtils::getShortName($e) . '::' . $e->getMessage());
             }
             $this->handlers[$curieStr] = $handler;
         }
 
         try {
-            return $handler->handleRequest($request, $notifier, $this->pbjx)->setRequestId($request->getRequestId());
+            return $handler->handleRequest($request, $this->pbjx, $notifier)->setRequestId($request->getRequestId());
         } catch (\Exception $e) {
             return RequestHandlingFailedV1::create()
                 ->setRequestId($request->getRequestId())
                 ->setFailedRequest($request)
-                ->setReason(ClassUtils::getShortName(get_class($e)) . '::' . $e->getMessage());
+                ->setReason(ClassUtils::getShortName($e) . '::' . $e->getMessage());
         }
     }
 }

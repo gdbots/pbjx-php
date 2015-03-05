@@ -116,7 +116,7 @@ abstract class AbstractTransport implements Transport
                     $response = RequestHandlingFailedV1::create()
                         ->setRequestId($request->getRequestId())
                         ->setFailedRequest($request)
-                        ->setReason(ClassUtils::getShortName(get_class($e)) . '::' . $e->getMessage());
+                        ->setReason(ClassUtils::getShortName($e) . '::' . $e->getMessage());
                 }
             } else {
                 $this->locator->getExceptionHandler()->onTransportException(
@@ -125,7 +125,7 @@ abstract class AbstractTransport implements Transport
                 $response = RequestHandlingFailedV1::create()
                     ->setRequestId($request->getRequestId())
                     ->setFailedRequest($request)
-                    ->setReason(ClassUtils::getShortName(get_class($e)) . '::' . $e->getMessage());
+                    ->setReason(ClassUtils::getShortName($e) . '::' . $e->getMessage());
             }
         }
 
