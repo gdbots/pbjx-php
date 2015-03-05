@@ -2,6 +2,7 @@
 
 namespace Gdbots\Pbjx;
 
+use Gdbots\Common\Util\ClassUtils;
 use Gdbots\Pbj\Extension\DomainEvent;
 use Gdbots\Pbj\MessageResolver;
 use Gdbots\Pbjx\Domain\Event\EventExecutionFailedV1;
@@ -99,7 +100,7 @@ class DefaultEventBus implements EventBus
 
                 $failedEvent = EventExecutionFailedV1::create()
                     ->setFailedEvent($domainEvent)
-                    ->setReason($e->getMessage());
+                    ->setReason(ClassUtils::getShortName(get_class($e)) . '::' . $e->getMessage());
 
                 // running in process for now
                 $this->receiveEvent($failedEvent);

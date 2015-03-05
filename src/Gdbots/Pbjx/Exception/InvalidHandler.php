@@ -7,6 +7,12 @@ use Gdbots\Pbjx\CommandHandler;
 
 final class InvalidHandler extends \UnexpectedValueException implements GdbotsPbjxException
 {
+    /**
+     * @param Command $command
+     * @param CommandHandler $handler
+     * @param string $message
+     * @return static
+     */
     public static function forCommand(Command $command, CommandHandler $handler, $message = '')
     {
         return new static(

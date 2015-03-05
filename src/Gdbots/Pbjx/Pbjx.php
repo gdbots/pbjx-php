@@ -5,8 +5,8 @@ namespace Gdbots\Pbjx;
 use Gdbots\Pbj\Extension\Command;
 use Gdbots\Pbj\Extension\DomainEvent;
 use Gdbots\Pbj\Extension\Request;
-use Gdbots\Pbj\Extension\Response;
 use Gdbots\Pbjx\Exception\GdbotsPbjxException;
+use React\Promise\ExtendedPromiseInterface;
 
 interface Pbjx
 {
@@ -31,13 +31,10 @@ interface Pbjx
     public function publish(DomainEvent $domainEvent);
 
     /**
-     * Processes a request and returns the response from the handler.
+     * Processes a request and returns a Promise for the result.
      *
      * @param Request $request
-     * @return Response
-     *
-     * @throws GdbotsPbjxException
-     * @throws \Exception
+     * @return ExtendedPromiseInterface
      */
     public function request(Request $request);
 }

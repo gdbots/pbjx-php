@@ -69,6 +69,41 @@ final class PbjxEvents
     const EVENT_EXCEPTION = 'gdbots.pbjx.event.exception';
 
     /**
+     * Occurs prior to request being sent to the transport.
+     *
+     * @see Gdbots\Pbjx\Event\ValidateRequestEvent
+     * @var string
+     */
+    const REQUEST_VALIDATE = 'gdbots.pbjx.request.validate';
+
+    /**
+     * Occurs after validation and prior to request being sent to the transport.
+     *
+     * @see Gdbots\Pbjx\Event\EnrichRequestEvent
+     * @var string
+     */
+    const REQUEST_ENRICH = 'gdbots.pbjx.request.enrich';
+
+    /**
+     * Occurs before request is sent to the handler.  An event listener can use
+     * setResponse which will prevent the handler from getting called.  Useful
+     * for requests that can be cached.
+     *
+     * @see Gdbots\Pbjx\Event\RequestBusEvent
+     * @var string
+     */
+    const REQUEST_BEFORE_HANDLE = 'gdbots.pbjx.request.before_handle';
+
+    /**
+     * Occurs after request has been successfully sent to the handler
+     * and a response was generated.
+     *
+     * @see Gdbots\Pbjx\Event\RequestBusEvent
+     * @var string
+     */
+    const REQUEST_AFTER_HANDLE = 'gdbots.pbjx.request.after_handle';
+
+    /**
      * Occurs prior to the message being sent by the transport.
      *
      * @see Gdbots\Pbjx\Event\TransportEvent

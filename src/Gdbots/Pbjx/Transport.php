@@ -34,10 +34,11 @@ interface Transport
      * Sends a request via the transport.
      *
      * @param Request $request
+     * @param Notifier $notifier
      * @return Response
      *
      * @throws GdbotsPbjxException
      * @throws \Exception
      */
-    //public function sendRequest(Request $request);
+    public function sendRequest(Request $request, Notifier $notifier);
 }

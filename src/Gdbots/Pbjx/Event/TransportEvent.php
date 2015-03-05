@@ -5,6 +5,7 @@ namespace Gdbots\Pbjx\Event;
 use Gdbots\Pbj\Extension\Command;
 use Gdbots\Pbj\Extension\DomainEvent;
 use Gdbots\Pbj\Extension\Request;
+use Gdbots\Pbj\Extension\Response;
 use Gdbots\Pbj\Message;
 
 class TransportEvent extends PbjxEvent
@@ -63,5 +64,13 @@ class TransportEvent extends PbjxEvent
     public function isRequestMessage()
     {
         return $this->message instanceof Request;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isResponseMessage()
+    {
+        return $this->message instanceof Response;
     }
 }

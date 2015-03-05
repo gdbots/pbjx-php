@@ -6,9 +6,12 @@ use Gdbots\Common\Util\ClassUtils;
 use Gdbots\Common\Util\StringUtils;
 use Gdbots\Pbj\Extension\Command;
 use Gdbots\Pbj\Extension\DomainEvent;
+use Gdbots\Pbj\Extension\Request;
 use Gdbots\Pbjx\Dispatcher;
+use Gdbots\Pbjx\Domain\Response\RequestHandlingFailedV1;
 use Gdbots\Pbjx\Event\TransportEvent;
 use Gdbots\Pbjx\Event\TransportExceptionEvent;
+use Gdbots\Pbjx\Notifier;
 use Gdbots\Pbjx\PbjxEvents;
 use Gdbots\Pbjx\ServiceLocator;
 use Gdbots\Pbjx\Transport;
@@ -50,7 +53,7 @@ abstract class AbstractTransport implements Transport
             $this->locator->getExceptionHandler()->onTransportException(
                 new TransportExceptionEvent($this->transportName, $command, $e)
             );
-            return;
+            throw $e;
         }
 
         $this->dispatcher->dispatch(PbjxEvents::TRANSPORT_AFTER_SEND, $event);
@@ -78,7 +81,7 @@ abstract class AbstractTransport implements Transport
             $this->locator->getExceptionHandler()->onTransportException(
                 new TransportExceptionEvent($this->transportName, $domainEvent, $e)
             );
-            return;
+            throw $e;
         }
 
         $this->dispatcher->dispatch(PbjxEvents::TRANSPORT_AFTER_SEND, $event);
@@ -91,4 +94,52 @@ abstract class AbstractTransport implements Transport
      * @throws \Exception
      */
     abstract protected function doSendEvent(DomainEvent $domainEvent);
+
+    /**
+     * {@inheritdoc}
+     */
+    public function sendRequest(Request $request, Notifier $notifier)
+    {
+        $event = new TransportEvent($this->transportName, $request);
+        $this->dispatcher->dispatch(PbjxEvents::TRANSPORT_BEFORE_SEND, $event);
+
+        try {
+            $response = $this->doSendRequest($request, $notifier);
+        } catch (\Exception $e) {
+            /*
+             * fallback handling if the transport is down
+             */
+            if ('in-memory' !== $this->transportName) {
+                try {
+                    $response = $this->locator->getRequestBus()->receiveRequest($request, $notifier);
+                } catch (\Exception $e) {
+                    $response = RequestHandlingFailedV1::create()
+                        ->setRequestId($request->getRequestId())
+                        ->setFailedRequest($request)
+                        ->setReason(ClassUtils::getShortName(get_class($e)) . '::' . $e->getMessage());
+                }
+            } else {
+                $this->locator->getExceptionHandler()->onTransportException(
+                    new TransportExceptionEvent($this->transportName, $request, $e)
+                );
+                $response = RequestHandlingFailedV1::create()
+                    ->setRequestId($request->getRequestId())
+                    ->setFailedRequest($request)
+                    ->setReason(ClassUtils::getShortName(get_class($e)) . '::' . $e->getMessage());
+            }
+        }
+
+        $event = new TransportEvent($this->transportName, $response);
+        $this->dispatcher->dispatch(PbjxEvents::TRANSPORT_AFTER_SEND, $event);
+        return $response;
+    }
+
+    /**
+     * Override in the transport to handle the actual send.
+     *
+     * @param Request $request
+     * @param Notifier $notifier
+     * @throws \Exception
+     */
+    abstract protected function doSendRequest(Request $request, Notifier $notifier);
 }

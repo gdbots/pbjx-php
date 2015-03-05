@@ -88,6 +88,5 @@ class DefaultExceptionHandler implements ExceptionHandler
             )
         );
         $this->dispatcher->dispatch(PbjxEvents::TRANSPORT_SEND_EXCEPTION, $event);
-        throw $event->getException();
     }
 }
