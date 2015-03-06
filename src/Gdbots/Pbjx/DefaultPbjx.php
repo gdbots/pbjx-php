@@ -14,7 +14,6 @@ use Gdbots\Pbjx\Event\ValidateCommandEvent;
 use Gdbots\Pbjx\Event\ValidateRequestEvent;
 use Gdbots\Pbjx\Exception\RequestHandlingFailed;
 use React\Promise\Deferred;
-use React\Promise\LazyPromise;
 
 class DefaultPbjx implements Pbjx
 {
@@ -70,51 +69,42 @@ class DefaultPbjx implements Pbjx
      */
     public function request(Request $request)
     {
-        $that = $this;
-        $factory = function () use ($that, $request) {
-            $deferred = new Deferred();
-            $notifier = new RequestNotifier($deferred);
+        $curie = $request::schema()->getId()->getCurie()->toString();
+        $deferred = new Deferred();
 
-            $curie = $request::schema()->getId()->getCurie()->toString();
+        try {
+            $event = new ValidateRequestEvent($request);
+            $this->dispatcher->dispatch(PbjxEvents::REQUEST_VALIDATE, $event);
+            $this->dispatcher->dispatch($curie . '.validate', $event);
 
-            try {
-                $event = new ValidateRequestEvent($request);
-                $that->dispatcher->dispatch(PbjxEvents::REQUEST_VALIDATE, $event);
-                $that->dispatcher->dispatch($curie . '.validate', $event);
+            $event = new EnrichRequestEvent($request);
+            $this->dispatcher->dispatch(PbjxEvents::REQUEST_ENRICH, $event);
+            $this->dispatcher->dispatch($curie . '.enrich', $event);
 
-                $event = new EnrichRequestEvent($request);
-                $that->dispatcher->dispatch(PbjxEvents::REQUEST_ENRICH, $event);
-                $that->dispatcher->dispatch($curie . '.enrich', $event);
-
-                $event = new RequestBusEvent($request);
-                $that->dispatcher->dispatch(PbjxEvents::REQUEST_BEFORE_HANDLE, $event);
-                $that->dispatcher->dispatch($curie . '.before_handle', $event);
-            } catch (\Exception $e) {
-                $deferred->reject($e);
-                return $deferred->promise();
-            }
-
-            if ($event->hasResponse()) {
-                $deferred->resolve($event->getResponse());
-                return $deferred->promise();
-            }
-
-            // todo: handle async issues with notifier and promise not returning until later
-            $response = $that->locator->getRequestBus()->request($request, $notifier);
-            if ($response instanceof RequestHandlingFailedV1) {
-                $deferred->reject(new RequestHandlingFailed($response));
-                return $deferred->promise();
-            }
-
-            $deferred->resolve($response);
-            $event->setResponse($response);
-            $that->dispatcher->dispatch(PbjxEvents::REQUEST_AFTER_HANDLE, $event);
-            $that->dispatcher->dispatch($curie . '.after_handle', $event);
-
+            $event = new RequestBusEvent($request);
+            $this->dispatcher->dispatch(PbjxEvents::REQUEST_BEFORE_HANDLE, $event);
+            $this->dispatcher->dispatch($curie . '.before_handle', $event);
+        } catch (\Exception $e) {
+            $deferred->reject($e);
             return $deferred->promise();
-        };
+        }
 
-        $promise = new LazyPromise($factory);
-        return $promise;
+        if ($event->hasResponse()) {
+            $deferred->resolve($event->getResponse());
+            return $deferred->promise();
+        }
+
+        $response = $this->locator->getRequestBus()->request($request);
+        if ($response instanceof RequestHandlingFailedV1) {
+            $deferred->reject(new RequestHandlingFailed($response));
+            return $deferred->promise();
+        }
+
+        $deferred->resolve($response);
+        $event->setResponse($response);
+        $this->dispatcher->dispatch(PbjxEvents::REQUEST_AFTER_HANDLE, $event);
+        $this->dispatcher->dispatch($curie . '.after_handle', $event);
+
+        return $deferred->promise();
     }
 }

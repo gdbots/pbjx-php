@@ -11,10 +11,9 @@ interface RequestBus
      * Processes a request and returns the response from the handler.
      *
      * @param Request $request
-     * @param Notifier $notifier
      * @return Response
      */
-    public function request(Request $request, Notifier $notifier);
+    public function request(Request $request);
 
     /**
      * Processes a request directly.  DO NOT use this method in the
@@ -22,8 +21,7 @@ interface RequestBus
      * and workers of the Pbjx system.
      *
      * @param Request $request
-     * @param Notifier $notifier
      * @return Response
      */
-    public function receiveRequest(Request $request, Notifier $notifier);
+    public function receiveRequest(Request $request);
 }

@@ -19,7 +19,7 @@ final class GetTimeResponse extends AbstractResponse
     protected static function defineSchema()
     {
         $schema = ResponseSchema::create(__CLASS__, 'pbj:gdbots:tests.pbjx:fixtures:get-time-response:1-0-0', [
-            Fb::create(self::TIME_FIELD_NAME, T\DateTimeType::create())->build(),
+            Fb::create(self::TIME_FIELD_NAME, T\DateTimeType::create())->build()
         ]);
         MessageResolver::registerSchema($schema);
         return $schema;

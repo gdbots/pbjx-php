@@ -11,11 +11,10 @@ interface RequestHandler
     /**
      * @param Request $request
      * @param Pbjx $pbjx
-     * @param Notifier $notifier
      * @return Response
      *
      * @throws GdbotsPbjxException
      * @throws \Exception
      */
-    public function handleRequest(Request $request, Pbjx $pbjx, Notifier $notifier);
+    public function handleRequest(Request $request, Pbjx $pbjx);
 }

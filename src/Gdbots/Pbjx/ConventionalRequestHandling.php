@@ -12,13 +12,12 @@ trait ConventionalRequestHandling
     /**
      * @param Request $request
      * @param Pbjx $pbjx
-     * @param Notifier $notifier
      * @return Response
      *
      * @throws GdbotsPbjxException
      * @throws \Exception
      */
-    public function handleRequest(Request $request, Pbjx $pbjx, Notifier $notifier)
+    public function handleRequest(Request $request, Pbjx $pbjx)
     {
         $schema = $request::schema();
         $short = $schema->getClassShortName();
@@ -31,12 +30,11 @@ The RequestHandler needs the following code to operate:
     /**
      * @param $short \$request
      * @param Pbjx \$pbjx
-     * @param Notifier \$notifier
      * @return Response
      *
      * @throws \Exception
      */
-    protected function $method($short \$request, Pbjx \$pbjx, Notifier \$notifier)
+    protected function $method($short \$request, Pbjx \$pbjx)
     {
     }
 
@@ -45,6 +43,6 @@ MSG;
             throw InvalidHandler::forRequest($request, $this, $message);
         }
 
-        return $this->$method($request, $pbjx, $notifier);
+        return $this->$method($request, $pbjx);
     }
 }

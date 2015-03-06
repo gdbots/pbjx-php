@@ -3,11 +3,13 @@
 namespace Gdbots\Pbjx;
 
 use Gdbots\Common\Util\ClassUtils;
+use Gdbots\Common\Util\StringUtils;
 use Gdbots\Pbj\Extension\Request;
 use Gdbots\Pbj\Extension\Response;
 use Gdbots\Pbj\MessageResolver;
 use Gdbots\Pbjx\Domain\Response\RequestHandlingFailedV1;
 use Gdbots\Pbjx\Exception\InvalidHandler;
+use Gdbots\Pbjx\Exception\UnexpectedValueException;
 
 class DefaultRequestBus implements RequestBus
 {
@@ -42,17 +44,17 @@ class DefaultRequestBus implements RequestBus
     /**
      * {@inheritdoc}
      */
-    public function request(Request $request, Notifier $notifier)
+    public function request(Request $request)
     {
-        return $this->transport->sendRequest($request->freeze(), $notifier);
+        return $this->transport->sendRequest($request->freeze());
     }
 
     /**
      * {@inheritdoc}
      */
-    public function receiveRequest(Request $request, Notifier $notifier)
+    public function receiveRequest(Request $request)
     {
-        return $this->handleRequest($request->freeze(), $notifier);
+        return $this->handleRequest($request->freeze());
     }
 
     /**
@@ -61,10 +63,9 @@ class DefaultRequestBus implements RequestBus
      * with the reason.
      *
      * @param Request $request
-     * @param Notifier $notifier
      * @return Response
      */
-    final protected function handleRequest(Request $request, Notifier $notifier)
+    final protected function handleRequest(Request $request)
     {
         $curie = $request::schema()->getId()->getCurie();
         $curieStr = $curie->toString();
@@ -89,7 +90,17 @@ class DefaultRequestBus implements RequestBus
         }
 
         try {
-            return $handler->handleRequest($request, $this->pbjx, $notifier)->setRequestId($request->getRequestId());
+            $response = $handler->handleRequest($request, $this->pbjx);
+            if (!$response instanceof Response) {
+                throw new UnexpectedValueException(
+                    sprintf(
+                        'The handler "%s" returned "%s" but a Response object was expected.',
+                        get_class($handler),
+                        StringUtils::varToString($response)
+                    )
+                );
+            }
+            return $response->setRequestId($request->getRequestId());
         } catch (\Exception $e) {
             return RequestHandlingFailedV1::create()
                 ->setRequestId($request->getRequestId())

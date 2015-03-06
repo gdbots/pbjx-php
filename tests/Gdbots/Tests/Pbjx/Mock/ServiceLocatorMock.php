@@ -2,6 +2,7 @@
 
 namespace Gdbots\Tests\Pbjx\Mock;
 
+use Gdbots\Pbj\Extension\DomainEvent;
 use Gdbots\Pbj\MessageCurie;
 use Gdbots\Pbjx\CommandBus;
 use Gdbots\Pbjx\CommandHandler;
@@ -55,6 +56,15 @@ class ServiceLocatorMock implements ServiceLocator
         $this->eventBus = new DefaultEventBus($this, $this->transport);
         $this->requestBus = new DefaultRequestBus($this, $this->transport);
         $this->exceptionHandler = new DefaultExceptionHandler($this);
+
+        /*
+        $this->dispatcher->addListener(
+            'gdbots:*',
+            function (DomainEvent $event) {
+                echo $event . PHP_EOL . PHP_EOL;
+            }
+        );
+        */
     }
 
     /**

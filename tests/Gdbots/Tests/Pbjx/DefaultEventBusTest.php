@@ -62,7 +62,7 @@ class DefaultEventBusTest extends \PHPUnit_Framework_TestCase
         $dispatcher->addListener(
             $schemaId->getResolverKey(),
             function () {
-                throw new \LogicException('Simulate failure.');
+                throw new \LogicException('Simulate failure 1.');
             }
         );
 
@@ -94,7 +94,7 @@ class DefaultEventBusTest extends \PHPUnit_Framework_TestCase
         $dispatcher->addListener(
             $schemaId->getResolverKey(),
             function () {
-                throw new \LogicException('Simulate failure.');
+                throw new \LogicException('Simulate failure 2.');
             }
         );
 

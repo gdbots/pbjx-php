@@ -3,7 +3,6 @@
 namespace Gdbots\Tests\Pbjx\Fixtures;
 
 use Gdbots\Pbjx\ConventionalRequestHandling;
-use Gdbots\Pbjx\Notifier;
 use Gdbots\Pbjx\Pbjx;
 use Gdbots\Pbjx\RequestHandler;
 
@@ -14,21 +13,14 @@ class GetTimeRequestHandler implements RequestHandler
     /**
      * @param GetTimeRequest $request
      * @param Pbjx $pbjx
-     * @param Notifier $notifier
      *
      * @return GetTimeResponse
      */
-    protected function getTimeRequest(GetTimeRequest $request, Pbjx $pbjx, Notifier $notifier)
+    protected function getTimeRequest(GetTimeRequest $request, Pbjx $pbjx)
     {
-        $response = GetTimeResponse::create()
-            ->setTime($request->getMicrotime()->toDateTime())
-        ;
-
-        for ($i = 0; $i < 5; $i++) {
-            $notifier->notify('doing stuff - ' . $i);
-            //sleep(1);
+        if ($request->getTestFail()) {
+            return 'test fail';
         }
-
-        return $response;
+        return GetTimeResponse::create()->setTime($request->getMicrotime()->toDateTime());
     }
 }
