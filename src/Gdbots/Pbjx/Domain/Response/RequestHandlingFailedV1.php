@@ -20,8 +20,9 @@ final class RequestHandlingFailedV1 extends AbstractResponse
     protected static function defineSchema()
     {
         return ResponseSchema::create(__CLASS__, 'pbj:gdbots:pbjx:response:request-handling-failed:1-0-0', [
-            Fb::create(self::FAILED_REQUEST_FIELD_NAME, T\AnyMessageType::create())
+            Fb::create(self::FAILED_REQUEST_FIELD_NAME, T\MessageType::create())
                 ->required()
+                ->anyOfClassNames([])
                 ->build(),
             Fb::create(self::REASON_FIELD_NAME, T\TextType::create())
                 ->build(),

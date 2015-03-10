@@ -90,11 +90,23 @@ class DefaultPbjx implements Pbjx
         }
 
         if ($event->hasResponse()) {
-            $deferred->resolve($event->getResponse());
+            $response = $event->getResponse();
+            if (!$response->isFrozen()) {
+                if ($request->hasCorrelator() && !$response->hasCorrelator()) {
+                    $response->setCorrelator($request->getCorrelator());
+                }
+            }
+            $deferred->resolve($response);
             return $deferred->promise();
         }
 
         $response = $this->locator->getRequestBus()->request($request);
+        if (!$response->isFrozen()) {
+            if ($request->hasCorrelator() && !$response->hasCorrelator()) {
+                $response->setCorrelator($request->getCorrelator());
+            }
+        }
+
         if ($response instanceof RequestHandlingFailedV1) {
             $deferred->reject(new RequestHandlingFailed($response));
             return $deferred->promise();
