@@ -2,9 +2,9 @@
 
 namespace Gdbots\Pbjx\Domain\Event;
 
-use Gdbots\Pbj\Extension\AbstractEvent;
-use Gdbots\Pbj\Extension\DomainEvent;
-use Gdbots\Pbj\Extension\EventSchema;
+use Gdbots\Pbj\Mixin\AbstractEvent;
+use Gdbots\Pbj\Mixin\DomainEvent;
+use Gdbots\Pbj\Mixin\EventMixin;
 use Gdbots\Pbj\FieldBuilder as Fb;
 use Gdbots\Pbj\Schema;
 use Gdbots\Pbj\Type as T;
@@ -19,14 +19,19 @@ final class EventExecutionFailedV1 extends AbstractEvent
      */
     protected static function defineSchema()
     {
-        return EventSchema::create(__CLASS__, 'pbj:gdbots:pbjx:event:event-execution-failed:1-0-0', [
-            Fb::create(self::FAILED_EVENT_FIELD_NAME, T\MessageType::create())
-                ->required()
-                ->anyOfClassNames([])
-                ->build(),
-            Fb::create(self::REASON_FIELD_NAME, T\TextType::create())
-                ->build(),
-        ]);
+        return new Schema('pbj:gdbots:pbjx:event:event-execution-failed:1-0-0', __CLASS__,
+            [
+                Fb::create(self::FAILED_EVENT_FIELD_NAME, T\MessageType::create())
+                    ->required()
+                    ->anyOfClassNames(['Gdbots\Pbj\Mixin\DomainEvent'])
+                    ->build(),
+                Fb::create(self::REASON_FIELD_NAME, T\TextType::create())
+                    ->build(),
+            ],
+            [
+                EventMixin::create()
+            ]
+        );
     }
 
     /**

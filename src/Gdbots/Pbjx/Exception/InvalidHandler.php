@@ -2,8 +2,8 @@
 
 namespace Gdbots\Pbjx\Exception;
 
-use Gdbots\Pbj\Extension\Command;
-use Gdbots\Pbj\Extension\Request;
+use Gdbots\Pbj\Mixin\Command;
+use Gdbots\Pbj\Mixin\Request;
 use Gdbots\Pbjx\CommandHandler;
 use Gdbots\Pbjx\RequestHandler;
 

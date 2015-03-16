@@ -2,7 +2,7 @@
 
 namespace Gdbots\Tests\Pbjx\Fixtures;
 
-use Gdbots\Pbj\Extension\Command;
+use Gdbots\Pbj\Mixin\Command;
 use Gdbots\Pbjx\CommandHandler;
 use Gdbots\Pbjx\ConventionalCommandHandling;
 use Gdbots\Pbjx\Pbjx;

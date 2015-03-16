@@ -42,7 +42,7 @@ class DefaultEventBusTest extends \PHPUnit_Framework_TestCase
             $that->assertSame($publishedEvent, $event);
         };
 
-        $dispatcher->addListener($schemaId->getResolverKey(), $func);
+        $dispatcher->addListener($schemaId->getCurieWithMajorRev(), $func);
         $dispatcher->addListener($curie->toString(), $func);
         $dispatcher->addListener(sprintf('%s:%s:%s:*', $vendor, $package, $category), $func);
         $dispatcher->addListener(sprintf('%s:%s:*', $vendor, $package), $func);
@@ -60,14 +60,14 @@ class DefaultEventBusTest extends \PHPUnit_Framework_TestCase
         $handled = false;
 
         $dispatcher->addListener(
-            $schemaId->getResolverKey(),
+            $schemaId->getCurieWithMajorRev(),
             function () {
                 throw new \LogicException('Simulate failure 1.');
             }
         );
 
         $dispatcher->addListener(
-            EventExecutionFailedV1::schema()->getId()->getResolverKey(),
+            EventExecutionFailedV1::schema()->getId()->getCurieWithMajorRev(),
             function () use (&$handled) {
                 $handled = true;
             }
@@ -79,7 +79,7 @@ class DefaultEventBusTest extends \PHPUnit_Framework_TestCase
             sprintf(
                 '%s failed because the event [%s] was never published.',
                 __FUNCTION__,
-                $schemaId->getResolverKey()
+                $schemaId->getCurieWithMajorRev()
             )
         );
     }
@@ -92,14 +92,14 @@ class DefaultEventBusTest extends \PHPUnit_Framework_TestCase
         $schemaId = $event::schema()->getId();
 
         $dispatcher->addListener(
-            $schemaId->getResolverKey(),
+            $schemaId->getCurieWithMajorRev(),
             function () {
                 throw new \LogicException('Simulate failure 2.');
             }
         );
 
         $dispatcher->addListener(
-            EventExecutionFailedV1::schema()->getId()->getResolverKey(),
+            EventExecutionFailedV1::schema()->getId()->getCurieWithMajorRev(),
             function () {
                 throw new \LogicException('Failed to handle EventExecutionFailedV1.');
             }

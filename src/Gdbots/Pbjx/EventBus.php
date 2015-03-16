@@ -2,7 +2,7 @@
 
 namespace Gdbots\Pbjx;
 
-use Gdbots\Pbj\Extension\DomainEvent;
+use Gdbots\Pbj\Mixin\DomainEvent;
 use Gdbots\Pbjx\Exception\GdbotsPbjxException;
 
 interface EventBus

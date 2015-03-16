@@ -4,10 +4,10 @@ namespace Gdbots\Pbjx;
 
 use Gdbots\Common\Util\ClassUtils;
 use Gdbots\Common\Util\StringUtils;
-use Gdbots\Pbj\Extension\Request;
-use Gdbots\Pbj\Extension\Response;
+use Gdbots\Pbj\Mixin\Request;
+use Gdbots\Pbj\Mixin\Response;
 use Gdbots\Pbj\MessageResolver;
-use Gdbots\Pbjx\Domain\Response\RequestHandlingFailedV1;
+use Gdbots\Pbjx\Domain\Request\RequestHandlingFailedV1;
 use Gdbots\Pbjx\Exception\InvalidHandler;
 use Gdbots\Pbjx\Exception\UnexpectedValueException;
 

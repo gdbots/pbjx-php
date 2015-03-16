@@ -2,10 +2,10 @@
 
 namespace Gdbots\Pbjx;
 
-use Gdbots\Pbj\Extension\Command;
-use Gdbots\Pbj\Extension\DomainEvent;
-use Gdbots\Pbj\Extension\Request;
-use Gdbots\Pbj\Extension\Response;
+use Gdbots\Pbj\Mixin\Command;
+use Gdbots\Pbj\Mixin\DomainEvent;
+use Gdbots\Pbj\Mixin\Request;
+use Gdbots\Pbj\Mixin\Response;
 use Gdbots\Pbjx\Exception\GdbotsPbjxException;
 
 interface Transport

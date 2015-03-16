@@ -2,7 +2,6 @@
 
 namespace Gdbots\Tests\Pbjx\Mock;
 
-use Gdbots\Pbj\Extension\DomainEvent;
 use Gdbots\Pbj\MessageCurie;
 use Gdbots\Pbjx\CommandBus;
 use Gdbots\Pbjx\CommandHandler;

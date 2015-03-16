@@ -3,7 +3,7 @@
 namespace Gdbots\Pbjx;
 
 use Gdbots\Common\Util\ClassUtils;
-use Gdbots\Pbj\Extension\DomainEvent;
+use Gdbots\Pbj\Mixin\DomainEvent;
 use Gdbots\Pbj\MessageResolver;
 use Gdbots\Pbjx\Domain\Event\EventExecutionFailedV1;
 use Gdbots\Pbjx\Event\EventBusExceptionEvent;
@@ -60,15 +60,21 @@ class DefaultEventBus implements EventBus
      */
     protected function doPublish(DomainEvent $domainEvent)
     {
-        $schemaId = $domainEvent::schema()->getId();
+        $schema = $domainEvent::schema();
+        $schemaId = $schema->getId();
         $curie = $schemaId->getCurie();
 
         $vendor = $curie->getVendor();
         $package = $curie->getPackage();
         $category = $curie->getCategory();
 
-        $this->doDispatch($schemaId->getResolverKey(), $domainEvent);
+        $this->doDispatch($schemaId->getCurieWithMajorRev(), $domainEvent);
         $this->doDispatch($curie->toString(), $domainEvent);
+
+        foreach ($schema->getMixinIds() as $mixinId) {
+            $this->doDispatch($mixinId, $domainEvent);
+        }
+
         $this->doDispatch(sprintf('%s:%s:%s:*', $vendor, $package, $category), $domainEvent);
         $this->doDispatch(sprintf('%s:%s:*', $vendor, $package), $domainEvent);
         $this->doDispatch(sprintf('%s:*', $vendor), $domainEvent);

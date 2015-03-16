@@ -2,7 +2,7 @@
 
 namespace Gdbots\Pbjx;
 
-use Gdbots\Pbj\Extension\Command;
+use Gdbots\Pbj\Mixin\Command;
 use Gdbots\Pbjx\Exception\GdbotsPbjxException;
 
 interface CommandHandler

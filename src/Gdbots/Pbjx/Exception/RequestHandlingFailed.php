@@ -2,8 +2,8 @@
 
 namespace Gdbots\Pbjx\Exception;
 
-use Gdbots\Pbj\Extension\Request;
-use Gdbots\Pbjx\Domain\Response\RequestHandlingFailedV1;
+use Gdbots\Pbj\Mixin\Request;
+use Gdbots\Pbjx\Domain\Request\RequestHandlingFailedV1;
 
 class RequestHandlingFailed extends \RuntimeException implements GdbotsPbjxException
 {

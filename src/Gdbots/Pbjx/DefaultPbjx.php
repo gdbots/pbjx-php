@@ -2,10 +2,10 @@
 
 namespace Gdbots\Pbjx;
 
-use Gdbots\Pbj\Extension\Command;
-use Gdbots\Pbj\Extension\DomainEvent;
-use Gdbots\Pbj\Extension\Request;
-use Gdbots\Pbjx\Domain\Response\RequestHandlingFailedV1;
+use Gdbots\Pbj\Mixin\Command;
+use Gdbots\Pbj\Mixin\DomainEvent;
+use Gdbots\Pbj\Mixin\Request;
+use Gdbots\Pbjx\Domain\Request\RequestHandlingFailedV1;
 use Gdbots\Pbjx\Event\EnrichCommandEvent;
 use Gdbots\Pbjx\Event\EnrichDomainEventEvent;
 use Gdbots\Pbjx\Event\EnrichRequestEvent;
@@ -37,16 +37,8 @@ class DefaultPbjx implements Pbjx
      */
     public function send(Command $command)
     {
-        $curie = $command::schema()->getId()->getCurie()->toString();
-
-        $event = new ValidateCommandEvent($command);
-        $this->dispatcher->dispatch(PbjxEvents::COMMAND_VALIDATE, $event);
-        $this->dispatcher->dispatch($curie . '.validate', $event);
-
-        $event = new EnrichCommandEvent($command);
-        $this->dispatcher->dispatch(PbjxEvents::COMMAND_ENRICH, $event);
-        $this->dispatcher->dispatch($curie . '.enrich', $event);
-
+        PbjxEventBroadcaster::broadcast($this->dispatcher, $command, new ValidateCommandEvent($command), PbjxEvents::COMMAND_VALIDATE);
+        PbjxEventBroadcaster::broadcast($this->dispatcher, $command, new EnrichCommandEvent($command), PbjxEvents::COMMAND_ENRICH);
         $this->locator->getCommandBus()->send($command);
     }
 
@@ -55,12 +47,7 @@ class DefaultPbjx implements Pbjx
      */
     public function publish(DomainEvent $domainEvent)
     {
-        $curie = $domainEvent::schema()->getId()->getCurie()->toString();
-
-        $event = new EnrichDomainEventEvent($domainEvent);
-        $this->dispatcher->dispatch(PbjxEvents::EVENT_ENRICH, $event);
-        $this->dispatcher->dispatch($curie . '.enrich', $event);
-
+        PbjxEventBroadcaster::broadcast($this->dispatcher, $domainEvent, new EnrichDomainEventEvent($domainEvent), PbjxEvents::EVENT_ENRICH);
         $this->locator->getEventBus()->publish($domainEvent);
     }
 
@@ -69,21 +56,13 @@ class DefaultPbjx implements Pbjx
      */
     public function request(Request $request)
     {
-        $curie = $request::schema()->getId()->getCurie()->toString();
         $deferred = new Deferred();
 
         try {
-            $event = new ValidateRequestEvent($request);
-            $this->dispatcher->dispatch(PbjxEvents::REQUEST_VALIDATE, $event);
-            $this->dispatcher->dispatch($curie . '.validate', $event);
-
-            $event = new EnrichRequestEvent($request);
-            $this->dispatcher->dispatch(PbjxEvents::REQUEST_ENRICH, $event);
-            $this->dispatcher->dispatch($curie . '.enrich', $event);
-
+            PbjxEventBroadcaster::broadcast($this->dispatcher, $request, new ValidateRequestEvent($request), PbjxEvents::REQUEST_VALIDATE);
+            PbjxEventBroadcaster::broadcast($this->dispatcher, $request, new EnrichRequestEvent($request), PbjxEvents::REQUEST_ENRICH);
             $event = new RequestBusEvent($request);
-            $this->dispatcher->dispatch(PbjxEvents::REQUEST_BEFORE_HANDLE, $event);
-            $this->dispatcher->dispatch($curie . '.before_handle', $event);
+            PbjxEventBroadcaster::broadcast($this->dispatcher, $request, $event, PbjxEvents::REQUEST_BEFORE_HANDLE);
         } catch (\Exception $e) {
             $deferred->reject($e);
             return $deferred->promise();
@@ -114,8 +93,7 @@ class DefaultPbjx implements Pbjx
 
         $deferred->resolve($response);
         $event->setResponse($response);
-        $this->dispatcher->dispatch(PbjxEvents::REQUEST_AFTER_HANDLE, $event);
-        $this->dispatcher->dispatch($curie . '.after_handle', $event);
+        PbjxEventBroadcaster::broadcast($this->dispatcher, $request, $event, PbjxEvents::REQUEST_AFTER_HANDLE);
 
         return $deferred->promise();
     }

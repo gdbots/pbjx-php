@@ -1,11 +1,11 @@
 <?php
 
-namespace Gdbots\Pbjx\Domain\Response;
+namespace Gdbots\Pbjx\Domain\Request;
 
-use Gdbots\Pbj\Extension\AbstractResponse;
-use Gdbots\Pbj\Extension\Request;
-use Gdbots\Pbj\Extension\ResponseSchema;
+use Gdbots\Pbj\Mixin\AbstractResponse;
+use Gdbots\Pbj\Mixin\Request;
 use Gdbots\Pbj\FieldBuilder as Fb;
+use Gdbots\Pbj\Mixin\ResponseMixin;
 use Gdbots\Pbj\Schema;
 use Gdbots\Pbj\Type as T;
 
@@ -19,14 +19,19 @@ final class RequestHandlingFailedV1 extends AbstractResponse
      */
     protected static function defineSchema()
     {
-        return ResponseSchema::create(__CLASS__, 'pbj:gdbots:pbjx:response:request-handling-failed:1-0-0', [
-            Fb::create(self::FAILED_REQUEST_FIELD_NAME, T\MessageType::create())
-                ->required()
-                ->anyOfClassNames([])
-                ->build(),
-            Fb::create(self::REASON_FIELD_NAME, T\TextType::create())
-                ->build(),
-        ]);
+        return new Schema('pbj:gdbots:pbjx:response:request-handling-failed:1-0-0', __CLASS__,
+            [
+                Fb::create(self::FAILED_REQUEST_FIELD_NAME, T\MessageType::create())
+                    ->required()
+                    ->anyOfClassNames(['Gdbots\Pbj\Mixin\Request'])
+                    ->build(),
+                Fb::create(self::REASON_FIELD_NAME, T\TextType::create())
+                    ->build(),
+            ],
+            [
+                ResponseMixin::create()
+            ]
+        );
     }
 
     /**

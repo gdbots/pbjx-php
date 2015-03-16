@@ -2,7 +2,7 @@
 
 namespace Gdbots\Pbjx\Event;
 
-use Gdbots\Pbj\Extension\DomainEvent;
+use Gdbots\Pbj\Mixin\DomainEvent;
 
 class EventBusExceptionEvent extends EventBusEvent
 {

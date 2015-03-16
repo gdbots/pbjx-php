@@ -4,11 +4,11 @@ namespace Gdbots\Pbjx\Transport;
 
 use Gdbots\Common\Util\ClassUtils;
 use Gdbots\Common\Util\StringUtils;
-use Gdbots\Pbj\Extension\Command;
-use Gdbots\Pbj\Extension\DomainEvent;
-use Gdbots\Pbj\Extension\Request;
+use Gdbots\Pbj\Mixin\Command;
+use Gdbots\Pbj\Mixin\DomainEvent;
+use Gdbots\Pbj\Mixin\Request;
 use Gdbots\Pbjx\Dispatcher;
-use Gdbots\Pbjx\Domain\Response\RequestHandlingFailedV1;
+use Gdbots\Pbjx\Domain\Request\RequestHandlingFailedV1;
 use Gdbots\Pbjx\Event\TransportEvent;
 use Gdbots\Pbjx\Event\TransportExceptionEvent;
 use Gdbots\Pbjx\PbjxEvents;

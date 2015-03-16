@@ -2,7 +2,7 @@
 
 namespace Gdbots\Pbjx\Event;
 
-use Gdbots\Pbj\Extension\Command;
+use Gdbots\Pbj\Mixin\Command;
 
 class CommandBusEvent extends PbjxEvent
 {

@@ -2,7 +2,7 @@
 
 namespace Gdbots\Pbjx;
 
-use Gdbots\Pbj\Extension\Command;
+use Gdbots\Pbj\Mixin\Command;
 use Gdbots\Pbjx\Event\CommandBusEvent;
 use Gdbots\Pbjx\Event\CommandBusExceptionEvent;
 use Gdbots\Pbjx\Exception\InvalidHandler;
@@ -90,13 +90,9 @@ class DefaultCommandBus implements CommandBus
 
         try {
             $event = new CommandBusEvent($command);
-            $this->dispatcher->dispatch(PbjxEvents::COMMAND_BEFORE_HANDLE, $event);
-            $this->dispatcher->dispatch($curieStr . '.before_handle', $event);
-
+            PbjxEventBroadcaster::broadcast($this->dispatcher, $command, $event, PbjxEvents::COMMAND_BEFORE_HANDLE);
             $handler->handleCommand($command, $this->pbjx);
-
-            $this->dispatcher->dispatch(PbjxEvents::COMMAND_AFTER_HANDLE, $event);
-            $this->dispatcher->dispatch($curieStr . '.after_handle', $event);
+            PbjxEventBroadcaster::broadcast($this->dispatcher, $command, $event, PbjxEvents::COMMAND_AFTER_HANDLE);
         } catch (\Exception $e) {
             $this->locator->getExceptionHandler()->onCommandBusException(
                 new CommandBusExceptionEvent($command, $e)
