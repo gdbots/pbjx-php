@@ -2,16 +2,16 @@
 
 namespace Gdbots\Pbjx;
 
+use Gdbots\Pbj\Message;
 use Gdbots\Pbj\Mixin\Command;
 use Gdbots\Pbj\Mixin\DomainEvent;
 use Gdbots\Pbj\Mixin\Request;
 use Gdbots\Pbjx\Domain\Request\RequestHandlingFailedV1;
-use Gdbots\Pbjx\Event\EnrichCommandEvent;
-use Gdbots\Pbjx\Event\EnrichDomainEventEvent;
-use Gdbots\Pbjx\Event\EnrichRequestEvent;
-use Gdbots\Pbjx\Event\RequestBusEvent;
-use Gdbots\Pbjx\Event\ValidateCommandEvent;
-use Gdbots\Pbjx\Event\ValidateRequestEvent;
+use Gdbots\Pbjx\Event\BusExceptionEvent;
+use Gdbots\Pbjx\Event\GetResponseEvent;
+use Gdbots\Pbjx\Event\PbjxEvent;
+use Gdbots\Pbjx\Event\PostResponseEvent;
+use Gdbots\Pbjx\Exception\InvalidArgumentException;
 use Gdbots\Pbjx\Exception\RequestHandlingFailed;
 use React\Promise\Deferred;
 
@@ -30,6 +30,25 @@ class DefaultPbjx implements Pbjx
     {
         $this->locator = $locator;
         $this->dispatcher = $this->locator->getDispatcher();
+        PbjxEvent::setPbjx($this);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function trigger(Message $message, $suffix, PbjxEvent $event = null)
+    {
+        $suffix = '.' . trim($suffix, '.');
+        if ('.' === $suffix) {
+            throw new InvalidArgumentException('Trigger requires a non-empty suffix.');
+        }
+        $event = $event ?: new PbjxEvent($message);
+
+        $schema = $message::schema();
+        $this->dispatcher->dispatch($schema->getCurie()->toString() . $suffix, $event);
+        foreach ($schema->getMixinIds() as $mixinId) {
+            $this->dispatcher->dispatch($mixinId . $suffix, $event);
+        }
     }
 
     /**
@@ -37,8 +56,9 @@ class DefaultPbjx implements Pbjx
      */
     public function send(Command $command)
     {
-        PbjxEventBroadcaster::broadcast($this->dispatcher, $command, new ValidateCommandEvent($command), PbjxEvents::COMMAND_VALIDATE);
-        PbjxEventBroadcaster::broadcast($this->dispatcher, $command, new EnrichCommandEvent($command), PbjxEvents::COMMAND_ENRICH);
+        $event = new PbjxEvent($command);
+        $this->trigger($command, PbjxEvents::SUFFIX_VALIDATE, $event);
+        $this->trigger($command, PbjxEvents::SUFFIX_ENRICH, $event);
         $this->locator->getCommandBus()->send($command);
     }
 
@@ -47,7 +67,6 @@ class DefaultPbjx implements Pbjx
      */
     public function publish(DomainEvent $domainEvent)
     {
-        PbjxEventBroadcaster::broadcast($this->dispatcher, $domainEvent, new EnrichDomainEventEvent($domainEvent), PbjxEvents::EVENT_ENRICH);
         $this->locator->getEventBus()->publish($domainEvent);
     }
 
@@ -59,10 +78,11 @@ class DefaultPbjx implements Pbjx
         $deferred = new Deferred();
 
         try {
-            PbjxEventBroadcaster::broadcast($this->dispatcher, $request, new ValidateRequestEvent($request), PbjxEvents::REQUEST_VALIDATE);
-            PbjxEventBroadcaster::broadcast($this->dispatcher, $request, new EnrichRequestEvent($request), PbjxEvents::REQUEST_ENRICH);
-            $event = new RequestBusEvent($request);
-            PbjxEventBroadcaster::broadcast($this->dispatcher, $request, $event, PbjxEvents::REQUEST_BEFORE_HANDLE);
+            $event = new PbjxEvent($request);
+            $this->trigger($request, PbjxEvents::SUFFIX_VALIDATE, $event);
+            $this->trigger($request, PbjxEvents::SUFFIX_ENRICH, $event);
+            $event = new GetResponseEvent($request);
+            $this->trigger($request, PbjxEvents::SUFFIX_BEFORE_HANDLE, $event);
         } catch (\Exception $e) {
             $deferred->reject($e);
             return $deferred->promise();
@@ -70,21 +90,12 @@ class DefaultPbjx implements Pbjx
 
         if ($event->hasResponse()) {
             $response = $event->getResponse();
-            if (!$response->isFrozen()) {
-                if ($request->hasCorrelator() && !$response->hasCorrelator()) {
-                    $response->setCorrelator($request->getCorrelator());
-                }
-            }
             $deferred->resolve($response);
             return $deferred->promise();
         }
 
         $response = $this->locator->getRequestBus()->request($request);
-        if (!$response->isFrozen()) {
-            if ($request->hasCorrelator() && !$response->hasCorrelator()) {
-                $response->setCorrelator($request->getCorrelator());
-            }
-        }
+        $event->setResponse($response);
 
         if ($response instanceof RequestHandlingFailedV1) {
             $deferred->reject(new RequestHandlingFailed($response));
@@ -92,8 +103,16 @@ class DefaultPbjx implements Pbjx
         }
 
         $deferred->resolve($response);
-        $event->setResponse($response);
-        PbjxEventBroadcaster::broadcast($this->dispatcher, $request, $event, PbjxEvents::REQUEST_AFTER_HANDLE);
+
+        try {
+            $event = new PostResponseEvent($request, $response);
+            $this->trigger($request, PbjxEvents::SUFFIX_AFTER_HANDLE, $event);
+            $this->trigger($response, PbjxEvents::SUFFIX_CREATED, $event);
+        } catch (\Exception $e) {
+            $this->locator->getExceptionHandler()->onRequestBusException(
+                new BusExceptionEvent($response, $e)
+            );
+        }
 
         return $deferred->promise();
     }

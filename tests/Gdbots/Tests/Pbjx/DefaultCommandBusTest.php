@@ -2,33 +2,19 @@
 
 namespace Gdbots\Tests\Pbjx;
 
-use Gdbots\Pbjx\Event\CommandBusExceptionEvent;
-use Gdbots\Pbjx\Pbjx;
+use Gdbots\Pbjx\Event\BusExceptionEvent;
 use Gdbots\Pbjx\PbjxEvents;
 use Gdbots\Tests\Pbjx\Fixtures\FakeCommand;
 use Gdbots\Tests\Pbjx\Fixtures\SayHello;
 use Gdbots\Tests\Pbjx\Fixtures\SayHelloHandler;
-use Gdbots\Tests\Pbjx\Mock\ServiceLocatorMock;
 
-class DefaultCommandBusTest extends \PHPUnit_Framework_TestCase
+class DefaultCommandBusTest extends AbstractBusTestCase
 {
-    /** @var ServiceLocatorMock */
-    protected $locator;
-
-    /** @var Pbjx */
-    protected $pbjx;
-
-    protected function setup()
-    {
-        $this->locator = new ServiceLocatorMock();
-        $this->pbjx = $this->locator->getPbjx();
-    }
-
     public function testSend()
     {
         $command = SayHello::create();
         $handler = new SayHelloHandler();
-        $this->locator->registerCommandHandler($command::schema()->getId()->getCurie(), $handler);
+        $this->locator->registerCommandHandler($command::schema()->getCurie(), $handler);
         $this->pbjx->send($command);
         $this->assertTrue($handler->hasHandled($command));
     }
@@ -40,8 +26,8 @@ class DefaultCommandBusTest extends \PHPUnit_Framework_TestCase
     {
         $command = FakeCommand::create();
         $this->locator->getDispatcher()->addListener(
-            PbjxEvents::COMMAND_HANDLE_EXCEPTION,
-            function(CommandBusExceptionEvent $event) {
+            PbjxEvents::COMMAND_BUS_EXCEPTION,
+            function(BusExceptionEvent $event) {
                 throw $event->getException();
             }
         );

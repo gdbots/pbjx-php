@@ -2,20 +2,20 @@
 
 namespace Gdbots\Pbjx\Event;
 
-use Gdbots\Pbj\Mixin\Command;
+use Gdbots\Pbj\Message;
 
-class CommandBusExceptionEvent extends CommandBusEvent
+class BusExceptionEvent extends PbjxEvent
 {
     /** @var \Exception */
     protected $exception;
 
     /**
-     * @param Command $command
+     * @param Message $message
      * @param \Exception $exception
      */
-    public function __construct(Command $command, \Exception $exception)
+    public function __construct(Message $message, \Exception $exception)
     {
-        parent::__construct($command);
+        parent::__construct($message);
         $this->exception = $exception;
     }
 

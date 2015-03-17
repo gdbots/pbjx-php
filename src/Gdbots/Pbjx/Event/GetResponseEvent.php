@@ -2,14 +2,15 @@
 
 namespace Gdbots\Pbjx\Event;
 
+use Gdbots\Pbj\HasCorrelator;
 use Gdbots\Pbj\Mixin\Request;
 use Gdbots\Pbj\Mixin\Response;
 use Gdbots\Pbjx\Exception\LogicException;
 
-class RequestBusEvent extends PbjxEvent
+class GetResponseEvent extends PbjxEvent
 {
     /** @var Request */
-    protected $request;
+    protected $message;
 
     /** @var Response */
     protected $response;
@@ -19,7 +20,7 @@ class RequestBusEvent extends PbjxEvent
      */
     public function __construct(Request $request)
     {
-        $this->request = $request;
+        parent::__construct($request);
     }
 
     /**
@@ -27,7 +28,7 @@ class RequestBusEvent extends PbjxEvent
      */
     public function getRequest()
     {
-        return $this->request;
+        return $this->message;
     }
 
     /**
@@ -53,9 +54,16 @@ class RequestBusEvent extends PbjxEvent
     public function setResponse(Response $response)
     {
         if ($this->hasResponse()) {
-            throw new LogicException('Response can only be set one time on RequestBusEvent.');
+            throw new LogicException('Response can only be set one time.');
         }
-        $this->response = $response->setRequestId($this->request->getRequestId());
+
+        // todo: review we're setting request_id here and in request bus and some in default pbjx.
+        $this->response = $response->setRequestId($this->message->getRequestId());
+
+        if ($this->message instanceof HasCorrelator && $response instanceof HasCorrelator) {
+            $response->correlateWith($this->message);
+        }
+
         $this->stopPropagation();
     }
 }

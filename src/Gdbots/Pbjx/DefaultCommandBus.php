@@ -3,8 +3,8 @@
 namespace Gdbots\Pbjx;
 
 use Gdbots\Pbj\Mixin\Command;
-use Gdbots\Pbjx\Event\CommandBusEvent;
-use Gdbots\Pbjx\Event\CommandBusExceptionEvent;
+use Gdbots\Pbjx\Event\BusExceptionEvent;
+use Gdbots\Pbjx\Event\PbjxEvent;
 use Gdbots\Pbjx\Exception\InvalidHandler;
 
 class DefaultCommandBus implements CommandBus
@@ -66,7 +66,7 @@ class DefaultCommandBus implements CommandBus
      */
     final protected function handleCommand(Command $command)
     {
-        $curie = $command::schema()->getId()->getCurie();
+        $curie = $command::schema()->getCurie();
         $curieStr = $curie->toString();
 
         if (isset($this->handlers[$curieStr])) {
@@ -81,7 +81,7 @@ class DefaultCommandBus implements CommandBus
                 }
             } catch (\Exception $e) {
                 $this->locator->getExceptionHandler()->onCommandBusException(
-                    new CommandBusExceptionEvent($command, $e)
+                    new BusExceptionEvent($command, $e)
                 );
                 return;
             }
@@ -89,13 +89,13 @@ class DefaultCommandBus implements CommandBus
         }
 
         try {
-            $event = new CommandBusEvent($command);
-            PbjxEventBroadcaster::broadcast($this->dispatcher, $command, $event, PbjxEvents::COMMAND_BEFORE_HANDLE);
+            $event = new PbjxEvent($command);
+            $this->pbjx->trigger($command, PbjxEvents::SUFFIX_BEFORE_HANDLE, $event);
             $handler->handleCommand($command, $this->pbjx);
-            PbjxEventBroadcaster::broadcast($this->dispatcher, $command, $event, PbjxEvents::COMMAND_AFTER_HANDLE);
+            $this->pbjx->trigger($command, PbjxEvents::SUFFIX_AFTER_HANDLE, $event);
         } catch (\Exception $e) {
             $this->locator->getExceptionHandler()->onCommandBusException(
-                new CommandBusExceptionEvent($command, $e)
+                new BusExceptionEvent($command, $e)
             );
         }
     }

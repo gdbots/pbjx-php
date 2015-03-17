@@ -6,7 +6,7 @@ use Gdbots\Common\Util\ClassUtils;
 use Gdbots\Pbj\Mixin\DomainEvent;
 use Gdbots\Pbj\MessageResolver;
 use Gdbots\Pbjx\Domain\Event\EventExecutionFailedV1;
-use Gdbots\Pbjx\Event\EventBusExceptionEvent;
+use Gdbots\Pbjx\Event\BusExceptionEvent;
 
 class DefaultEventBus implements EventBus
 {
@@ -99,7 +99,7 @@ class DefaultEventBus implements EventBus
             } catch (\Exception $e) {
                 if ($domainEvent instanceof EventExecutionFailedV1) {
                     $this->locator->getExceptionHandler()->onEventBusException(
-                        new EventBusExceptionEvent($domainEvent, $e)
+                        new BusExceptionEvent($domainEvent, $e)
                     );
                     return;
                 }

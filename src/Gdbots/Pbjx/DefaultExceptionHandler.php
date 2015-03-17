@@ -2,8 +2,7 @@
 
 namespace Gdbots\Pbjx;
 
-use Gdbots\Pbjx\Event\CommandBusExceptionEvent;
-use Gdbots\Pbjx\Event\EventBusExceptionEvent;
+use Gdbots\Pbjx\Event\BusExceptionEvent;
 use Gdbots\Pbjx\Event\TransportExceptionEvent;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -37,37 +36,46 @@ class DefaultExceptionHandler implements ExceptionHandler
     /**
      * {@inheritdoc}
      */
-    public function onCommandBusException(CommandBusExceptionEvent $event)
+    public function onCommandBusException(BusExceptionEvent $event)
     {
-        $command = $event->getCommand();
         $this->logger->critical(
             sprintf(
-                'Command with id [%s] could not be handled.  Reason: %s' . PHP_EOL .
-                'Payload:' . PHP_EOL . '%s',
-                $command->getCommandId(),
+                'Command could not be handled.  Reason: %s' . PHP_EOL . 'Payload:' . PHP_EOL . '%s',
                 $event->getException()->getMessage(),
-                $command
+                $event->getMessage()
             )
         );
-        $this->dispatcher->dispatch(PbjxEvents::COMMAND_HANDLE_EXCEPTION, $event);
+        $this->dispatcher->dispatch(PbjxEvents::COMMAND_BUS_EXCEPTION, $event);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function onEventBusException(EventBusExceptionEvent $event)
+    public function onEventBusException(BusExceptionEvent $event)
     {
-        $domainEvent = $event->getDomainEvent();
         $this->logger->critical(
             sprintf(
-                'Domain event with id [%s] could not be handled.  Reason: %s' . PHP_EOL .
-                'Payload:' . PHP_EOL . '%s',
-                $domainEvent->getEventId(),
+                'Domain event could not be handled.  Reason: %s' . PHP_EOL . 'Payload:' . PHP_EOL . '%s',
                 $event->getException()->getMessage(),
-                $domainEvent
+                $event->getMessage()
             )
         );
-        $this->dispatcher->dispatch(PbjxEvents::EVENT_EXCEPTION, $event);
+        $this->dispatcher->dispatch(PbjxEvents::EVENT_BUS_EXCEPTION, $event);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function onRequestBusException(BusExceptionEvent $event)
+    {
+        $this->logger->error(
+            sprintf(
+                'Request handling failed.  Reason: %s' . PHP_EOL . 'Payload:' . PHP_EOL . '%s',
+                $event->getException()->getMessage(),
+                $event->getMessage()
+            )
+        );
+        $this->dispatcher->dispatch(PbjxEvents::REQUEST_BUS_EXCEPTION, $event);
     }
 
     /**
@@ -75,16 +83,12 @@ class DefaultExceptionHandler implements ExceptionHandler
      */
     public function onTransportException(TransportExceptionEvent $event)
     {
-        $message = $event->getMessage();
-        $schemaId = $message::schema()->getId();
         $this->logger->emergency(
             sprintf(
-                'Message [%s] could not be sent by [%s] transport.  Reason: %s' . PHP_EOL .
-                'Payload:' . PHP_EOL . '%s',
-                $schemaId->toString(),
+                'Message could not be sent by [%s] transport.  Reason: %s' . PHP_EOL . 'Payload:' . PHP_EOL . '%s',
                 $event->getTransportName(),
                 $event->getException()->getMessage(),
-                $message
+                $event->getMessage()
             )
         );
         $this->dispatcher->dispatch(PbjxEvents::TRANSPORT_SEND_EXCEPTION, $event);

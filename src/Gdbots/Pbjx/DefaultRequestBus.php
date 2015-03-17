@@ -67,7 +67,7 @@ class DefaultRequestBus implements RequestBus
      */
     final protected function handleRequest(Request $request)
     {
-        $curie = $request::schema()->getId()->getCurie();
+        $curie = $request::schema()->getCurie();
         $curieStr = $curie->toString();
 
         if (isset($this->handlers[$curieStr])) {

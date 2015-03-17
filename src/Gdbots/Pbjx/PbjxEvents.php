@@ -10,98 +10,50 @@ final class PbjxEvents
     private function __construct() {}
 
     /**
-     * Occurs prior to command being sent to the transport.
+     * Suffixes are typically used by @see Pbjx::trigger
+     * The actual event name is a combination of curies, mixins, etc. on the
+     * message plus a suffix.  The event payload will be a PbjxEvent or a
+     * subclass of that.
      *
-     * @see Gdbots\Pbjx\Event\ValidateCommandEvent
+     * @see Gdbots\Pbjx\Event\PbjxEvent
      * @var string
      */
-    const COMMAND_VALIDATE = 'gdbots.pbjx.command.validate';
-
-    /**
-     * Occurs after validation and prior to command being sent to the transport.
-     *
-     * @see Gdbots\Pbjx\Event\EnrichCommandEvent
-     * @var string
-     */
-    const COMMAND_ENRICH = 'gdbots.pbjx.command.enrich';
-
-    /**
-     * Occurs before command is sent to the handler.
-     *
-     * @see Gdbots\Pbjx\Event\CommandBusEvent
-     * @var string
-     */
-    const COMMAND_BEFORE_HANDLE = 'gdbots.pbjx.command.before_handle';
-
-    /**
-     * Occurs after command has been successfully sent to the handler.
-     *
-     * @see Gdbots\Pbjx\Event\CommandBusEvent
-     * @var string
-     */
-    const COMMAND_AFTER_HANDLE = 'gdbots.pbjx.command.after_handle';
+    const SUFFIX_BIND = 'bind';
+    const SUFFIX_VALIDATE = 'validate';
+    const SUFFIX_ENRICH = 'enrich';
+    const SUFFIX_BEFORE_HANDLE = 'before_handle';
+    const SUFFIX_AFTER_HANDLE = 'after_handle';
+    const SUFFIX_CREATED = 'created';
+    const SUFFIX_UPDATED = 'updated';
+    const SUFFIX_DELETED = 'deleted';
 
     /**
      * Occurs prior to an expection being thrown during the handling phase of a command.
      * This is not announced during validate, enrich or the transport send.
      *
-     * @see Gdbots\Pbjx\Event\CommandBusExceptionEvent
+     * @see Gdbots\Pbjx\Event\BusExceptionEvent
      * @var string
      */
-    const COMMAND_HANDLE_EXCEPTION = 'gdbots.pbjx.command.handle_exception';
-
-    /**
-     * Occurs prior to an event being sent to the transport.
-     *
-     * @see Gdbots\Pbjx\Event\EnrichDomainEventEvent
-     * @var string
-     */
-    const EVENT_ENRICH = 'gdbots.pbjx.event.enrich';
+    const COMMAND_BUS_EXCEPTION = 'gdbots.pbjx.command_bus.exception';
 
     /**
      * Occurs during event dispatching, where events are actually handled.  If the
      * subscriber throws and exception and the EventExecutionFailedV1 also fails
      * to be handled, then this event is announced.  This should be very rare.
      *
-     * @see Gdbots\Pbjx\Event\EventBusExceptionEvent
+     * @see Gdbots\Pbjx\Event\BusExceptionEvent
      * @var string
      */
-    const EVENT_EXCEPTION = 'gdbots.pbjx.event.exception';
+    const EVENT_BUS_EXCEPTION = 'gdbots.pbjx.event_bus.exception';
 
     /**
-     * Occurs prior to request being sent to the transport.
+     * Occurs during request handling when an exception is not properly
+     * handled and converted to a RequestHandlingFailedV1 response.
      *
-     * @see Gdbots\Pbjx\Event\ValidateRequestEvent
+     * @see Gdbots\Pbjx\Event\BusExceptionEvent
      * @var string
      */
-    const REQUEST_VALIDATE = 'gdbots.pbjx.request.validate';
-
-    /**
-     * Occurs after validation and prior to request being sent to the transport.
-     *
-     * @see Gdbots\Pbjx\Event\EnrichRequestEvent
-     * @var string
-     */
-    const REQUEST_ENRICH = 'gdbots.pbjx.request.enrich';
-
-    /**
-     * Occurs before request is sent to the handler.  An event listener can use
-     * setResponse which will prevent the handler from getting called.  Useful
-     * for requests that can be cached.
-     *
-     * @see Gdbots\Pbjx\Event\RequestBusEvent
-     * @var string
-     */
-    const REQUEST_BEFORE_HANDLE = 'gdbots.pbjx.request.before_handle';
-
-    /**
-     * Occurs after request has been successfully sent to the handler
-     * and a response was generated.
-     *
-     * @see Gdbots\Pbjx\Event\RequestBusEvent
-     * @var string
-     */
-    const REQUEST_AFTER_HANDLE = 'gdbots.pbjx.request.after_handle';
+    const REQUEST_BUS_EXCEPTION = 'gdbots.pbjx.request_bus.exception';
 
     /**
      * Occurs prior to the message being sent by the transport.

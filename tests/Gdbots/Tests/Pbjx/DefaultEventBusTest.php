@@ -3,27 +3,13 @@
 namespace Gdbots\Tests\Pbjx;
 
 use Gdbots\Pbjx\Domain\Event\EventExecutionFailedV1;
-use Gdbots\Pbjx\Event\EventBusExceptionEvent;
-use Gdbots\Pbjx\Pbjx;
+use Gdbots\Pbjx\Event\BusExceptionEvent;
 use Gdbots\Pbjx\PbjxEvents;
 use Gdbots\Tests\Pbjx\Fixtures\FailingEvent;
 use Gdbots\Tests\Pbjx\Fixtures\SimpleEvent;
-use Gdbots\Tests\Pbjx\Mock\ServiceLocatorMock;
 
-class DefaultEventBusTest extends \PHPUnit_Framework_TestCase
+class DefaultEventBusTest extends AbstractBusTestCase
 {
-    /** @var ServiceLocatorMock */
-    protected $locator;
-
-    /** @var Pbjx */
-    protected $pbjx;
-
-    protected function setup()
-    {
-        $this->locator = new ServiceLocatorMock();
-        $this->pbjx = $this->locator->getPbjx();
-    }
-
     public function testPublish()
     {
         $event = SimpleEvent::create()->setName('homer');
@@ -67,7 +53,7 @@ class DefaultEventBusTest extends \PHPUnit_Framework_TestCase
         );
 
         $dispatcher->addListener(
-            EventExecutionFailedV1::schema()->getId()->getCurieWithMajorRev(),
+            EventExecutionFailedV1::schema()->getCurieWithMajorRev(),
             function () use (&$handled) {
                 $handled = true;
             }
@@ -99,17 +85,17 @@ class DefaultEventBusTest extends \PHPUnit_Framework_TestCase
         );
 
         $dispatcher->addListener(
-            EventExecutionFailedV1::schema()->getId()->getCurieWithMajorRev(),
+            EventExecutionFailedV1::schema()->getCurieWithMajorRev(),
             function () {
                 throw new \LogicException('Failed to handle EventExecutionFailedV1.');
             }
         );
 
         $dispatcher->addListener(
-            PbjxEvents::EVENT_EXCEPTION,
-            function (EventBusExceptionEvent $exceptionEvent) use ($that, $event) {
+            PbjxEvents::EVENT_BUS_EXCEPTION,
+            function (BusExceptionEvent $exceptionEvent) use ($that, $event) {
                 /** @var EventExecutionFailedV1 $domainEvent */
-                $domainEvent = $exceptionEvent->getDomainEvent();
+                $domainEvent = $exceptionEvent->getMessage();
                 $that->assertSame(
                     $domainEvent->getFailedEvent()->get(SimpleEvent::NAME_FIELD_NAME),
                     $event->getName()
