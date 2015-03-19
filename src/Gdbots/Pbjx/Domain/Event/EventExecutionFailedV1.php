@@ -23,7 +23,7 @@ final class EventExecutionFailedV1 extends AbstractEvent
             [
                 Fb::create(self::FAILED_EVENT_FIELD_NAME, T\MessageType::create())
                     ->required()
-                    ->anyOfClassNames(['Gdbots\Pbj\Mixin\DomainEvent'])
+                    ->className('Gdbots\Pbj\Mixin\DomainEvent')
                     ->build(),
                 Fb::create(self::REASON_FIELD_NAME, T\TextType::create())
                     ->build(),

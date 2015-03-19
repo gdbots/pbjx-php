@@ -23,7 +23,7 @@ final class RequestHandlingFailedV1 extends AbstractResponse
             [
                 Fb::create(self::FAILED_REQUEST_FIELD_NAME, T\MessageType::create())
                     ->required()
-                    ->anyOfClassNames(['Gdbots\Pbj\Mixin\Request'])
+                    ->className('Gdbots\Pbj\Mixin\Request')
                     ->build(),
                 Fb::create(self::REASON_FIELD_NAME, T\TextType::create())
                     ->build(),

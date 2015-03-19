@@ -53,22 +53,21 @@ class DefaultEventBus implements EventBus
 
     /**
      * Publishes the event to all subscribers using the dispatcher, which processes
-     * events in memory.  If any events throw an exception an EventFailed event
-     * will be published.
+     * events in memory.  If any events throw an exception an EventExecutionFailedV1
+     * event will be published.
      *
      * @param DomainEvent $domainEvent
      */
     protected function doPublish(DomainEvent $domainEvent)
     {
         $schema = $domainEvent::schema();
-        $schemaId = $schema->getId();
-        $curie = $schemaId->getCurie();
+        $curie = $schema->getCurie();
 
         $vendor = $curie->getVendor();
         $package = $curie->getPackage();
         $category = $curie->getCategory();
 
-        $this->doDispatch($schemaId->getCurieWithMajorRev(), $domainEvent);
+        $this->doDispatch($schema->getCurieWithMajorRev(), $domainEvent);
         $this->doDispatch($curie->toString(), $domainEvent);
 
         foreach ($schema->getMixinIds() as $mixinId) {
@@ -84,8 +83,8 @@ class DefaultEventBus implements EventBus
      * todo: need to decouple this dispatch/event subscribing from symfony since our process doesn't
      * publish events with an Event object and you cannot stop propagation.
      *
-     * this is left for now with the expectation that we won't subscribe to events and expect to
-     * be called like a symfony event listener.
+     * this is left for now with the expectation that we won't subscribe to these events and
+     * expect to be called like a symfony event listener.
      *
      * @param string $eventName
      * @param DomainEvent $domainEvent
