@@ -23,7 +23,7 @@ abstract class AbstractServiceLocator implements ServiceLocator
     private $exceptionHandler;
 
     /** @var Transport */
-    private $defaultTransport;
+    protected $defaultTransport;
 
     /**
      * {@inheritdoc}

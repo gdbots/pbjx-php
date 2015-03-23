@@ -13,9 +13,6 @@ use Gdbots\Pbjx\Exception\UnexpectedValueException;
 
 class DefaultRequestBus implements RequestBus
 {
-    /** @var Dispatcher */
-    protected $dispatcher;
-
     /** @var ServiceLocator */
     protected $locator;
 
@@ -36,7 +33,6 @@ class DefaultRequestBus implements RequestBus
     {
         $this->locator = $locator;
         $this->transport = $transport;
-        $this->dispatcher = $this->locator->getDispatcher();
         $this->pbjx = $this->locator->getPbjx();
         MessageResolver::registerSchema(RequestHandlingFailedV1::schema());
     }

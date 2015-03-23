@@ -7,6 +7,7 @@ use Gdbots\Common\Util\StringUtils;
 use Gdbots\Pbj\Mixin\Command;
 use Gdbots\Pbj\Mixin\DomainEvent;
 use Gdbots\Pbj\Mixin\Request;
+use Gdbots\Pbj\Mixin\Response;
 use Gdbots\Pbjx\Dispatcher;
 use Gdbots\Pbjx\Domain\Request\RequestHandlingFailedV1;
 use Gdbots\Pbjx\Event\TransportEvent;
@@ -64,7 +65,10 @@ abstract class AbstractTransport implements Transport
      * @param Command $command
      * @throws \Exception
      */
-    abstract protected function doSendCommand(Command $command);
+    protected function doSendCommand(Command $command)
+    {
+        $this->locator->getCommandBus()->receiveCommand($command);
+    }
 
     /**
      * {@inheritdoc}
@@ -92,7 +96,10 @@ abstract class AbstractTransport implements Transport
      * @param DomainEvent $domainEvent
      * @throws \Exception
      */
-    abstract protected function doSendEvent(DomainEvent $domainEvent);
+    protected function doSendEvent(DomainEvent $domainEvent)
+    {
+        $this->locator->getEventBus()->receiveEvent($domainEvent);
+    }
 
     /**
      * {@inheritdoc}
@@ -137,7 +144,11 @@ abstract class AbstractTransport implements Transport
      * Override in the transport to handle the actual send.
      *
      * @param Request $request
+     * @return Response
      * @throws \Exception
      */
-    abstract protected function doSendRequest(Request $request);
+    protected function doSendRequest(Request $request)
+    {
+        return $this->locator->getRequestBus()->receiveRequest($request);
+    }
 }

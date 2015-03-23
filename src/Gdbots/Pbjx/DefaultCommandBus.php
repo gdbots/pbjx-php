@@ -9,9 +9,6 @@ use Gdbots\Pbjx\Exception\InvalidHandler;
 
 class DefaultCommandBus implements CommandBus
 {
-    /** @var Dispatcher */
-    protected $dispatcher;
-
     /** @var ServiceLocator */
     protected $locator;
 
@@ -32,7 +29,6 @@ class DefaultCommandBus implements CommandBus
     {
         $this->locator = $locator;
         $this->transport = $transport;
-        $this->dispatcher = $this->locator->getDispatcher();
         $this->pbjx = $this->locator->getPbjx();
     }
 

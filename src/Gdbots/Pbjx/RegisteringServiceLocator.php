@@ -55,4 +55,12 @@ final class RegisteringServiceLocator extends AbstractServiceLocator
     {
         $this->handlers[$curie->toString()] = $handler;
     }
+
+    /**
+     * @param Transport $transport
+     */
+    public function setDefaultTransport(Transport $transport)
+    {
+        $this->defaultTransport = $transport;
+    }
 }
