@@ -112,8 +112,13 @@ abstract class AbstractTransport implements Transport
         try {
             $response = $this->doSendRequest($request);
         } catch (\Exception $e) {
+            $this->locator->getExceptionHandler()->onTransportException(
+                new TransportExceptionEvent($this->transportName, $request, $e)
+            );
+
             /*
              * fallback handling if the transport is down
+             * todo: review, should we just die here?
              */
             if ('in-memory' !== $this->transportName) {
                 try {
@@ -125,9 +130,6 @@ abstract class AbstractTransport implements Transport
                         ->setReason(ClassUtils::getShortName($e) . '::' . $e->getMessage());
                 }
             } else {
-                $this->locator->getExceptionHandler()->onTransportException(
-                    new TransportExceptionEvent($this->transportName, $request, $e)
-                );
                 $response = RequestHandlingFailedV1::create()
                     ->setRequestId($request->getRequestId())
                     ->setFailedRequest($request)
