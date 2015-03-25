@@ -77,10 +77,7 @@ class DefaultRequestBus implements RequestBus
                     );
                 }
             } catch (\Exception $e) {
-                return RequestHandlingFailedV1::create()
-                    ->setRequestId($request->getRequestId())
-                    ->setFailedRequest($request)
-                    ->setReason(ClassUtils::getShortName($e) . '::' . $e->getMessage());
+                return $this->createResponseForFailedRequest($request, $e);
             }
             $this->handlers[$curieStr] = $handler;
         }
@@ -96,12 +93,34 @@ class DefaultRequestBus implements RequestBus
                     )
                 );
             }
-            return $response->setRequestId($request->getRequestId());
+
+            $response->setRequestRef($request->generateMessageRef());
+            if ($request->hasCorrelator()) {
+                $response->setCorrelator($request->getCorrelator());
+            }
+
+            return $response;
         } catch (\Exception $e) {
-            return RequestHandlingFailedV1::create()
-                ->setRequestId($request->getRequestId())
-                ->setFailedRequest($request)
-                ->setReason(ClassUtils::getShortName($e) . '::' . $e->getMessage());
+            return $this->createResponseForFailedRequest($request, $e);
         }
+    }
+
+    /**
+     * @param Request $request
+     * @param \Exception $exception
+     * @return Response
+     */
+    private function createResponseForFailedRequest(Request $request, \Exception $exception)
+    {
+        $response = RequestHandlingFailedV1::create()
+            ->setRequestRef($request->generateMessageRef())
+            ->setFailedRequest($request)
+            ->setReason(ClassUtils::getShortName($exception) . '::' . $exception->getMessage());
+
+        if ($request->hasCorrelator()) {
+            $response->setCorrelator($request->getCorrelator());
+        }
+
+        return $response;
     }
 }

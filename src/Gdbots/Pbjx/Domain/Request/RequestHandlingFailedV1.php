@@ -35,6 +35,14 @@ final class RequestHandlingFailedV1 extends AbstractResponse
     }
 
     /**
+     * @return bool
+     */
+    public function hasFailedRequest()
+    {
+        return $this->has(self::FAILED_REQUEST_FIELD_NAME);
+    }
+
+    /**
      * @return Request
      */
     public function getFailedRequest()
@@ -49,6 +57,14 @@ final class RequestHandlingFailedV1 extends AbstractResponse
     public function setFailedRequest(Request $request)
     {
         return $this->setSingleValue(self::FAILED_REQUEST_FIELD_NAME, $request);
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasReason()
+    {
+        return $this->has(self::REASON_FIELD_NAME);
     }
 
     /**

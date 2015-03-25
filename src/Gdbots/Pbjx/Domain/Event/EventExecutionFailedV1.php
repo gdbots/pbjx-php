@@ -35,6 +35,14 @@ final class EventExecutionFailedV1 extends AbstractEvent
     }
 
     /**
+     * @return bool
+     */
+    public function hasFailedEvent()
+    {
+        return $this->has(self::FAILED_EVENT_FIELD_NAME);
+    }
+
+    /**
      * @return DomainEvent
      */
     public function getFailedEvent()
@@ -49,6 +57,14 @@ final class EventExecutionFailedV1 extends AbstractEvent
     public function setFailedEvent(DomainEvent $domainEvent)
     {
         return $this->setSingleValue(self::FAILED_EVENT_FIELD_NAME, $domainEvent);
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasReason()
+    {
+        return $this->has(self::REASON_FIELD_NAME);
     }
 
     /**

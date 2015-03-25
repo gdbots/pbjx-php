@@ -2,7 +2,6 @@
 
 namespace Gdbots\Pbjx\Event;
 
-use Gdbots\Pbj\HasCorrelator;
 use Gdbots\Pbj\Mixin\Request;
 use Gdbots\Pbj\Mixin\Response;
 use Gdbots\Pbjx\Exception\LogicException;
@@ -57,13 +56,15 @@ class GetResponseEvent extends PbjxEvent
             throw new LogicException('Response can only be set one time.');
         }
 
-        // todo: review we're setting request_id here and in request bus and some in default pbjx.
-        $this->response = $response->setRequestId($this->message->getRequestId());
-
-        if ($this->message instanceof HasCorrelator && $response instanceof HasCorrelator) {
-            $response->correlateWith($this->message);
+        if (!$response->hasRequestRef()) {
+            $response->setRequestRef($this->message->generateMessageRef());
         }
 
+        if (!$response->hasCorrelator() && $this->message->hasCorrelator()) {
+            $response->setCorrelator($this->message->getCorrelator());
+        }
+
+        $this->response = $response;
         $this->stopPropagation();
     }
 }

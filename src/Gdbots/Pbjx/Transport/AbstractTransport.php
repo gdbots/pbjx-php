@@ -124,16 +124,10 @@ abstract class AbstractTransport implements Transport
                 try {
                     $response = $this->locator->getRequestBus()->receiveRequest($request);
                 } catch (\Exception $e) {
-                    $response = RequestHandlingFailedV1::create()
-                        ->setRequestId($request->getRequestId())
-                        ->setFailedRequest($request)
-                        ->setReason(ClassUtils::getShortName($e) . '::' . $e->getMessage());
+                    $response = $this->createResponseForFailedRequest($request, $e);
                 }
             } else {
-                $response = RequestHandlingFailedV1::create()
-                    ->setRequestId($request->getRequestId())
-                    ->setFailedRequest($request)
-                    ->setReason(ClassUtils::getShortName($e) . '::' . $e->getMessage());
+                $response = $this->createResponseForFailedRequest($request, $e);
             }
         }
 
@@ -152,5 +146,24 @@ abstract class AbstractTransport implements Transport
     protected function doSendRequest(Request $request)
     {
         return $this->locator->getRequestBus()->receiveRequest($request);
+    }
+
+    /**
+     * @param Request $request
+     * @param \Exception $exception
+     * @return Response
+     */
+    protected function createResponseForFailedRequest(Request $request, \Exception $exception)
+    {
+        $response = RequestHandlingFailedV1::create()
+            ->setRequestRef($request->generateMessageRef())
+            ->setFailedRequest($request)
+            ->setReason(ClassUtils::getShortName($exception) . '::' . $exception->getMessage());
+
+        if ($request->hasCorrelator()) {
+            $response->setCorrelator($request->getCorrelator());
+        }
+
+        return $response;
     }
 }
