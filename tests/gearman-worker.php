@@ -10,9 +10,12 @@ use Gdbots\Pbjx\RegisteringServiceLocator;
 use Gdbots\Pbjx\Transport\GearmanTransport;
 use Gdbots\Tests\Pbjx\Fixtures\GetTimeRequest;
 use Gdbots\Tests\Pbjx\Fixtures\GetTimeRequestHandler;
+use Gdbots\Tests\Pbjx\Fixtures\SayHello;
+use Gdbots\Tests\Pbjx\Fixtures\SayHelloHandler;
 
 $locator = new RegisteringServiceLocator();
 $locator->setDefaultTransport(new GearmanTransport($locator));
+$locator->registerCommandHandler(SayHello::schema()->getCurie(), new SayHelloHandler());
 $locator->registerRequestHandler(GetTimeRequest::schema()->getCurie(), new GetTimeRequestHandler());
 $serializer = new PhpSerializer();
 
