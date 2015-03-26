@@ -107,6 +107,10 @@ class DefaultEventBus implements EventBus
                     ->setFailedEvent($domainEvent)
                     ->setReason(ClassUtils::getShortName($e) . '::' . $e->getMessage());
 
+                if ($domainEvent->hasCorrelator()) {
+                    $failedEvent->setCorrelator($domainEvent->getCorrelator());
+                }
+
                 // running in process for now
                 $this->receiveEvent($failedEvent);
             }
