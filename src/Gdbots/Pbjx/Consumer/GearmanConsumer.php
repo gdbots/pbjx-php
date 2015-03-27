@@ -1,94 +1,181 @@
 <?php
 
-namespace Gdbots\Pbjx\Transport;
+namespace Gdbots\Pbjx\Consumer;
 
-use Gdbots\Pbj\Mixin\Command;
-use Gdbots\Pbj\Mixin\DomainEvent;
-use Gdbots\Pbj\Mixin\Request;
-use Gdbots\Pbj\Mixin\Response;
+use Gdbots\Common\Util\NumberUtils;
+use Gdbots\Pbj\Message;
 use Gdbots\Pbj\Serializer\PhpSerializer;
 use Gdbots\Pbj\Serializer\Serializer;
 use Gdbots\Pbjx\Router;
 use Gdbots\Pbjx\ServiceLocator;
+use Psr\Log\LoggerInterface;
 
-class GearmanConsumer
+class GearmanConsumer extends AbstractConsumer
 {
-    /** @var \GearmanClient */
-    protected $client;
+    /** @var \GearmanWorker */
+    protected $worker;
 
     /** @var Serializer */
     protected $serializer;
 
     /**
-     * The channels this consumer is listening to.  In gearman,
-     * this is the function name.
-     *
+     * The channels this consumer is listening to.  In gearman, this is the function name.
+     * If the supplied array is empty the router default channels are used.
+     * @see Router
      * @see \GearmanWorker::addFunction
-     *
      * @var array
      */
     protected $channels = [];
 
     /**
+     * @link http://php.net/manual/en/gearmanclient.addserver.php
+     * @var array
+     */
+    protected $servers = [];
+
+    /**
+     * @link http://php.net/manual/en/gearmanclient.settimeout.php
+     * @var int
+     */
+    protected $timeout = 5000;
+
+    /**
      * @param ServiceLocator $locator
-     * @param Router $router
+     * @param array $channels
+     * @param array $servers servers in the format [['host' => '127.0.0.1', 'port' => 4730]]
+     * @param int $timeout milliseconds
+     * @param LoggerInterface $logger
      */
-    public function __construct(ServiceLocator $locator, $servers = [], $channels = [], $timeout = 5000)
-    {
-        $this->router = $router ?: new GearmanRouter();
+    public function __construct(
+        ServiceLocator $locator,
+        array $channels = [],
+        array $servers = [],
+        $timeout = 5000,
+        LoggerInterface $logger = null
+    ) {
+        parent::__construct($locator, $logger);
+        $this->channels = $channels
+            ?: [Router::DEFAULT_COMMAND_CHANNEL, Router::DEFAULT_EVENT_CHANNEL, Router::DEFAULT_REQUEST_CHANNEL]
+        ;
+        $this->servers = $servers;
+        $this->timeout = NumberUtils::bound($timeout, 200, 10000);
     }
 
     /**
-     * @see Router::forCommand
-     * @see GearmanClient::doBackground
+     * Creates a gearman worker, sets the timeout and adds the servers.
+     * At least one server must connect successfully otherwise an exception is thrown.
      *
-     * @param Command $command
-     * @throws \Exception
+     * @throws \GearmanException
      */
-    protected function doSendCommand(Command $command)
+    protected function setup()
     {
-        $workload = $this->getSerializer()->serialize($command);
-        $channel = $this->router->forCommand($command);
-        $this->getClient()->doBackground($channel, $workload, $command->getCommandId());
-    }
+        if (null === $this->worker) {
+            $worker = new \GearmanWorker();
+            $worker->setTimeout($this->timeout);
 
-    /**
-     * @see Router::forEvent
-     * @see GearmanClient::doBackground
-     *
-     * @param DomainEvent $domainEvent
-     * @throws \Exception
-     */
-    protected function doSendEvent(DomainEvent $domainEvent)
-    {
-        $workload = $this->getSerializer()->serialize($domainEvent);
-        $channel = $this->router->forEvent($domainEvent);
-        $this->getClient()->doBackground($channel, $workload, $domainEvent->getEventId());
-    }
+            if (empty($this->servers)) {
+                try {
+                    // by default we add the local machine
+                    if (!$worker->addServer()) {
+                        throw new \GearmanException('GearmanWorker::addServer returned false.');
+                    }
+                } catch (\Exception $e) {
+                    throw new \GearmanException('Unable to add local server 127.0.0.1:4730.  ' . $e->getMessage());
+                }
+            } else {
+                shuffle($this->servers);
+                $added = 0;
+                foreach ($this->servers as $server) {
+                    $host = isset($server['host']) ? $server['host'] : '127.0.0.1';
+                    $port = (int) isset($server['port']) ? $server['port'] : 4730;
+                    try {
+                        if ($worker->addServer($host, $port)) {
+                            $added++;
+                        }
+                    } catch (\Exception $e) {
+                        // do nothing, yet.
+                    }
+                }
 
-    /**
-     * Processes the request in memory synchronously.
-     *
-     * @param Request $request
-     * @return Response
-     * @throws \Exception
-     */
-    protected function doSendRequest(Request $request)
-    {
-        return parent::doSendRequest($request);
-    }
+                if (0 === $added) {
+                    throw new \GearmanException(
+                        sprintf('Unable to add any of these servers: %s', json_encode($this->servers))
+                    );
+                }
+            }
 
-    /**
-     * @return \GearmanClient
-     */
-    protected function getClient()
-    {
-        if (null === $this->client) {
-            $client = new \GearmanClient();
-            $client->addServer();
-            $this->client = $client;
+            $worker->addOptions(GEARMAN_WORKER_NON_BLOCKING);
+            $worker->addOptions(GEARMAN_WORKER_GRAB_UNIQ);
+            $this->worker = $worker;
+
+            foreach ($this->channels as $channel) {
+                $this->worker->addFunction($channel, array($this, 'handleJob'));
+            }
         }
-        return $this->client;
+    }
+
+    /**
+     * Runs the gearman worker process.
+     * @link http://php.net/manual/en/gearmanworker.work.php
+     */
+    protected function work()
+    {
+        if (@$this->worker->work() ||
+            $this->worker->returnCode() == GEARMAN_IO_WAIT ||
+            $this->worker->returnCode() == GEARMAN_NO_JOBS
+        ) {
+            if ($this->worker->returnCode() == GEARMAN_SUCCESS) {
+                return;
+            }
+
+            if (!@$this->worker->wait()) {
+                if ($this->worker->returnCode() == GEARMAN_NO_ACTIVE_FDS) {
+                    sleep(5);
+                }
+            }
+        }
+    }
+
+    /**
+     * @param \GearmanJob $job
+     * @return null|string
+     */
+    public function handleJob(\GearmanJob $job)
+    {
+        $this->logger->info(
+            sprintf('Handling job [%s] with id [%s] on channel [%s].', $job->handle(), $job->unique(), $job->functionName())
+        );
+
+        try {
+            $serializer = $this->getSerializer();
+            $message = $serializer->deserialize($job->workload());
+            $result = $this->handleMessage($message);
+            if ($result instanceof Message) {
+                return $serializer->serialize($result);
+            }
+        } catch (\Exception $e) {
+            //$job->sendException($e->getMessage());
+            $this->logger->error(
+                sprintf(
+                    'Failed to handle job [%s] with id [%s] on channel [%s].  %s',
+                    $job->handle(),
+                    $job->unique(),
+                    $job->functionName(),
+                    $e->getMessage()
+                )
+            );
+        }
+    }
+
+    /**
+     * Unregisters all functions from the gearman worker and then nullifies the worker.
+     */
+    protected function teardown()
+    {
+        if ($this->worker) {
+            @$this->worker->unregisterAll();
+            $this->worker = null;
+        }
     }
 
     /**

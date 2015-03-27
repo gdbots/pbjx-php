@@ -121,9 +121,11 @@ class GearmanTransport extends AbstractTransport
             if (empty($this->servers)) {
                 try {
                     // by default we add the local machine
-                    $client->addServer();
+                    if (!$client->addServer()) {
+                        throw new \GearmanException('GearmanClient::addServer returned false.');
+                    }
                 } catch (\Exception $e) {
-                    throw new \GearmanException('Unable to add local server 127.0.0.1:4730.');
+                    throw new \GearmanException('Unable to add local server 127.0.0.1:4730.  ' . $e->getMessage());
                 }
             } else {
                 shuffle($this->servers);
@@ -132,8 +134,9 @@ class GearmanTransport extends AbstractTransport
                     $host = isset($server['host']) ? $server['host'] : '127.0.0.1';
                     $port = (int) isset($server['port']) ? $server['port'] : 4730;
                     try {
-                        $client->addServer($host, $port);
-                        $added++;
+                        if ($client->addServer($host, $port)) {
+                            $added++;
+                        }
                     } catch (\Exception $e) {
                         // do nothing, yet.
                     }

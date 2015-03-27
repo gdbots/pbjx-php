@@ -14,7 +14,7 @@ class GearmanRouter implements Router
      */
     public function forCommand(Command $command)
     {
-        return 'commands';
+        return Router::DEFAULT_COMMAND_CHANNEL;
     }
 
     /**
@@ -22,7 +22,7 @@ class GearmanRouter implements Router
      */
     public function forEvent(DomainEvent $domainEvent)
     {
-        return 'events';
+        return Router::DEFAULT_EVENT_CHANNEL;
     }
 
     /**
@@ -30,6 +30,6 @@ class GearmanRouter implements Router
      */
     public function forRequest(Request $request)
     {
-        return 'requests';
+        return Router::DEFAULT_REQUEST_CHANNEL;
     }
 }

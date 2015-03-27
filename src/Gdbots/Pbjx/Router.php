@@ -14,6 +14,10 @@ use Gdbots\Pbj\Mixin\Request;
  */
 interface Router
 {
+    const DEFAULT_COMMAND_CHANNEL = 'commands';
+    const DEFAULT_EVENT_CHANNEL = 'events';
+    const DEFAULT_REQUEST_CHANNEL = 'requests';
+
     /**
      * @param Command $command
      * @return string
