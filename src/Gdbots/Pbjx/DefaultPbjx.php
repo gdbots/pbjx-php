@@ -45,6 +45,7 @@ class DefaultPbjx implements Pbjx
         $event = $event ?: new PbjxEvent($message);
 
         $schema = $message::schema();
+        $this->dispatcher->dispatch($schema->getCurieWithMajorRev() . $suffix, $event);
         $this->dispatcher->dispatch($schema->getCurie()->toString() . $suffix, $event);
         foreach ($schema->getMixinIds() as $mixinId) {
             $this->dispatcher->dispatch($mixinId . $suffix, $event);
