@@ -51,9 +51,11 @@ abstract class AbstractConsumer
      */
     final public function run($maxRuntime = 300)
     {
-        $maxRuntime = NumberUtils::bound($maxRuntime, 10, 600);
+        $maxRuntime = NumberUtils::bound($maxRuntime, 10, 86400);
         $start = time();
-        $this->logger->notice(sprintf('Starting [%s] consumer.', $this->consumerName));
+        $this->logger->notice(
+            sprintf('Starting [%s] consumer, will run for up to [%d] seconds.', $this->consumerName, $maxRuntime)
+        );
         $this->setup();
 
         $this->isRunning = true;
@@ -64,7 +66,7 @@ abstract class AbstractConsumer
                 $this->work();
             } catch(\Exception $e) {
                 $this->stop();
-                $this->logger->error(
+                $this->logger->critical(
                     sprintf(
                         'Consumer [%s] caught an exception with message [%s], shutting down.',
                         $this->consumerName,
@@ -76,7 +78,11 @@ abstract class AbstractConsumer
 
             if ($this->isRunning && $maxRuntime > 0 && time() - $start > $maxRuntime) {
                 $this->logger->notice(
-                    sprintf('Consumer [%s] has been running too long, shutting down.', $this->consumerName)
+                    sprintf(
+                        'Consumer [%s] has been running for more than [%d] seconds, shutting down.',
+                        $this->consumerName,
+                        $maxRuntime
+                    )
                 );
                 $this->stop();
             }
@@ -183,6 +189,7 @@ abstract class AbstractConsumer
             return;
         }
 
+        $this->boundSignals = true;
         declare(ticks = 1);
 
         if (function_exists('pcntl_signal')) {
@@ -197,7 +204,7 @@ abstract class AbstractConsumer
      */
     private function handleSignals($signo)
     {
-		switch ($signo) {
+        switch ($signo) {
             case SIGINT:
             case SIGTERM:
                 $this->stop();
@@ -206,5 +213,5 @@ abstract class AbstractConsumer
                 );
                 break;
         }
-	}
+    }
 }

@@ -8,11 +8,18 @@ use Gdbots\Tests\Pbjx\Fixtures\GetTimeRequest;
 use Gdbots\Tests\Pbjx\Fixtures\GetTimeRequestHandler;
 use Gdbots\Tests\Pbjx\Fixtures\SayHello;
 use Gdbots\Tests\Pbjx\Fixtures\SayHelloHandler;
+use Gdbots\Tests\Pbjx\Fixtures\SimpleEvent;
 
 $locator = new RegisteringServiceLocator();
 $locator->registerCommandHandler(SayHello::schema()->getCurie(), new SayHelloHandler());
 $locator->registerRequestHandler(GetTimeRequest::schema()->getCurie(), new GetTimeRequestHandler());
 
+$locator->getDispatcher()->addListener(
+    SimpleEvent::schema()->getCurieWithMajorRev(),
+    function (SimpleEvent $publishedEvent) {
+        echo $publishedEvent;
+    }
+);
+
 $consumer = new GearmanConsumer($locator);
 $consumer->run();
-

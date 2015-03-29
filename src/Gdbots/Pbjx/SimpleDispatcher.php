@@ -15,8 +15,11 @@ final class SimpleDispatcher extends EventDispatcher implements Dispatcher
     /**
      * {@inheritdoc}
      */
+    /*
     public function dispatch($eventName, Event $event = null)
     {
+        echo $eventName . PHP_EOL;
         return parent::dispatch($eventName, $event);
     }
+    */
 }

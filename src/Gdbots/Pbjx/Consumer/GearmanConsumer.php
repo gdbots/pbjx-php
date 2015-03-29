@@ -10,6 +10,10 @@ use Gdbots\Pbjx\Router;
 use Gdbots\Pbjx\ServiceLocator;
 use Psr\Log\LoggerInterface;
 
+/**
+ * todo: add setId support for workers
+ * @link http://php.net/manual/en/gearmanworker.setid.php
+ */
 class GearmanConsumer extends AbstractConsumer
 {
     /** @var \GearmanWorker */
@@ -34,7 +38,7 @@ class GearmanConsumer extends AbstractConsumer
     protected $servers = [];
 
     /**
-     * @link http://php.net/manual/en/gearmanclient.settimeout.php
+     * @link http://php.net/manual/en/gearmanworker.settimeout.php
      * @var int
      */
     protected $timeout = 5000;
@@ -42,7 +46,7 @@ class GearmanConsumer extends AbstractConsumer
     /**
      * @param ServiceLocator $locator
      * @param array $channels
-     * @param array $servers servers in the format [['host' => '127.0.0.1', 'port' => 4730]]
+     * @param array $servers format [['host' => '127.0.0.1', 'port' => 4730]]
      * @param int $timeout milliseconds
      * @param LoggerInterface $logger
      */
@@ -108,6 +112,7 @@ class GearmanConsumer extends AbstractConsumer
             $worker->addOptions(GEARMAN_WORKER_GRAB_UNIQ);
             $this->worker = $worker;
 
+            shuffle($this->channels);
             foreach ($this->channels as $channel) {
                 $this->worker->addFunction($channel, array($this, 'handleJob'));
             }
@@ -143,7 +148,12 @@ class GearmanConsumer extends AbstractConsumer
     public function handleJob(\GearmanJob $job)
     {
         $this->logger->info(
-            sprintf('Handling job [%s] with id [%s] on channel [%s].', $job->handle(), $job->unique(), $job->functionName())
+            sprintf(
+                'Handling job [%s] with id [%s] on channel [%s].',
+                $job->handle(),
+                $job->unique(),
+                $job->functionName()
+            )
         );
 
         try {
@@ -154,7 +164,6 @@ class GearmanConsumer extends AbstractConsumer
                 return $serializer->serialize($result);
             }
         } catch (\Exception $e) {
-            //$job->sendException($e->getMessage());
             $this->logger->error(
                 sprintf(
                     'Failed to handle job [%s] with id [%s] on channel [%s].  %s',
@@ -165,6 +174,8 @@ class GearmanConsumer extends AbstractConsumer
                 )
             );
         }
+
+        return null;
     }
 
     /**

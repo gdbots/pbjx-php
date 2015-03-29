@@ -37,7 +37,7 @@ class GearmanTransport extends AbstractTransport
 
     /**
      * @param ServiceLocator $locator
-     * @param array $servers servers in the format [['host' => '127.0.0.1', 'port' => 4730]]
+     * @param array $servers format [['host' => '127.0.0.1', 'port' => 4730]]
      * @param int $timeout milliseconds
      * @param Router $router
      */
