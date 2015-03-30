@@ -7,10 +7,11 @@ use Gdbots\Pbj\Mixin\DomainEvent;
 use Gdbots\Pbj\MessageResolver;
 use Gdbots\Pbjx\Domain\Event\EventExecutionFailedV1;
 use Gdbots\Pbjx\Event\BusExceptionEvent;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 class DefaultEventBus implements EventBus
 {
-    /** @var Dispatcher */
+    /** @var EventDispatcherInterface */
     protected $dispatcher;
 
     /** @var ServiceLocator */

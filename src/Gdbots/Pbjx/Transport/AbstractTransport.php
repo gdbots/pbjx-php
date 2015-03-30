@@ -8,17 +8,17 @@ use Gdbots\Pbj\Mixin\Command;
 use Gdbots\Pbj\Mixin\DomainEvent;
 use Gdbots\Pbj\Mixin\Request;
 use Gdbots\Pbj\Mixin\Response;
-use Gdbots\Pbjx\Dispatcher;
 use Gdbots\Pbjx\Domain\Request\RequestHandlingFailedV1;
 use Gdbots\Pbjx\Event\TransportEvent;
 use Gdbots\Pbjx\Event\TransportExceptionEvent;
 use Gdbots\Pbjx\PbjxEvents;
 use Gdbots\Pbjx\ServiceLocator;
 use Gdbots\Pbjx\Transport;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 abstract class AbstractTransport implements Transport
 {
-    /** @var Dispatcher */
+    /** @var EventDispatcherInterface */
     protected $dispatcher;
 
     /** @var ServiceLocator */

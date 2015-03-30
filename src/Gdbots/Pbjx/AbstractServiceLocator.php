@@ -2,12 +2,15 @@
 
 namespace Gdbots\Pbjx;
 
+use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+
 abstract class AbstractServiceLocator implements ServiceLocator
 {
     /** @var Pbjx */
     private $pbjx;
 
-    /** @var Dispatcher */
+    /** @var EventDispatcherInterface */
     private $dispatcher;
 
     /** @var CommandBus */
@@ -56,11 +59,11 @@ abstract class AbstractServiceLocator implements ServiceLocator
     }
 
     /**
-     * @return Dispatcher
+     * @return EventDispatcherInterface
      */
     protected function doGetDispatcher()
     {
-        return new SimpleDispatcher();
+        return new EventDispatcher();
     }
 
     /**

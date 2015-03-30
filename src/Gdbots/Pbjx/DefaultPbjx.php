@@ -14,10 +14,11 @@ use Gdbots\Pbjx\Event\PostResponseEvent;
 use Gdbots\Pbjx\Exception\InvalidArgumentException;
 use Gdbots\Pbjx\Exception\RequestHandlingFailed;
 use React\Promise\Deferred;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 class DefaultPbjx implements Pbjx
 {
-    /** @var Dispatcher */
+    /** @var EventDispatcherInterface */
     protected $dispatcher;
 
     /** @var ServiceLocator */

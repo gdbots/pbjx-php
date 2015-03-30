@@ -6,10 +6,11 @@ use Gdbots\Pbjx\Event\BusExceptionEvent;
 use Gdbots\Pbjx\Event\TransportExceptionEvent;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 class DefaultExceptionHandler implements ExceptionHandler
 {
-    /** @var Dispatcher */
+    /** @var EventDispatcherInterface */
     protected $dispatcher;
 
     /** @var ServiceLocator */

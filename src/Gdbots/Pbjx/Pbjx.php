@@ -14,8 +14,7 @@ use React\Promise\ExtendedPromiseInterface;
 interface Pbjx
 {
     /**
-     * Triggers in-process events using the dispatcher which will announce
-     * an event for each of:
+     * Triggers in-process events using the dispatcher which will announce an event for each of:
      *
      * curie:v[MAJOR VERSION].suffix
      * curie.suffix

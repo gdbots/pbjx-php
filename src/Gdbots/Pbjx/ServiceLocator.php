@@ -3,6 +3,7 @@
 namespace Gdbots\Pbjx;
 
 use Gdbots\Pbj\MessageCurie;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 interface ServiceLocator
 {
@@ -12,7 +13,7 @@ interface ServiceLocator
     public function getPbjx();
 
     /**
-     * @return Dispatcher
+     * @return EventDispatcherInterface
      */
     public function getDispatcher();
 
