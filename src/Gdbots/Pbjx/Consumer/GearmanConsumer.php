@@ -6,6 +6,7 @@ use Gdbots\Common\Util\NumberUtils;
 use Gdbots\Pbj\Message;
 use Gdbots\Pbj\Serializer\PhpSerializer;
 use Gdbots\Pbj\Serializer\Serializer;
+use Gdbots\Pbjx\PbjxEvents;
 use Gdbots\Pbjx\Router;
 use Gdbots\Pbjx\ServiceLocator;
 use Psr\Log\LoggerInterface;
@@ -160,10 +161,16 @@ class GearmanConsumer extends AbstractConsumer
             $serializer = $this->getSerializer();
             $message = $serializer->deserialize($job->workload());
             $result = $this->handleMessage($message);
+            $this->locator->getDispatcher()->dispatch(PbjxEvents::CONSUMER_AFTER_HANDLE_MESSAGE);
+
             if ($result instanceof Message) {
                 return $serializer->serialize($result);
             }
+
+            return null;
+
         } catch (\Exception $e) {
+            $job->sendFail();
             $this->logger->error(
                 sprintf(
                     'Failed to handle job [%s] with id [%s] on channel [%s].  %s',

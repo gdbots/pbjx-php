@@ -10,6 +10,7 @@ use Gdbots\Pbj\Mixin\Command;
 use Gdbots\Pbj\Mixin\DomainEvent;
 use Gdbots\Pbj\Mixin\Request;
 use Gdbots\Pbj\Mixin\Response;
+use Gdbots\Pbjx\PbjxEvents;
 use Gdbots\Pbjx\ServiceLocator;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -40,7 +41,7 @@ abstract class AbstractConsumer
     {
         $this->locator = $locator;
         $this->logger = $logger ?: new NullLogger();
-        $this->consumerName = StringUtils::toSlugFromCamel(
+        $this->consumerName = StringUtils::toSnakeFromCamel(
             str_replace('Consumer', '', ClassUtils::getShortName($this))
         );
     }
@@ -89,6 +90,7 @@ abstract class AbstractConsumer
         } while ($this->isRunning());
 
         $this->teardown();
+        $this->locator->getDispatcher()->dispatch(PbjxEvents::CONSUMER_AFTER_TEARDOWN);
         $this->stop();
     }
 

@@ -34,7 +34,7 @@ abstract class AbstractTransport implements Transport
     {
         $this->locator = $locator;
         $this->dispatcher = $this->locator->getDispatcher();
-        $this->transportName = StringUtils::toSlugFromCamel(
+        $this->transportName = StringUtils::toSnakeFromCamel(
             str_replace('Transport', '', ClassUtils::getShortName($this))
         );
     }
