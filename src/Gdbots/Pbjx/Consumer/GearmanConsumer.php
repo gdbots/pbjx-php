@@ -62,7 +62,6 @@ class GearmanConsumer extends AbstractConsumer
         $this->channels = $channels
             ?: [Router::DEFAULT_COMMAND_CHANNEL, Router::DEFAULT_EVENT_CHANNEL, Router::DEFAULT_REQUEST_CHANNEL]
         ;
-        $this->channels = array_map(function ($channel) { return str_replace('-', '_', $channel); }, $this->channels);
         $this->servers = $servers;
         $this->timeout = NumberUtils::bound($timeout, 200, 10000);
     }
