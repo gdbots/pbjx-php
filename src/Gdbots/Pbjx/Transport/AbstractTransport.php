@@ -120,7 +120,7 @@ abstract class AbstractTransport implements Transport
              * fallback handling if the transport is down
              * todo: review, should we just die here?
              */
-            if ('in-memory' !== $this->transportName) {
+            if ('in_memory' !== $this->transportName) {
                 try {
                     $response = $this->locator->getRequestBus()->receiveRequest($request);
                 } catch (\Exception $e) {

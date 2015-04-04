@@ -10,11 +10,28 @@ use Gdbots\Pbjx\Router;
 class GearmanRouter implements Router
 {
     /**
+     * Prefixes the channel the work will be routed to.  This is useful
+     * for routing all messages to appname_env_pbjx_commands|events|request
+     * when you're running multiple environments or apps on a single gearmand.
+     *
+     * @var string
+     */
+    protected $prefix;
+
+    /**
+     * @param string|null $prefix
+     */
+    public function __construct($prefix = null)
+    {
+        $this->prefix = $prefix;
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function forCommand(Command $command)
     {
-        return Router::DEFAULT_COMMAND_CHANNEL;
+        return $this->prefix . Router::DEFAULT_COMMAND_CHANNEL;
     }
 
     /**
@@ -22,7 +39,7 @@ class GearmanRouter implements Router
      */
     public function forEvent(DomainEvent $domainEvent)
     {
-        return Router::DEFAULT_EVENT_CHANNEL;
+        return $this->prefix . Router::DEFAULT_EVENT_CHANNEL;
     }
 
     /**
@@ -30,6 +47,7 @@ class GearmanRouter implements Router
      */
     public function forRequest(Request $request)
     {
-        return Router::DEFAULT_REQUEST_CHANNEL;
+        return $this->prefix . Router::DEFAULT_REQUEST_CHANNEL;
     }
 }
+
