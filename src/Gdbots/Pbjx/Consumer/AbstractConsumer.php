@@ -80,6 +80,7 @@ abstract class AbstractConsumer
             }
 
             if ($this->isRunning && $maxRuntime > 0 && time() - $start > $maxRuntime) {
+                $this->stop();
                 $this->logger->notice(
                     sprintf(
                         'Consumer [%s] has been running for more than [%d] seconds, shutting down.',
@@ -87,7 +88,7 @@ abstract class AbstractConsumer
                         $maxRuntime
                     )
                 );
-                $this->stop();
+                break;
             }
         } while ($this->isRunning());
 
@@ -162,7 +163,7 @@ abstract class AbstractConsumer
     /**
      * @param Command $command
      */
-    final protected function handleCommand(Command $command)
+    private function handleCommand(Command $command)
     {
         $this->locator->getCommandBus()->receiveCommand($command);
     }
@@ -170,7 +171,7 @@ abstract class AbstractConsumer
     /**
      * @param DomainEvent $domainEvent
      */
-    final protected function handleEvent(DomainEvent $domainEvent)
+    private function handleEvent(DomainEvent $domainEvent)
     {
         $this->locator->getEventBus()->receiveEvent($domainEvent);
     }
@@ -179,7 +180,7 @@ abstract class AbstractConsumer
      * @param Request $request
      * @return Response
      */
-    final protected function handleRequest(Request $request)
+    private function handleRequest(Request $request)
     {
         return $this->locator->getRequestBus()->receiveRequest($request);
     }
