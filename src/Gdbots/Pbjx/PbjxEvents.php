@@ -80,12 +80,28 @@ final class PbjxEvents
     const TRANSPORT_SEND_EXCEPTION = 'gdbots.pbjx.transport.send_exception';
 
     /**
+     * Occurs before a job/task/message has been handled by a consumer.
+     *
+     * @see Symfony\Component\EventDispatcher\Event
+     * @var string
+     */
+    const CONSUMER_BEFORE_HANDLE = 'gdbots.pbjx.consumer.before_handle';
+
+    /**
      * Occurs after a job/task/message has been handled by a consumer.
      *
      * @see Symfony\Component\EventDispatcher\Event
      * @var string
      */
-    const CONSUMER_AFTER_HANDLE_MESSAGE = 'gdbots.pbjx.consumer.after_handle_message';
+    const CONSUMER_AFTER_HANDLE = 'gdbots.pbjx.consumer.after_handle';
+
+    /**
+     * Occurs if an exception is thrown during message handling.
+     *
+     * @see Symfony\Component\EventDispatcher\Event
+     * @var string
+     */
+    const CONSUMER_HANDLING_EXCEPTION = 'gdbots.pbjx.consumer.handling_exception';
 
     /**
      * Occurs after the consumer has stopped and finished its teardown.

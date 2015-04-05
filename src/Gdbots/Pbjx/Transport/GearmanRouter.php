@@ -9,6 +9,10 @@ use Gdbots\Pbjx\Router;
 
 class GearmanRouter implements Router
 {
+    const DEFAULT_COMMAND_CHANNEL = 'pbjx_commands';
+    const DEFAULT_EVENT_CHANNEL = 'pbjx_events';
+    const DEFAULT_REQUEST_CHANNEL = 'pbjx_requests';
+
     /**
      * Prefixes the channel the work will be routed to.  This is useful
      * for routing all messages to appname_env_pbjx_commands|events|request
@@ -31,7 +35,7 @@ class GearmanRouter implements Router
      */
     public function forCommand(Command $command)
     {
-        return $this->prefix . Router::DEFAULT_COMMAND_CHANNEL;
+        return $this->prefix . static::DEFAULT_COMMAND_CHANNEL;
     }
 
     /**
@@ -39,7 +43,7 @@ class GearmanRouter implements Router
      */
     public function forEvent(DomainEvent $domainEvent)
     {
-        return $this->prefix . Router::DEFAULT_EVENT_CHANNEL;
+        return $this->prefix . static::DEFAULT_EVENT_CHANNEL;
     }
 
     /**
@@ -47,7 +51,7 @@ class GearmanRouter implements Router
      */
     public function forRequest(Request $request)
     {
-        return $this->prefix . Router::DEFAULT_REQUEST_CHANNEL;
+        return $this->prefix . static::DEFAULT_REQUEST_CHANNEL;
     }
 }
 

@@ -61,6 +61,7 @@ abstract class AbstractConsumer
 
         $this->isRunning = true;
         $this->bindSignals();
+        $dispatcher = $this->locator->getDispatcher();
 
         do {
             try {
@@ -74,6 +75,7 @@ abstract class AbstractConsumer
                         $e->getMessage()
                     )
                 );
+                $dispatcher->dispatch(PbjxEvents::CONSUMER_HANDLING_EXCEPTION);
                 break;
             }
 
@@ -90,7 +92,7 @@ abstract class AbstractConsumer
         } while ($this->isRunning());
 
         $this->teardown();
-        $this->locator->getDispatcher()->dispatch(PbjxEvents::CONSUMER_AFTER_TEARDOWN);
+        $dispatcher->dispatch(PbjxEvents::CONSUMER_AFTER_TEARDOWN);
         $this->stop();
     }
 

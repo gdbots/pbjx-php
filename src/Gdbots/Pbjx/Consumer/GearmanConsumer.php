@@ -7,14 +7,10 @@ use Gdbots\Pbj\Message;
 use Gdbots\Pbj\Serializer\PhpSerializer;
 use Gdbots\Pbj\Serializer\Serializer;
 use Gdbots\Pbjx\PbjxEvents;
-use Gdbots\Pbjx\Router;
 use Gdbots\Pbjx\ServiceLocator;
+use Gdbots\Pbjx\Transport\GearmanRouter;
 use Psr\Log\LoggerInterface;
 
-/**
- * todo: add setId support for workers
- * @link http://php.net/manual/en/gearmanworker.setid.php
- */
 class GearmanConsumer extends AbstractConsumer
 {
     /** @var \GearmanWorker */
@@ -45,7 +41,14 @@ class GearmanConsumer extends AbstractConsumer
     protected $timeout = 5000;
 
     /**
+     * @link http://php.net/manual/en/gearmanworker.setid.php
+     * @var string
+     */
+    protected $workerId;
+
+    /**
      * @param ServiceLocator $locator
+     * @param string|null $workerId
      * @param array $channels
      * @param array $servers format [['host' => '127.0.0.1', 'port' => 4730]]
      * @param int $timeout milliseconds
@@ -53,14 +56,20 @@ class GearmanConsumer extends AbstractConsumer
      */
     public function __construct(
         ServiceLocator $locator,
-        array $channels = [],
-        array $servers = [],
+        $workerId = null,
+        array $channels = null,
+        array $servers = null,
         $timeout = 5000,
         LoggerInterface $logger = null
     ) {
         parent::__construct($locator, $logger);
+        $this->workerId = $workerId;
         $this->channels = $channels
-            ?: [Router::DEFAULT_COMMAND_CHANNEL, Router::DEFAULT_EVENT_CHANNEL, Router::DEFAULT_REQUEST_CHANNEL]
+            ?: [
+                GearmanRouter::DEFAULT_COMMAND_CHANNEL,
+                GearmanRouter::DEFAULT_EVENT_CHANNEL,
+                GearmanRouter::DEFAULT_REQUEST_CHANNEL
+            ]
         ;
         $this->servers = $servers;
         $this->timeout = NumberUtils::bound($timeout, 200, 10000);
@@ -111,6 +120,9 @@ class GearmanConsumer extends AbstractConsumer
 
             $worker->addOptions(GEARMAN_WORKER_NON_BLOCKING);
             $worker->addOptions(GEARMAN_WORKER_GRAB_UNIQ);
+            if (null !== $this->workerId && is_callable([$worker, 'setId'])) {
+                $worker->setId($this->workerId);
+            }
             $this->worker = $worker;
 
             shuffle($this->channels);
@@ -145,41 +157,38 @@ class GearmanConsumer extends AbstractConsumer
     /**
      * @param \GearmanJob $job
      * @return null|string
+     * @throws \Exception
      */
     public function handleJob(\GearmanJob $job)
     {
         $this->logger->info(
             sprintf(
-                'Handling job [%s] with id [%s] on channel [%s].',
+                'Handling job [%s] with id [%s] on channel [%s], worker id [%s].',
                 $job->handle(),
                 $job->unique(),
-                $job->functionName()
+                $job->functionName(),
+                $this->workerId
             )
         );
 
+        $dispatcher = $this->locator->getDispatcher();
+        $serializer = $this->getSerializer();
+
         try {
-            $serializer = $this->getSerializer();
             $message = $serializer->deserialize($job->workload());
+            $dispatcher->dispatch(PbjxEvents::CONSUMER_BEFORE_HANDLE);
             $result = $this->handleMessage($message);
-            $this->locator->getDispatcher()->dispatch(PbjxEvents::CONSUMER_AFTER_HANDLE_MESSAGE);
+            $dispatcher->dispatch(PbjxEvents::CONSUMER_AFTER_HANDLE);
 
             if ($result instanceof Message) {
                 return $serializer->serialize($result);
             }
-
-            return null;
-
         } catch (\Exception $e) {
             $job->sendFail();
             $this->logger->error(
-                sprintf(
-                    'Failed to handle job [%s] with id [%s] on channel [%s].  %s',
-                    $job->handle(),
-                    $job->unique(),
-                    $job->functionName(),
-                    $e->getMessage()
-                )
+                sprintf('Failed to handle job [%s] with workload: %s', $job->handle(), $job->workload())
             );
+            throw $e;
         }
 
         return null;

@@ -21,5 +21,5 @@ $locator->getDispatcher()->addListener(
     }
 );
 
-$consumer = new GearmanConsumer($locator);
+$consumer = new GearmanConsumer($locator, 'gdbots_pbjx_test');
 $consumer->run();
