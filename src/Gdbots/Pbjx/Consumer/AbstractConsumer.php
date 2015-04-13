@@ -207,7 +207,7 @@ abstract class AbstractConsumer
     /**
      * @param int $signo
      */
-    private function handleSignals($signo)
+    final public function handleSignals($signo)
     {
         switch ($signo) {
             case SIGINT:
