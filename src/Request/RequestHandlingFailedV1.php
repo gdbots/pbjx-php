@@ -15,9 +15,6 @@ final class RequestHandlingFailedV1 extends AbstractMessage implements Response
 {
     use ResponseTrait;
 
-    const FAILED_REQUEST_FIELD_NAME = 'failed_request';
-    const REASON_FIELD_NAME = 'reason';
-
     /**
      * @return Schema
      */

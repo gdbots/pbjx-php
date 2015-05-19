@@ -14,9 +14,6 @@ final class EventExecutionFailedV1 extends AbstractMessage implements DomainEven
 {
     use EventTrait;
 
-    const FAILED_EVENT_FIELD_NAME = 'failed_event';
-    const REASON_FIELD_NAME = 'reason';
-
     /**
      * @return Schema
      */
