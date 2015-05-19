@@ -2,6 +2,11 @@
 This changelog references the relevant changes done in 0.x versions.
 
 
+## v0.2.0
+* Use psr4 autoloading.
+* Update all references to Command, DomainEvent, Entity, Request and Response interfaces to new locations.
+
+
 ## v0.1.1
 * Rename composer package to `gdbots/pbjx`.
 
