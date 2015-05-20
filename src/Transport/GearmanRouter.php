@@ -2,9 +2,9 @@
 
 namespace Gdbots\Pbjx\Transport;
 
-use Gdbots\Pbj\Command;
+use Gdbots\Pbj\DomainCommand;
 use Gdbots\Pbj\DomainEvent;
-use Gdbots\Pbj\Request;
+use Gdbots\Pbj\DomainRequest;
 use Gdbots\Pbjx\Router;
 
 class GearmanRouter implements Router
@@ -33,7 +33,7 @@ class GearmanRouter implements Router
     /**
      * {@inheritdoc}
      */
-    public function forCommand(Command $command)
+    public function forCommand(DomainCommand $command)
     {
         return $this->prefix . static::DEFAULT_COMMAND_CHANNEL;
     }
@@ -49,7 +49,7 @@ class GearmanRouter implements Router
     /**
      * {@inheritdoc}
      */
-    public function forRequest(Request $request)
+    public function forRequest(DomainRequest $request)
     {
         return $this->prefix . static::DEFAULT_REQUEST_CHANNEL;
     }

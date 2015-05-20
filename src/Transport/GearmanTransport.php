@@ -3,10 +3,10 @@
 namespace Gdbots\Pbjx\Transport;
 
 use Gdbots\Common\Util\NumberUtils;
-use Gdbots\Pbj\Command;
+use Gdbots\Pbj\DomainCommand;
 use Gdbots\Pbj\DomainEvent;
-use Gdbots\Pbj\Request;
-use Gdbots\Pbj\Response;
+use Gdbots\Pbj\DomainRequest;
+use Gdbots\Pbj\DomainResponse;
 use Gdbots\Pbj\Serializer\PhpSerializer;
 use Gdbots\Pbj\Serializer\Serializer;
 use Gdbots\Pbjx\Router;
@@ -53,10 +53,10 @@ class GearmanTransport extends AbstractTransport
      * @see Router::forCommand
      * @see GearmanClient::doBackground
      *
-     * @param Command $command
+     * @param DomainCommand $command
      * @throws \Exception
      */
-    protected function doSendCommand(Command $command)
+    protected function doSendCommand(DomainCommand $command)
     {
         $workload = $this->getSerializer()->serialize($command);
         $channel = $this->router->forCommand($command);
@@ -86,11 +86,11 @@ class GearmanTransport extends AbstractTransport
     /**
      * Processes the request in memory synchronously.
      *
-     * @param Request $request
-     * @return Response
+     * @param DomainRequest $request
+     * @return DomainResponse
      * @throws \Exception
      */
-    protected function doSendRequest(Request $request)
+    protected function doSendRequest(DomainRequest $request)
     {
         $workload = $this->getSerializer()->serialize($request);
         $channel = $this->router->forRequest($request);

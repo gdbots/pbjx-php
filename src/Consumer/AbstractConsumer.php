@@ -5,11 +5,11 @@ namespace Gdbots\Pbjx\Consumer;
 use Gdbots\Common\Util\ClassUtils;
 use Gdbots\Common\Util\NumberUtils;
 use Gdbots\Common\Util\StringUtils;
-use Gdbots\Pbj\Command;
+use Gdbots\Pbj\DomainCommand;
 use Gdbots\Pbj\DomainEvent;
+use Gdbots\Pbj\DomainRequest;
+use Gdbots\Pbj\DomainResponse;
 use Gdbots\Pbj\Message;
-use Gdbots\Pbj\Request;
-use Gdbots\Pbj\Response;
 use Gdbots\Pbjx\PbjxEvents;
 use Gdbots\Pbjx\ServiceLocator;
 use Psr\Log\LoggerInterface;
@@ -145,7 +145,7 @@ abstract class AbstractConsumer
      */
     final protected function handleMessage(Message $message)
     {
-        if ($message instanceof Command) {
+        if ($message instanceof DomainCommand) {
             $this->handleCommand($message);
             return null;
         }
@@ -155,15 +155,15 @@ abstract class AbstractConsumer
             return null;
         }
 
-        if ($message instanceof Request) {
+        if ($message instanceof DomainRequest) {
             return $this->handleRequest($message);
         }
     }
 
     /**
-     * @param Command $command
+     * @param DomainCommand $command
      */
-    private function handleCommand(Command $command)
+    private function handleCommand(DomainCommand $command)
     {
         $this->locator->getCommandBus()->receiveCommand($command);
     }
@@ -177,10 +177,10 @@ abstract class AbstractConsumer
     }
 
     /**
-     * @param Request $request
-     * @return Response
+     * @param DomainRequest $request
+     * @return DomainResponse
      */
-    private function handleRequest(Request $request)
+    private function handleRequest(DomainRequest $request)
     {
         return $this->locator->getRequestBus()->receiveRequest($request);
     }

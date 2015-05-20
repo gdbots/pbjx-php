@@ -2,20 +2,20 @@
 
 namespace Gdbots\Pbjx\Exception;
 
-use Gdbots\Pbj\Command;
-use Gdbots\Pbj\Request;
+use Gdbots\Pbj\DomainCommand;
+use Gdbots\Pbj\DomainRequest;
 use Gdbots\Pbjx\CommandHandler;
 use Gdbots\Pbjx\RequestHandler;
 
 final class InvalidHandler extends \UnexpectedValueException implements GdbotsPbjxException
 {
     /**
-     * @param Command $command
+     * @param DomainCommand $command
      * @param CommandHandler $handler
      * @param string $message
      * @return static
      */
-    public static function forCommand(Command $command, CommandHandler $handler, $message = '')
+    public static function forCommand(DomainCommand $command, CommandHandler $handler, $message = '')
     {
         return new static(
             sprintf(
@@ -28,12 +28,12 @@ final class InvalidHandler extends \UnexpectedValueException implements GdbotsPb
     }
 
     /**
-     * @param Request $request
+     * @param DomainRequest $request
      * @param RequestHandler $handler
      * @param string $message
      * @return static
      */
-    public static function forRequest(Request $request, RequestHandler $handler, $message = '')
+    public static function forRequest(DomainRequest $request, RequestHandler $handler, $message = '')
     {
         return new static(
             sprintf(

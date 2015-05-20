@@ -2,28 +2,28 @@
 
 namespace Gdbots\Pbjx\Event;
 
-use Gdbots\Pbj\Request;
-use Gdbots\Pbj\Response;
+use Gdbots\Pbj\DomainRequest;
+use Gdbots\Pbj\DomainResponse;
 use Gdbots\Pbjx\Exception\LogicException;
 
 class GetResponseEvent extends PbjxEvent
 {
-    /** @var Request */
+    /** @var DomainRequest */
     protected $message;
 
-    /** @var Response */
+    /** @var DomainResponse */
     protected $response;
 
     /**
-     * @param Request $request
+     * @param DomainRequest $request
      */
-    public function __construct(Request $request)
+    public function __construct(DomainRequest $request)
     {
         parent::__construct($request);
     }
 
     /**
-     * @return Request
+     * @return DomainRequest
      */
     public function getRequest()
     {
@@ -39,7 +39,7 @@ class GetResponseEvent extends PbjxEvent
     }
 
     /**
-     * @return Response
+     * @return DomainResponse
      */
     public function getResponse()
     {
@@ -47,10 +47,10 @@ class GetResponseEvent extends PbjxEvent
     }
 
     /**
-     * @param Response $response
+     * @param DomainResponse $response
      * @throws LogicException
      */
-    public function setResponse(Response $response)
+    public function setResponse(DomainResponse $response)
     {
         if ($this->hasResponse()) {
             throw new LogicException('Response can only be set one time.');

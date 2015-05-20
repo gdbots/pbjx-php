@@ -2,10 +2,10 @@
 
 namespace Gdbots\Pbjx;
 
-use Gdbots\Pbj\Command;
+use Gdbots\Pbj\DomainCommand;
 use Gdbots\Pbj\DomainEvent;
+use Gdbots\Pbj\DomainRequest;
 use Gdbots\Pbj\Message;
-use Gdbots\Pbj\Request;
 use Gdbots\Pbjx\Event\BusExceptionEvent;
 use Gdbots\Pbjx\Event\GetResponseEvent;
 use Gdbots\Pbjx\Event\PbjxEvent;
@@ -56,7 +56,7 @@ class DefaultPbjx implements Pbjx
     /**
      * {@inheritdoc}
      */
-    public function send(Command $command)
+    public function send(DomainCommand $command)
     {
         $event = new PbjxEvent($command);
         $this->trigger($command, PbjxEvents::SUFFIX_VALIDATE, $event);
@@ -75,7 +75,7 @@ class DefaultPbjx implements Pbjx
     /**
      * {@inheritdoc}
      */
-    public function request(Request $request)
+    public function request(DomainRequest $request)
     {
         $deferred = new Deferred();
 

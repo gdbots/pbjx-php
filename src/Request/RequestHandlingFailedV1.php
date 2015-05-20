@@ -3,15 +3,15 @@
 namespace Gdbots\Pbjx\Request;
 
 use Gdbots\Pbj\AbstractMessage;
+use Gdbots\Pbj\DomainRequest;
+use Gdbots\Pbj\DomainResponse;
 use Gdbots\Pbj\FieldBuilder as Fb;
 use Gdbots\Pbj\Mixin\ResponseMixin;
 use Gdbots\Pbj\Mixin\ResponseTrait;
-use Gdbots\Pbj\Request;
-use Gdbots\Pbj\Response;
 use Gdbots\Pbj\Schema;
 use Gdbots\Pbj\Type as T;
 
-final class RequestHandlingFailedV1 extends AbstractMessage implements Response
+final class RequestHandlingFailedV1 extends AbstractMessage implements DomainResponse
 {
     use ResponseTrait;
 
@@ -24,7 +24,7 @@ final class RequestHandlingFailedV1 extends AbstractMessage implements Response
             [
                 Fb::create('failed_request', T\MessageType::create())
                     ->required()
-                    ->className('Gdbots\Pbj\Request')
+                    ->className('Gdbots\Pbj\DomainRequest')
                     ->build(),
                 Fb::create('reason', T\TextType::create())
                     ->build(),
@@ -44,7 +44,7 @@ final class RequestHandlingFailedV1 extends AbstractMessage implements Response
     }
 
     /**
-     * @return Request
+     * @return DomainRequest
      */
     public function getFailedRequest()
     {
@@ -52,10 +52,10 @@ final class RequestHandlingFailedV1 extends AbstractMessage implements Response
     }
 
     /**
-     * @param Request $request
+     * @param DomainRequest $request
      * @return self
      */
-    public function setFailedRequest(Request $request)
+    public function setFailedRequest(DomainRequest $request)
     {
         return $this->setSingleValue('failed_request', $request);
     }

@@ -2,7 +2,7 @@
 
 namespace Gdbots\Pbjx;
 
-use Gdbots\Pbj\Command;
+use Gdbots\Pbj\DomainCommand;
 use Gdbots\Pbjx\Event\BusExceptionEvent;
 use Gdbots\Pbjx\Event\PbjxEvent;
 use Gdbots\Pbjx\Exception\InvalidHandler;
@@ -35,7 +35,7 @@ class DefaultCommandBus implements CommandBus
     /**
      * {@inheritdoc}
      */
-    public function send(Command $command)
+    public function send(DomainCommand $command)
     {
         $this->transport->sendCommand($command->freeze());
     }
@@ -43,7 +43,7 @@ class DefaultCommandBus implements CommandBus
     /**
      * {@inheritdoc}
      */
-    public function receiveCommand(Command $command)
+    public function receiveCommand(DomainCommand $command)
     {
         $this->handleCommand($command->freeze());
     }
@@ -58,9 +58,9 @@ class DefaultCommandBus implements CommandBus
      * allowing an exception to just bubble up and break the service handling commands
      * will not be seen by anyone except an error log.
      *
-     * @param Command $command
+     * @param DomainCommand $command
      */
-    final protected function handleCommand(Command $command)
+    final protected function handleCommand(DomainCommand $command)
     {
         $curie = $command::schema()->getCurie();
         $curieStr = $curie->toString();

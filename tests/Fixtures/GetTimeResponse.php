@@ -3,15 +3,15 @@
 namespace Gdbots\Tests\Pbjx\Fixtures;
 
 use Gdbots\Pbj\AbstractMessage;
+use Gdbots\Pbj\DomainResponse;
 use Gdbots\Pbj\FieldBuilder as Fb;
 use Gdbots\Pbj\MessageResolver;
 use Gdbots\Pbj\Mixin\ResponseMixin;
 use Gdbots\Pbj\Mixin\ResponseTrait;
-use Gdbots\Pbj\Response;
 use Gdbots\Pbj\Schema;
 use Gdbots\Pbj\Type as T;
 
-final class GetTimeResponse extends AbstractMessage implements Response
+final class GetTimeResponse extends AbstractMessage implements DomainResponse
 {
     use ResponseTrait;
 

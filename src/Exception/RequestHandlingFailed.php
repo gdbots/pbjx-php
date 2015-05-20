@@ -2,7 +2,7 @@
 
 namespace Gdbots\Pbjx\Exception;
 
-use Gdbots\Pbj\Request;
+use Gdbots\Pbj\DomainRequest;
 use Gdbots\Pbjx\Request\RequestHandlingFailedV1;
 
 class RequestHandlingFailed extends \RuntimeException implements GdbotsPbjxException
@@ -25,7 +25,7 @@ class RequestHandlingFailed extends \RuntimeException implements GdbotsPbjxExcep
     }
 
     /**
-     * @return Request
+     * @return DomainRequest
      */
     public function getRequest()
     {

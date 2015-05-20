@@ -4,10 +4,10 @@ namespace Gdbots\Pbjx\Transport;
 
 use Gdbots\Common\Util\ClassUtils;
 use Gdbots\Common\Util\StringUtils;
-use Gdbots\Pbj\Command;
+use Gdbots\Pbj\DomainCommand;
 use Gdbots\Pbj\DomainEvent;
-use Gdbots\Pbj\Request;
-use Gdbots\Pbj\Response;
+use Gdbots\Pbj\DomainRequest;
+use Gdbots\Pbj\DomainResponse;
 use Gdbots\Pbjx\Event\TransportEvent;
 use Gdbots\Pbjx\Event\TransportExceptionEvent;
 use Gdbots\Pbjx\PbjxEvents;
@@ -42,7 +42,7 @@ abstract class AbstractTransport implements Transport
     /**
      * {@inheritdoc}
      */
-    public function sendCommand(Command $command)
+    public function sendCommand(DomainCommand $command)
     {
         $event = new TransportEvent($this->transportName, $command);
         $this->dispatcher->dispatch(PbjxEvents::TRANSPORT_BEFORE_SEND, $event);
@@ -62,10 +62,10 @@ abstract class AbstractTransport implements Transport
     /**
      * Override in the transport to handle the actual send.
      *
-     * @param Command $command
+     * @param DomainCommand $command
      * @throws \Exception
      */
-    protected function doSendCommand(Command $command)
+    protected function doSendCommand(DomainCommand $command)
     {
         $this->locator->getCommandBus()->receiveCommand($command);
     }
@@ -104,7 +104,7 @@ abstract class AbstractTransport implements Transport
     /**
      * {@inheritdoc}
      */
-    public function sendRequest(Request $request)
+    public function sendRequest(DomainRequest $request)
     {
         $event = new TransportEvent($this->transportName, $request);
         $this->dispatcher->dispatch(PbjxEvents::TRANSPORT_BEFORE_SEND, $event);
@@ -139,21 +139,21 @@ abstract class AbstractTransport implements Transport
     /**
      * Override in the transport to handle the actual send.
      *
-     * @param Request $request
-     * @return Response
+     * @param DomainRequest $request
+     * @return DomainResponse
      * @throws \Exception
      */
-    protected function doSendRequest(Request $request)
+    protected function doSendRequest(DomainRequest $request)
     {
         return $this->locator->getRequestBus()->receiveRequest($request);
     }
 
     /**
-     * @param Request $request
+     * @param DomainRequest $request
      * @param \Exception $exception
-     * @return Response
+     * @return DomainResponse
      */
-    protected function createResponseForFailedRequest(Request $request, \Exception $exception)
+    protected function createResponseForFailedRequest(DomainRequest $request, \Exception $exception)
     {
         $response = RequestHandlingFailedV1::create()
             ->setRequestRef($request->generateMessageRef())

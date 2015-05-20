@@ -2,7 +2,7 @@
 
 namespace Gdbots\Pbjx;
 
-use Gdbots\Pbj\Command;
+use Gdbots\Pbj\DomainCommand;
 use Gdbots\Pbjx\Exception\GdbotsPbjxException;
 
 interface CommandBus
@@ -10,22 +10,22 @@ interface CommandBus
     /**
      * Processes a command asynchronously.
      *
-     * @param Command $command
+     * @param DomainCommand $command
      *
      * @throws GdbotsPbjxException
      * @throws \Exception
      */
-    public function send(Command $command);
+    public function send(DomainCommand $command);
 
     /**
      * Processes a command directly.  DO NOT use this method in the
      * application as this is intended for the transports, consumers
      * and workers of the Pbjx system.
      *
-     * @param Command $command
+     * @param DomainCommand $command
      *
      * @throws GdbotsPbjxException
      * @throws \Exception
      */
-    public function receiveCommand(Command $command);
+    public function receiveCommand(DomainCommand $command);
 }

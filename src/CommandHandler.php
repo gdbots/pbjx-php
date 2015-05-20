@@ -2,17 +2,17 @@
 
 namespace Gdbots\Pbjx;
 
-use Gdbots\Pbj\Command;
+use Gdbots\Pbj\DomainCommand;
 use Gdbots\Pbjx\Exception\GdbotsPbjxException;
 
 interface CommandHandler
 {
     /**
-     * @param Command $command
+     * @param DomainCommand $command
      * @param Pbjx $pbjx
      *
      * @throws GdbotsPbjxException
      * @throws \Exception
      */
-    public function handleCommand(Command $command, Pbjx $pbjx);
+    public function handleCommand(DomainCommand $command, Pbjx $pbjx);
 }

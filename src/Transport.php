@@ -2,10 +2,10 @@
 
 namespace Gdbots\Pbjx;
 
-use Gdbots\Pbj\Command;
+use Gdbots\Pbj\DomainCommand;
 use Gdbots\Pbj\DomainEvent;
-use Gdbots\Pbj\Request;
-use Gdbots\Pbj\Response;
+use Gdbots\Pbj\DomainRequest;
+use Gdbots\Pbj\DomainResponse;
 use Gdbots\Pbjx\Exception\GdbotsPbjxException;
 
 interface Transport
@@ -13,12 +13,12 @@ interface Transport
     /**
      * Sends a command via the transport.
      *
-     * @param Command $command
+     * @param DomainCommand $command
      *
      * @throws GdbotsPbjxException
      * @throws \Exception
      */
-    public function sendCommand(Command $command);
+    public function sendCommand(DomainCommand $command);
 
     /**
      * Sends an event via the transport.
@@ -33,11 +33,11 @@ interface Transport
     /**
      * Sends a request via the transport.
      *
-     * @param Request $request
-     * @return Response
+     * @param DomainRequest $request
+     * @return DomainResponse
      *
      * @throws GdbotsPbjxException
      * @throws \Exception
      */
-    public function sendRequest(Request $request);
+    public function sendRequest(DomainRequest $request);
 }

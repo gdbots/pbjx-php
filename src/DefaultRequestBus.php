@@ -4,9 +4,9 @@ namespace Gdbots\Pbjx;
 
 use Gdbots\Common\Util\ClassUtils;
 use Gdbots\Common\Util\StringUtils;
+use Gdbots\Pbj\DomainRequest;
+use Gdbots\Pbj\DomainResponse;
 use Gdbots\Pbj\MessageResolver;
-use Gdbots\Pbj\Request;
-use Gdbots\Pbj\Response;
 use Gdbots\Pbjx\Exception\InvalidHandler;
 use Gdbots\Pbjx\Exception\UnexpectedValueException;
 use Gdbots\Pbjx\Request\RequestHandlingFailedV1;
@@ -40,7 +40,7 @@ class DefaultRequestBus implements RequestBus
     /**
      * {@inheritdoc}
      */
-    public function request(Request $request)
+    public function request(DomainRequest $request)
     {
         return $this->transport->sendRequest($request->freeze());
     }
@@ -48,7 +48,7 @@ class DefaultRequestBus implements RequestBus
     /**
      * {@inheritdoc}
      */
-    public function receiveRequest(Request $request)
+    public function receiveRequest(DomainRequest $request)
     {
         return $this->handleRequest($request->freeze());
     }
@@ -58,10 +58,10 @@ class DefaultRequestBus implements RequestBus
      * it will be caught and a RequestHandlingFailedV1 response will be created
      * with the reason.
      *
-     * @param Request $request
-     * @return Response
+     * @param DomainRequest $request
+     * @return DomainResponse
      */
-    final protected function handleRequest(Request $request)
+    final protected function handleRequest(DomainRequest $request)
     {
         $curie = $request::schema()->getCurie();
         $curieStr = $curie->toString();
@@ -84,7 +84,7 @@ class DefaultRequestBus implements RequestBus
 
         try {
             $response = $handler->handleRequest($request, $this->pbjx);
-            if (!$response instanceof Response) {
+            if (!$response instanceof DomainResponse) {
                 throw new UnexpectedValueException(
                     sprintf(
                         'The handler "%s" returned "%s" but a Response object was expected.',
@@ -106,11 +106,11 @@ class DefaultRequestBus implements RequestBus
     }
 
     /**
-     * @param Request $request
+     * @param DomainRequest $request
      * @param \Exception $exception
-     * @return Response
+     * @return DomainResponse
      */
-    private function createResponseForFailedRequest(Request $request, \Exception $exception)
+    private function createResponseForFailedRequest(DomainRequest $request, \Exception $exception)
     {
         $response = RequestHandlingFailedV1::create()
             ->setRequestRef($request->generateMessageRef())

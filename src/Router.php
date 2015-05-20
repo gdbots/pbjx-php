@@ -2,9 +2,9 @@
 
 namespace Gdbots\Pbjx;
 
-use Gdbots\Pbj\Command;
+use Gdbots\Pbj\DomainCommand;
 use Gdbots\Pbj\DomainEvent;
-use Gdbots\Pbj\Request;
+use Gdbots\Pbj\DomainRequest;
 
 /**
  * A router is used by transports to determine which channel a message
@@ -15,10 +15,10 @@ use Gdbots\Pbj\Request;
 interface Router
 {
     /**
-     * @param Command $command
+     * @param DomainCommand $command
      * @return string
      */
-    public function forCommand(Command $command);
+    public function forCommand(DomainCommand $command);
 
     /**
      * @param DomainEvent $domainEvent
@@ -27,8 +27,8 @@ interface Router
     public function forEvent(DomainEvent $domainEvent);
 
     /**
-     * @param Request $request
+     * @param DomainRequest $request
      * @return string
      */
-    public function forRequest(Request $request);
+    public function forRequest(DomainRequest $request);
 }
