@@ -2,6 +2,7 @@
 
 namespace Gdbots\Pbjx;
 
+use Gdbots\Common\Util\ClassUtils;
 use Gdbots\Pbjx\Event\BusExceptionEvent;
 use Gdbots\Pbjx\Event\TransportExceptionEvent;
 use Psr\Log\LoggerInterface;
@@ -41,7 +42,8 @@ class DefaultExceptionHandler implements ExceptionHandler
     {
         $this->logger->critical(
             sprintf(
-                'Command could not be handled.  Reason: %s' . PHP_EOL . 'Payload:' . PHP_EOL . '%s',
+                'Command could not be handled.  %s::%s' . PHP_EOL . 'Payload:' . PHP_EOL . '%s',
+                ClassUtils::getShortName($event->getException()),
                 $event->getException()->getMessage(),
                 $event->getMessage()
             )
@@ -56,7 +58,8 @@ class DefaultExceptionHandler implements ExceptionHandler
     {
         $this->logger->critical(
             sprintf(
-                'Domain event could not be handled.  Reason: %s' . PHP_EOL . 'Payload:' . PHP_EOL . '%s',
+                'Domain event could not be handled.  %s::%s' . PHP_EOL . 'Payload:' . PHP_EOL . '%s',
+                ClassUtils::getShortName($event->getException()),
                 $event->getException()->getMessage(),
                 $event->getMessage()
             )
@@ -71,7 +74,8 @@ class DefaultExceptionHandler implements ExceptionHandler
     {
         $this->logger->error(
             sprintf(
-                'Request handling failed.  Reason: %s' . PHP_EOL . 'Payload:' . PHP_EOL . '%s',
+                'Request handling failed.  %s::%s' . PHP_EOL . 'Payload:' . PHP_EOL . '%s',
+                ClassUtils::getShortName($event->getException()),
                 $event->getException()->getMessage(),
                 $event->getMessage()
             )
@@ -86,7 +90,8 @@ class DefaultExceptionHandler implements ExceptionHandler
     {
         $this->logger->emergency(
             sprintf(
-                'Message could not be sent by [%s] transport.  Reason: %s' . PHP_EOL . 'Payload:' . PHP_EOL . '%s',
+                'Message could not be sent by [%s] transport.  %s:%s' . PHP_EOL . 'Payload:' . PHP_EOL . '%s',
+                ClassUtils::getShortName($event->getException()),
                 $event->getTransportName(),
                 $event->getException()->getMessage(),
                 $event->getMessage()
