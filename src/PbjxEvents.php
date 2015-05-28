@@ -34,7 +34,7 @@ final class PbjxEvents
      * @see Gdbots\Pbjx\Event\BusExceptionEvent
      * @var string
      */
-    const COMMAND_BUS_EXCEPTION = 'gdbots.pbjx.command_bus.exception';
+    const COMMAND_BUS_EXCEPTION = 'gdbots_pbjx.command_bus.exception';
 
     /**
      * Occurs during event dispatching, where events are actually handled.  If the
@@ -44,7 +44,7 @@ final class PbjxEvents
      * @see Gdbots\Pbjx\Event\BusExceptionEvent
      * @var string
      */
-    const EVENT_BUS_EXCEPTION = 'gdbots.pbjx.event_bus.exception';
+    const EVENT_BUS_EXCEPTION = 'gdbots_pbjx.event_bus.exception';
 
     /**
      * Occurs during request handling when an exception is not properly
@@ -53,7 +53,7 @@ final class PbjxEvents
      * @see Gdbots\Pbjx\Event\BusExceptionEvent
      * @var string
      */
-    const REQUEST_BUS_EXCEPTION = 'gdbots.pbjx.request_bus.exception';
+    const REQUEST_BUS_EXCEPTION = 'gdbots_pbjx.request_bus.exception';
 
     /**
      * Occurs prior to the message being sent by the transport.
@@ -61,7 +61,7 @@ final class PbjxEvents
      * @see Gdbots\Pbjx\Event\TransportEvent
      * @var string
      */
-    const TRANSPORT_BEFORE_SEND = 'gdbots.pbjx.transport.before_send';
+    const TRANSPORT_BEFORE_SEND = 'gdbots_pbjx.transport.before_send';
 
     /**
      * Occurs after the message has been successfully sent by the transport.
@@ -69,7 +69,7 @@ final class PbjxEvents
      * @see Gdbots\Pbjx\Event\TransportEvent
      * @var string
      */
-    const TRANSPORT_AFTER_SEND = 'gdbots.pbjx.transport.after_send';
+    const TRANSPORT_AFTER_SEND = 'gdbots_pbjx.transport.after_send';
 
     /**
      * Occurs if the transport throws an exception during the send.
@@ -77,7 +77,7 @@ final class PbjxEvents
      * @see Gdbots\Pbjx\Event\TransportExceptionEvent
      * @var string
      */
-    const TRANSPORT_SEND_EXCEPTION = 'gdbots.pbjx.transport.send_exception';
+    const TRANSPORT_SEND_EXCEPTION = 'gdbots_pbjx.transport.send_exception';
 
     /**
      * Occurs before a job/task/message has been handled by a consumer.
@@ -85,7 +85,7 @@ final class PbjxEvents
      * @see Symfony\Component\EventDispatcher\Event
      * @var string
      */
-    const CONSUMER_BEFORE_HANDLE = 'gdbots.pbjx.consumer.before_handle';
+    const CONSUMER_BEFORE_HANDLE = 'gdbots_pbjx.consumer.before_handle';
 
     /**
      * Occurs after a job/task/message has been handled by a consumer.
@@ -93,7 +93,7 @@ final class PbjxEvents
      * @see Symfony\Component\EventDispatcher\Event
      * @var string
      */
-    const CONSUMER_AFTER_HANDLE = 'gdbots.pbjx.consumer.after_handle';
+    const CONSUMER_AFTER_HANDLE = 'gdbots_pbjx.consumer.after_handle';
 
     /**
      * Occurs if an exception is thrown during message handling.
@@ -101,7 +101,7 @@ final class PbjxEvents
      * @see Symfony\Component\EventDispatcher\Event
      * @var string
      */
-    const CONSUMER_HANDLING_EXCEPTION = 'gdbots.pbjx.consumer.handling_exception';
+    const CONSUMER_HANDLING_EXCEPTION = 'gdbots_pbjx.consumer.handling_exception';
 
     /**
      * Occurs after the consumer has stopped and finished its teardown.
@@ -109,5 +109,5 @@ final class PbjxEvents
      * @see Symfony\Component\EventDispatcher\Event
      * @var string
      */
-    const CONSUMER_AFTER_TEARDOWN = 'gdbots.pbjx.consumer.after_teardown';
+    const CONSUMER_AFTER_TEARDOWN = 'gdbots_pbjx.consumer.after_teardown';
 }
