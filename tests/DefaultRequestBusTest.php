@@ -21,21 +21,21 @@ class DefaultRequestBusTest extends AbstractBusTestCase
     {
         $request = GetTimeRequest::create();
         $expected = $request->getMicrotime()->toDateTime();
-        $promise = $this->pbjx->request($request);
-
-        $promise->then(function(GetTimeResponse $response) use ($expected) {
-            $this->assertSame($expected, $response->getTime());
-        });
+        /** @var GetTimeResponse $response */
+        $response = $this->pbjx->request($request);
+        $this->assertInstanceOf('Gdbots\Tests\Pbjx\Fixtures\GetTimeResponse', $response);
+        $this->assertSame($expected->format('U.u'), $response->getTime()->format('U.u'));
     }
 
     public function testRequestHandlingFailed()
     {
         $request = GetTimeRequest::create();
         $request->setTestFail(true);
-        $promise = $this->pbjx->request($request);
 
-        $promise->then(function() {
+        try {
+            $response = $this->pbjx->request($request);
             $this->fail('Request did not fail as expected.');
-        });
+        } catch (\Exception $e) {
+        }
     }
 }

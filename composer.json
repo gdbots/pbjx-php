@@ -7,7 +7,6 @@
     "php": ">=5.4",
     "gdbots/pbj": "dev-marshalers",
     "psr/log": "~1",
-    "react/promise": "~2.2",
     "symfony/event-dispatcher": "~2.6"
   },
   "require-dev": {

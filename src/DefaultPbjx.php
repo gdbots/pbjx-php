@@ -13,7 +13,6 @@ use Gdbots\Pbjx\Event\PostResponseEvent;
 use Gdbots\Pbjx\Exception\InvalidArgumentException;
 use Gdbots\Pbjx\Exception\RequestHandlingFailed;
 use Gdbots\Pbjx\Request\RequestHandlingFailedV1;
-use React\Promise\Deferred;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 class DefaultPbjx implements Pbjx
@@ -77,34 +76,22 @@ class DefaultPbjx implements Pbjx
      */
     public function request(DomainRequest $request)
     {
-        $deferred = new Deferred();
-
-        try {
-            $event = new PbjxEvent($request);
-            $this->trigger($request, PbjxEvents::SUFFIX_VALIDATE, $event);
-            $this->trigger($request, PbjxEvents::SUFFIX_ENRICH, $event);
-            $event = new GetResponseEvent($request);
-            $this->trigger($request, PbjxEvents::SUFFIX_BEFORE_HANDLE, $event);
-        } catch (\Exception $e) {
-            $deferred->reject($e);
-            return $deferred->promise();
-        }
+        $event = new PbjxEvent($request);
+        $this->trigger($request, PbjxEvents::SUFFIX_VALIDATE, $event);
+        $this->trigger($request, PbjxEvents::SUFFIX_ENRICH, $event);
+        $event = new GetResponseEvent($request);
+        $this->trigger($request, PbjxEvents::SUFFIX_BEFORE_HANDLE, $event);
 
         if ($event->hasResponse()) {
-            $response = $event->getResponse();
-            $deferred->resolve($response);
-            return $deferred->promise();
+            return $event->getResponse();
         }
 
         $response = $this->locator->getRequestBus()->request($request);
         $event->setResponse($response);
 
         if ($response instanceof RequestHandlingFailedV1) {
-            $deferred->reject(new RequestHandlingFailed($response));
-            return $deferred->promise();
+            throw new RequestHandlingFailed($response);
         }
-
-        $deferred->resolve($response);
 
         try {
             $event = new PostResponseEvent($request, $response);
@@ -116,6 +103,6 @@ class DefaultPbjx implements Pbjx
             );
         }
 
-        return $deferred->promise();
+        return $response;
     }
 }

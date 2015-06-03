@@ -5,11 +5,11 @@ namespace Gdbots\Pbjx;
 use Gdbots\Pbj\DomainCommand;
 use Gdbots\Pbj\DomainEvent;
 use Gdbots\Pbj\DomainRequest;
+use Gdbots\Pbj\DomainResponse;
 use Gdbots\Pbj\Message;
 use Gdbots\Pbjx\Event\PbjxEvent;
 use Gdbots\Pbjx\Exception\GdbotsPbjxException;
 use Gdbots\Pbjx\Exception\InvalidArgumentException;
-use React\Promise\ExtendedPromiseInterface;
 
 interface Pbjx
 {
@@ -51,10 +51,13 @@ interface Pbjx
     public function publish(DomainEvent $domainEvent);
 
     /**
-     * Processes a request and returns a Promise for the result.
+     * Processes a request synchronously and returns the response.
      *
      * @param DomainRequest $request
-     * @return ExtendedPromiseInterface
+     * @return DomainResponse
+     *
+     * @throws GdbotsPbjxException
+     * @throws \Exception
      */
     public function request(DomainRequest $request);
 }
