@@ -6,7 +6,7 @@ use Gdbots\Common\Util\ClassUtils;
 use Gdbots\Pbj\DomainEvent;
 use Gdbots\Pbj\MessageResolver;
 use Gdbots\Pbjx\Event\BusExceptionEvent;
-use Gdbots\Pbjx\Event\EventExecutionFailedV1;
+use Gdbots\Pbjx\Event\EventExecutionFailed;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 class DefaultEventBus implements EventBus
@@ -33,7 +33,7 @@ class DefaultEventBus implements EventBus
         $this->transport = $transport;
         $this->dispatcher = $this->locator->getDispatcher();
         $this->pbjx = $this->locator->getPbjx();
-        MessageResolver::registerSchema(EventExecutionFailedV1::schema());
+        MessageResolver::registerSchema(EventExecutionFailed::schema());
     }
 
     /**
@@ -54,7 +54,7 @@ class DefaultEventBus implements EventBus
 
     /**
      * Publishes the event to all subscribers using the dispatcher, which processes
-     * events in memory.  If any events throw an exception an EventExecutionFailedV1
+     * events in memory.  If any events throw an exception an EventExecutionFailed
      * event will be published.
      *
      * @param DomainEvent $domainEvent
@@ -97,14 +97,14 @@ class DefaultEventBus implements EventBus
             try {
                 call_user_func($listener, $domainEvent, $this->pbjx);
             } catch (\Exception $e) {
-                if ($domainEvent instanceof EventExecutionFailedV1) {
+                if ($domainEvent instanceof EventExecutionFailed) {
                     $this->locator->getExceptionHandler()->onEventBusException(
                         new BusExceptionEvent($domainEvent, $e)
                     );
                     return;
                 }
 
-                $failedEvent = EventExecutionFailedV1::create()
+                $failedEvent = EventExecutionFailed::create()
                     ->setFailedEvent($domainEvent)
                     ->setReason(ClassUtils::getShortName($e) . '::' . $e->getMessage());
 

@@ -11,7 +11,7 @@ use Gdbots\Pbj\DomainResponse;
 use Gdbots\Pbjx\Event\TransportEvent;
 use Gdbots\Pbjx\Event\TransportExceptionEvent;
 use Gdbots\Pbjx\PbjxEvents;
-use Gdbots\Pbjx\Request\RequestHandlingFailedV1;
+use Gdbots\Pbjx\Request\RequestFailedResponse;
 use Gdbots\Pbjx\ServiceLocator;
 use Gdbots\Pbjx\Transport;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -155,7 +155,7 @@ abstract class AbstractTransport implements Transport
      */
     protected function createResponseForFailedRequest(DomainRequest $request, \Exception $exception)
     {
-        $response = RequestHandlingFailedV1::create()
+        $response = RequestFailedResponse::create()
             ->setRequestRef($request->generateMessageRef())
             ->setFailedRequest($request)
             ->setReason(ClassUtils::getShortName($exception) . '::' . $exception->getMessage());

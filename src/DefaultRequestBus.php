@@ -9,7 +9,7 @@ use Gdbots\Pbj\DomainResponse;
 use Gdbots\Pbj\MessageResolver;
 use Gdbots\Pbjx\Exception\InvalidHandler;
 use Gdbots\Pbjx\Exception\UnexpectedValueException;
-use Gdbots\Pbjx\Request\RequestHandlingFailedV1;
+use Gdbots\Pbjx\Request\RequestFailedResponse;
 
 class DefaultRequestBus implements RequestBus
 {
@@ -34,7 +34,7 @@ class DefaultRequestBus implements RequestBus
         $this->locator = $locator;
         $this->transport = $transport;
         $this->pbjx = $this->locator->getPbjx();
-        MessageResolver::registerSchema(RequestHandlingFailedV1::schema());
+        MessageResolver::registerSchema(RequestFailedResponse::schema());
     }
 
     /**
@@ -55,8 +55,7 @@ class DefaultRequestBus implements RequestBus
 
     /**
      * Invokes the handler that services the given request.  If an exception occurs
-     * it will be caught and a RequestHandlingFailedV1 response will be created
-     * with the reason.
+     * it will be caught and a RequestFailedResponse will be created with the reason.
      *
      * @param DomainRequest $request
      * @return DomainResponse
@@ -87,7 +86,7 @@ class DefaultRequestBus implements RequestBus
             if (!$response instanceof DomainResponse) {
                 throw new UnexpectedValueException(
                     sprintf(
-                        'The handler "%s" returned "%s" but a Response object was expected.',
+                        'The handler "%s" returned "%s" but a DomainResponse object was expected.',
                         get_class($handler),
                         StringUtils::varToString($response)
                     )
@@ -112,7 +111,7 @@ class DefaultRequestBus implements RequestBus
      */
     private function createResponseForFailedRequest(DomainRequest $request, \Exception $exception)
     {
-        $response = RequestHandlingFailedV1::create()
+        $response = RequestFailedResponse::create()
             ->setRequestRef($request->generateMessageRef())
             ->setFailedRequest($request)
             ->setReason(ClassUtils::getShortName($exception) . '::' . $exception->getMessage());

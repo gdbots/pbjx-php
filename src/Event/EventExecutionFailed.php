@@ -10,7 +10,7 @@ use Gdbots\Pbj\Mixin\EventTrait;
 use Gdbots\Pbj\Schema;
 use Gdbots\Pbj\Type as T;
 
-final class EventExecutionFailedV1 extends AbstractMessage implements DomainEvent
+final class EventExecutionFailed extends AbstractMessage implements DomainEvent
 {
     use EventTrait;
 

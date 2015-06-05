@@ -38,7 +38,7 @@ final class PbjxEvents
 
     /**
      * Occurs during event dispatching, where events are actually handled.  If the
-     * subscriber throws and exception and the EventExecutionFailedV1 also fails
+     * subscriber throws and exception and the EventExecutionFailed also fails
      * to be handled, then this event is announced.  This should be very rare.
      *
      * @see Gdbots\Pbjx\Event\BusExceptionEvent
@@ -48,7 +48,7 @@ final class PbjxEvents
 
     /**
      * Occurs during request handling when an exception is not properly
-     * handled and converted to a RequestHandlingFailedV1 response.
+     * handled and converted to a RequestFailedResponse response.
      *
      * @see Gdbots\Pbjx\Event\BusExceptionEvent
      * @var string

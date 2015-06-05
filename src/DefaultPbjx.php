@@ -12,7 +12,7 @@ use Gdbots\Pbjx\Event\PbjxEvent;
 use Gdbots\Pbjx\Event\PostResponseEvent;
 use Gdbots\Pbjx\Exception\InvalidArgumentException;
 use Gdbots\Pbjx\Exception\RequestHandlingFailed;
-use Gdbots\Pbjx\Request\RequestHandlingFailedV1;
+use Gdbots\Pbjx\Request\RequestFailedResponse;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 class DefaultPbjx implements Pbjx
@@ -89,7 +89,7 @@ class DefaultPbjx implements Pbjx
         $response = $this->locator->getRequestBus()->request($request);
         $event->setResponse($response);
 
-        if ($response instanceof RequestHandlingFailedV1) {
+        if ($response instanceof RequestFailedResponse) {
             throw new RequestHandlingFailed($response);
         }
 

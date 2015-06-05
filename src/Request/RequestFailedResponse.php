@@ -11,7 +11,7 @@ use Gdbots\Pbj\Mixin\ResponseTrait;
 use Gdbots\Pbj\Schema;
 use Gdbots\Pbj\Type as T;
 
-final class RequestHandlingFailedV1 extends AbstractMessage implements DomainResponse
+final class RequestFailedResponse extends AbstractMessage implements DomainResponse
 {
     use ResponseTrait;
 
@@ -20,7 +20,7 @@ final class RequestHandlingFailedV1 extends AbstractMessage implements DomainRes
      */
     protected static function defineSchema()
     {
-        return new Schema('pbj:gdbots:pbjx:response:request-handling-failed:1-0-0', __CLASS__,
+        return new Schema('pbj:gdbots:pbjx:request:request-failed-response:1-0-0', __CLASS__,
             [
                 Fb::create('failed_request', T\MessageType::create())
                     ->required()
