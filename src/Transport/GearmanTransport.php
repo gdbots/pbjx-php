@@ -47,6 +47,7 @@ class GearmanTransport extends AbstractTransport
         $this->servers = $servers;
         $this->timeout = NumberUtils::bound($timeout, 200, 10000);
         $this->router = $router ?: new GearmanRouter();
+        $this->serializer = new PhpSerializer();
     }
 
     /**
@@ -58,7 +59,7 @@ class GearmanTransport extends AbstractTransport
      */
     protected function doSendCommand(DomainCommand $command)
     {
-        $workload = $this->getSerializer()->serialize($command);
+        $workload = $this->serializer->serialize($command);
         $channel = $this->router->forCommand($command);
         $client = $this->getClient();
 
@@ -75,7 +76,7 @@ class GearmanTransport extends AbstractTransport
      */
     protected function doSendEvent(DomainEvent $domainEvent)
     {
-        $workload = $this->getSerializer()->serialize($domainEvent);
+        $workload = $this->serializer->serialize($domainEvent);
         $channel = $this->router->forEvent($domainEvent);
         $client = $this->getClient();
 
@@ -92,13 +93,13 @@ class GearmanTransport extends AbstractTransport
      */
     protected function doSendRequest(DomainRequest $request)
     {
-        $workload = $this->getSerializer()->serialize($request);
+        $workload = $this->serializer->serialize($request);
         $channel = $this->router->forRequest($request);
         $client = $this->getClient();
 
         $result = @$client->doNormal($channel, $workload, $request->getRequestId());
         $this->validateReturnCode($client, $channel);
-        return $this->getSerializer()->deserialize($result);
+        return $this->serializer->deserialize($result);
     }
 
     /**
@@ -153,17 +154,6 @@ class GearmanTransport extends AbstractTransport
         }
 
         return $this->client;
-    }
-
-    /**
-     * @return Serializer
-     */
-    protected function getSerializer()
-    {
-        if (null === $this->serializer) {
-            $this->serializer = new PhpSerializer();
-        }
-        return $this->serializer;
     }
 
     /**

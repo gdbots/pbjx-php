@@ -73,6 +73,7 @@ class GearmanConsumer extends AbstractConsumer
         ;
         $this->servers = $servers;
         $this->timeout = NumberUtils::bound($timeout, 200, 10000);
+        $this->serializer = new PhpSerializer();
     }
 
     /**
@@ -161,7 +162,7 @@ class GearmanConsumer extends AbstractConsumer
      */
     public function handleJob(\GearmanJob $job)
     {
-        $this->logger->info(
+        $this->logger->debug(
             sprintf(
                 'Handling job [%s] with id [%s] on channel [%s], worker id [%s].',
                 $job->handle(),
@@ -172,16 +173,15 @@ class GearmanConsumer extends AbstractConsumer
         );
 
         $dispatcher = $this->locator->getDispatcher();
-        $serializer = $this->getSerializer();
 
         try {
-            $message = $serializer->deserialize($job->workload());
+            $message = $this->serializer->deserialize($job->workload());
             $dispatcher->dispatch(PbjxEvents::CONSUMER_BEFORE_HANDLE);
             $result = $this->handleMessage($message);
             $dispatcher->dispatch(PbjxEvents::CONSUMER_AFTER_HANDLE);
 
             if ($result instanceof Message) {
-                return $serializer->serialize($result);
+                return $this->serializer->serialize($result);
             }
         } catch (\Exception $e) {
             $job->sendFail();
@@ -203,16 +203,5 @@ class GearmanConsumer extends AbstractConsumer
             @$this->worker->unregisterAll();
             $this->worker = null;
         }
-    }
-
-    /**
-     * @return Serializer
-     */
-    protected function getSerializer()
-    {
-        if (null === $this->serializer) {
-            $this->serializer = new PhpSerializer();
-        }
-        return $this->serializer;
     }
 }
