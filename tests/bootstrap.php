@@ -11,4 +11,3 @@ if (!file_exists(dirname(__DIR__) . '/composer.lock')) {
 
 // Include the composer autoloader
 $loader = require dirname(__DIR__) . '/vendor/autoload.php';
-$loader->add('Gdbots\\Tests', __DIR__);

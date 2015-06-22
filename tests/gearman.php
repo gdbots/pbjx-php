@@ -6,7 +6,6 @@ use Gdbots\Pbjx\RegisteringServiceLocator;
 use Gdbots\Pbjx\Transport\GearmanTransport;
 use Gdbots\Tests\Pbjx\Fixtures\GetTimeRequest;
 use Gdbots\Tests\Pbjx\Fixtures\GetTimeRequestHandler;
-use Gdbots\Tests\Pbjx\Fixtures\GetTimeResponse;
 use Gdbots\Tests\Pbjx\Fixtures\SayHello;
 use Gdbots\Tests\Pbjx\Fixtures\SimpleEvent;
 
@@ -30,14 +29,12 @@ while (true) {
 
     $request = GetTimeRequest::create();
     echo 'Requested -> ' . $request->getRequestId() . PHP_EOL;
-    $pbjx->request($request)->then(
-        function (GetTimeResponse $response) {
-            echo $response . PHP_EOL . PHP_EOL;
-        },
-        function (\Exception $e) {
-            echo $e->getMessage() . PHP_EOL . PHP_EOL;
-        }
-    );
+    try {
+        $response = $pbjx->request($request);
+        echo $response . PHP_EOL . PHP_EOL;
+    } catch (\Exception $e) {
+        echo $e->getMessage() . PHP_EOL . PHP_EOL;
+    }
 
     usleep(25000);
 }

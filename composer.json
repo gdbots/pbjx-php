@@ -5,9 +5,8 @@
   "license": "Apache-2.0",
   "require": {
     "php": ">=5.4",
-    "gdbots/pbj": "~0.2.2",
+    "gdbots/pbj": "~0.3",
     "psr/log": "~1",
-    "react/promise": "~2.2",
     "symfony/event-dispatcher": "~2.6"
   },
   "require-dev": {
@@ -18,12 +17,17 @@
   },
   "extra": {
     "branch-alias": {
-      "dev-master": "0.1.x-dev"
+      "dev-master": "0.2.x-dev"
     }
   },
   "autoload": {
-    "psr-0": {
+    "psr-4": {
       "Gdbots\\Pbjx\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Gdbots\\Tests\\Pbjx\\": "tests/"
     }
   },
   "replace": {
