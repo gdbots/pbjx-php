@@ -5,7 +5,7 @@
   "license": "Apache-2.0",
   "require": {
     "php": ">=5.4",
-    "gdbots/pbj": "dev-marshalers",
+    "gdbots/pbj": "~0.3",
     "psr/log": "~1",
     "symfony/event-dispatcher": "~2.6"
   },
