@@ -21,9 +21,6 @@ abstract class AbstractConsumer
     /* @var bool */
     private $isRunning = false;
 
-    /* @var bool */
-    private $boundSignals = false;
-
     /** @var ServiceLocator */
     protected $locator;
 
@@ -52,6 +49,11 @@ abstract class AbstractConsumer
      */
     final public function run($maxRuntime = 300)
     {
+        if ($this->isRunning) {
+            $this->logger->notice(sprintf('Consumer [%s] is already running.', $this->consumerName));
+            return;
+        }
+
         $maxRuntime = NumberUtils::bound($maxRuntime, 10, 86400);
         $start = time();
         $this->logger->notice(
@@ -60,7 +62,12 @@ abstract class AbstractConsumer
         $this->setup();
 
         $this->isRunning = true;
-        $this->bindSignals();
+        declare(ticks = 1);
+        if (function_exists('pcntl_signal')) {
+            pcntl_signal(SIGCHLD, SIG_IGN); // Zombies
+            pcntl_signal(SIGTERM, array($this, 'handleSignals')); // Kill
+            pcntl_signal(SIGINT, array($this, 'handleSignals')); // Control + C (from shell)
+        }
         $dispatcher = $this->locator->getDispatcher();
 
         do {
@@ -183,25 +190,6 @@ abstract class AbstractConsumer
     private function handleRequest(DomainRequest $request)
     {
         return $this->locator->getRequestBus()->receiveRequest($request);
-    }
-
-    /**
-     * Binds this consumer to signals from the terminal.
-     */
-    private function bindSignals()
-    {
-        if ($this->boundSignals) {
-            return;
-        }
-
-        $this->boundSignals = true;
-        declare(ticks = 1);
-
-        if (function_exists('pcntl_signal')) {
-            pcntl_signal(SIGCHLD, SIG_IGN); // Zombies
-            pcntl_signal(SIGTERM, array($this, 'handleSignals')); // Kill
-            pcntl_signal(SIGINT, array($this, 'handleSignals')); // Control + C (from shell)
-        }
     }
 
     /**

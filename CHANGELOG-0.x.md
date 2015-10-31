@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 0.x versions.
 
 
+## v0.2.1
+* issue #2: signals aren't caught reliably in abstract consumer.
+
+
 ## v0.2.0
 * Use psr4 autoloading.
 * Update all references to Command, DomainEvent, Entity, Request and Response interfaces to new `Domain` locations and prefix.
