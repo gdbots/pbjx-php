@@ -3,7 +3,6 @@
 namespace Gdbots\Tests\Pbjx\Fixtures;
 
 use Gdbots\Pbjx\ConventionalRequestHandling;
-use Gdbots\Pbjx\Pbjx;
 use Gdbots\Pbjx\RequestHandler;
 
 class GetTimeRequestHandler implements RequestHandler
@@ -12,11 +11,10 @@ class GetTimeRequestHandler implements RequestHandler
 
     /**
      * @param GetTimeRequest $request
-     * @param Pbjx $pbjx
      *
      * @return GetTimeResponse
      */
-    protected function getTimeRequest(GetTimeRequest $request, Pbjx $pbjx)
+    protected function getTimeRequest(GetTimeRequest $request)
     {
         if ($request->getTestFail()) {
             return 'test fail';

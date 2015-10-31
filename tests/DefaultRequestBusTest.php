@@ -33,7 +33,7 @@ class DefaultRequestBusTest extends AbstractBusTestCase
         $request->setTestFail(true);
 
         try {
-            $response = $this->pbjx->request($request);
+            $this->pbjx->request($request);
             $this->fail('Request did not fail as expected.');
         } catch (\Exception $e) {
         }
