@@ -3,7 +3,7 @@ This changelog references the relevant changes done in 0.x versions.
 
 
 ## v0.2.2
-* issue #3: Bake in the event enrich on "publish".
+* issue #3: Bake in the event enrich trigger on `Pbjx::publish` only if the message is not already frozen.
 
 
 ## v0.2.1
