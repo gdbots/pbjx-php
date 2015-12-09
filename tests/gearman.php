@@ -2,6 +2,8 @@
 
 include 'bootstrap.php';
 
+use Gdbots\Pbjx\Event\PbjxEvent;
+use Gdbots\Pbjx\PbjxEvents;
 use Gdbots\Pbjx\RegisteringServiceLocator;
 use Gdbots\Pbjx\Transport\GearmanTransport;
 use Gdbots\Tests\Pbjx\Fixtures\GetTimeRequest;
@@ -14,6 +16,13 @@ $locator->setDefaultTransport(new GearmanTransport($locator));
 $locator->registerRequestHandler(GetTimeRequest::schema()->getCurie(), new GetTimeRequestHandler());
 $pbjx = $locator->getPbjx();
 
+$locator->getDispatcher()->addListener(
+    SimpleEvent::schema()->getCurieWithMajorRev() . '.'. PbjxEvents::SUFFIX_ENRICH,
+    function (PbjxEvent $event, $eventName) {
+        echo $eventName . PHP_EOL;
+    }
+);
+
 while (true) {
     $time = time();
 
@@ -24,7 +33,11 @@ while (true) {
 
     $event = SimpleEvent::create()->setName('homer :: ' . $time);
     $pbjx->publish($event);
-    echo 'Published -> ' . $event->getEventId() . PHP_EOL;
+    echo 'Enriched, then Published -> ' . $event->getEventId() . PHP_EOL;
+    echo $event . PHP_EOL . PHP_EOL;
+
+    $pbjx->publish($event);
+    echo '(Enriched should not run again) Published -> ' . $event->getEventId() . PHP_EOL;
     echo $event . PHP_EOL . PHP_EOL;
 
     $request = GetTimeRequest::create();

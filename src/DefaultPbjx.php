@@ -68,6 +68,9 @@ class DefaultPbjx implements Pbjx
      */
     public function publish(DomainEvent $domainEvent)
     {
+        if (!$domainEvent->isFrozen()) {
+            $this->trigger($domainEvent, PbjxEvents::SUFFIX_ENRICH);
+        }
         $this->locator->getEventBus()->publish($domainEvent);
     }
 
