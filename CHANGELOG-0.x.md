@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 0.x versions.
 
 
+## v0.3.0
+* Require `gdbots/pbj` constraint `~0.4` and cleanup composer json format and codeclimate/travis configs.
+
+
 ## v0.2.2
 * issue #3: Bake in the event enrich trigger on `Pbjx::publish` only if the message is not already frozen.
 

@@ -5,7 +5,7 @@
   "license": "Apache-2.0",
   "require": {
     "php": ">=5.4",
-    "gdbots/pbj": "~0.3",
+    "gdbots/pbj": "~0.4",
     "psr/log": "~1",
     "symfony/event-dispatcher": "~2.6"
   },
@@ -15,19 +15,19 @@
   "suggest": {
     "ext-gearman": "Allows you to use GearmanTransport and GearmanConsumer for distributed processing."
   },
-  "extra": {
-    "branch-alias": {
-      "dev-master": "0.2.x-dev"
-    }
-  },
   "autoload": {
     "psr-4": {
-      "Gdbots\\Pbjx\\": "src/"
+      "Gdbots\\Pbjx\\": "src"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "Gdbots\\Tests\\Pbjx\\": "tests/"
+      "Gdbots\\Tests\\Pbjx\\": "tests"
+    }
+  },
+  "extra": {
+    "branch-alias": {
+      "dev-master": "0.3.x-dev"
     }
   },
   "replace": {
