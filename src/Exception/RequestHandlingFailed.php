@@ -2,8 +2,8 @@
 
 namespace Gdbots\Pbjx\Exception;
 
-use Gdbots\Pbj\DomainRequest;
-use Gdbots\Pbjx\Request\RequestFailedResponse;
+use Gdbots\Schemas\Pbj\Request\Request;
+use Gdbots\Schemas\Pbjx\Request\RequestFailedResponse;
 
 class RequestHandlingFailed extends \RuntimeException implements GdbotsPbjxException
 {
@@ -16,10 +16,10 @@ class RequestHandlingFailed extends \RuntimeException implements GdbotsPbjxExcep
     public function __construct(RequestFailedResponse $response)
     {
         $this->response = $response;
-        $ref = $response->getRequestRef() ?: $response->getFailedRequest()->getRequestId();
+        $ref = $response->get('request_ref') ?: $response->get('failed_request')->get('request_id');
         parent::__construct(
             sprintf(
-                'Request [%s] could not be handled.  Reason: %s', $ref, $this->response->getReason()
+                'Request [%s] could not be handled.  Reason: %s', $ref, $this->response->get('reason')
             )
         );
     }
@@ -33,10 +33,10 @@ class RequestHandlingFailed extends \RuntimeException implements GdbotsPbjxExcep
     }
 
     /**
-     * @return DomainRequest
+     * @return Request
      */
     public function getRequest()
     {
-        return $this->response->getFailedRequest();
+        return $this->response->get('failed_request');
     }
 }

@@ -2,20 +2,20 @@
 
 namespace Gdbots\Pbjx;
 
-use Gdbots\Pbj\DomainCommand;
 use Gdbots\Pbjx\Exception\GdbotsPbjxException;
 use Gdbots\Pbjx\Exception\InvalidHandler;
+use Gdbots\Schemas\Pbj\Command\Command;
 
 trait ConventionalCommandHandling
 {
     /**
-     * @param DomainCommand $command
+     * @param Command $command
      * @param Pbjx $pbjx
      *
      * @throws GdbotsPbjxException
      * @throws \Exception
      */
-    public function handleCommand(DomainCommand $command, Pbjx $pbjx)
+    public function handleCommand(Command $command, Pbjx $pbjx)
     {
         $schema = $command::schema();
         $short = $schema->getClassShortName();

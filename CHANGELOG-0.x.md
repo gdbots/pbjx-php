@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 0.x versions.
 
 
+## v1.0.0
+* Use `gdbots/pbj` constraint `~1.0` with simpler mixins, seperate repo for schemas and require php >=5.6.
+
+
 ## v0.3.0
 * Require `gdbots/pbj` constraint `~0.4` and cleanup composer json format and codeclimate/travis configs.
 

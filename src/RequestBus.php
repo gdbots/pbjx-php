@@ -2,26 +2,26 @@
 
 namespace Gdbots\Pbjx;
 
-use Gdbots\Pbj\DomainRequest;
-use Gdbots\Pbj\DomainResponse;
+use Gdbots\Schemas\Pbj\Request\Request;
+use Gdbots\Schemas\Pbj\Request\Response;
 
 interface RequestBus
 {
     /**
      * Processes a request and returns the response from the handler.
      *
-     * @param DomainRequest $request
-     * @return DomainResponse
+     * @param Request $request
+     * @return Response
      */
-    public function request(DomainRequest $request);
+    public function request(Request $request);
 
     /**
      * Processes a request directly.  DO NOT use this method in the
      * application as this is intended for the transports, consumers
      * and workers of the Pbjx system.
      *
-     * @param DomainRequest $request
-     * @return DomainResponse
+     * @param Request $request
+     * @return Response
      */
-    public function receiveRequest(DomainRequest $request);
+    public function receiveRequest(Request $request);
 }

@@ -4,12 +4,11 @@ namespace Gdbots\Pbjx;
 
 use Gdbots\Common\Util\ClassUtils;
 use Gdbots\Common\Util\StringUtils;
-use Gdbots\Pbj\DomainRequest;
-use Gdbots\Pbj\DomainResponse;
-use Gdbots\Pbj\MessageResolver;
 use Gdbots\Pbjx\Exception\InvalidHandler;
 use Gdbots\Pbjx\Exception\UnexpectedValueException;
-use Gdbots\Pbjx\Request\RequestFailedResponse;
+use Gdbots\Schemas\Pbj\Request\Request;
+use Gdbots\Schemas\Pbj\Request\Response;
+use Gdbots\Schemas\Pbjx\Request\RequestFailedResponseV1;
 
 class DefaultRequestBus implements RequestBus
 {
@@ -34,13 +33,12 @@ class DefaultRequestBus implements RequestBus
         $this->locator = $locator;
         $this->transport = $transport;
         $this->pbjx = $this->locator->getPbjx();
-        MessageResolver::registerSchema(RequestFailedResponse::schema());
     }
 
     /**
      * {@inheritdoc}
      */
-    public function request(DomainRequest $request)
+    public function request(Request $request)
     {
         return $this->transport->sendRequest($request->freeze());
     }
@@ -48,7 +46,7 @@ class DefaultRequestBus implements RequestBus
     /**
      * {@inheritdoc}
      */
-    public function receiveRequest(DomainRequest $request)
+    public function receiveRequest(Request $request)
     {
         return $this->handleRequest($request->freeze());
     }
@@ -57,10 +55,10 @@ class DefaultRequestBus implements RequestBus
      * Invokes the handler that services the given request.  If an exception occurs
      * it will be caught and a RequestFailedResponse will be created with the reason.
      *
-     * @param DomainRequest $request
-     * @return DomainResponse
+     * @param Request $request
+     * @return Response
      */
-    final protected function handleRequest(DomainRequest $request)
+    final protected function handleRequest(Request $request)
     {
         $curie = $request::schema()->getCurie();
         $curieStr = $curie->toString();
@@ -83,7 +81,7 @@ class DefaultRequestBus implements RequestBus
 
         try {
             $response = $handler->handleRequest($request, $this->pbjx);
-            if (!$response instanceof DomainResponse) {
+            if (!$response instanceof Response) {
                 throw new UnexpectedValueException(
                     sprintf(
                         'The handler "%s" returned "%s" but a DomainResponse object was expected.',
@@ -93,9 +91,9 @@ class DefaultRequestBus implements RequestBus
                 );
             }
 
-            $response->setRequestRef($request->generateMessageRef());
-            if ($request->hasCorrelator()) {
-                $response->setCorrelator($request->getCorrelator());
+            $response->set('request_ref', $request->generateMessageRef());
+            if ($request->has('correlator')) {
+                $response->set('correlator', $request->get('correlator'));
             }
 
             return $response;
@@ -105,19 +103,19 @@ class DefaultRequestBus implements RequestBus
     }
 
     /**
-     * @param DomainRequest $request
+     * @param Request $request
      * @param \Exception $exception
-     * @return DomainResponse
+     * @return Response
      */
-    private function createResponseForFailedRequest(DomainRequest $request, \Exception $exception)
+    private function createResponseForFailedRequest(Request $request, \Exception $exception)
     {
-        $response = RequestFailedResponse::create()
-            ->setRequestRef($request->generateMessageRef())
-            ->setFailedRequest($request)
-            ->setReason(ClassUtils::getShortName($exception) . '::' . $exception->getMessage());
+        $response = RequestFailedResponseV1::create()
+            ->set('request_ref', $request->generateMessageRef())
+            ->set('failed_request', $request)
+            ->set('reason', ClassUtils::getShortName($exception) . '::' . $exception->getMessage());
 
-        if ($request->hasCorrelator()) {
-            $response->setCorrelator($request->getCorrelator());
+        if ($request->has('correlator')) {
+            $response->set('correlator', $request->get('correlator'));
         }
 
         return $response;

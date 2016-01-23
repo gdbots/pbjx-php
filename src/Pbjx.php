@@ -2,14 +2,14 @@
 
 namespace Gdbots\Pbjx;
 
-use Gdbots\Pbj\DomainCommand;
-use Gdbots\Pbj\DomainEvent;
-use Gdbots\Pbj\DomainRequest;
-use Gdbots\Pbj\DomainResponse;
 use Gdbots\Pbj\Message;
 use Gdbots\Pbjx\Event\PbjxEvent;
 use Gdbots\Pbjx\Exception\GdbotsPbjxException;
 use Gdbots\Pbjx\Exception\InvalidArgumentException;
+use Gdbots\Schemas\Pbj\Command\Command;
+use Gdbots\Schemas\Pbj\Event\Event;
+use Gdbots\Schemas\Pbj\Request\Request;
+use Gdbots\Schemas\Pbj\Request\Response;
 
 interface Pbjx
 {
@@ -33,31 +33,31 @@ interface Pbjx
     /**
      * Processes a command asynchronously.
      *
-     * @param DomainCommand $command
+     * @param Command $command
      *
      * @throws GdbotsPbjxException
      * @throws \Exception
      */
-    public function send(DomainCommand $command);
+    public function send(Command $command);
 
     /**
      * Publishes events to all subscribers.
      *
-     * @param DomainEvent $domainEvent
+     * @param Event $event
      *
      * @throws GdbotsPbjxException
      * @throws \Exception
      */
-    public function publish(DomainEvent $domainEvent);
+    public function publish(Event $event);
 
     /**
      * Processes a request synchronously and returns the response.
      *
-     * @param DomainRequest $request
-     * @return DomainResponse
+     * @param Request $request
+     * @return Response
      *
      * @throws GdbotsPbjxException
      * @throws \Exception
      */
-    public function request(DomainRequest $request);
+    public function request(Request $request);
 }

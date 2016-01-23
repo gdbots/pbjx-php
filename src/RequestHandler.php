@@ -2,19 +2,19 @@
 
 namespace Gdbots\Pbjx;
 
-use Gdbots\Pbj\DomainRequest;
-use Gdbots\Pbj\DomainResponse;
 use Gdbots\Pbjx\Exception\GdbotsPbjxException;
+use Gdbots\Schemas\Pbj\Request\Request;
+use Gdbots\Schemas\Pbj\Request\Response;
 
 interface RequestHandler
 {
     /**
-     * @param DomainRequest $request
+     * @param Request $request
      * @param Pbjx $pbjx
-     * @return DomainResponse
+     * @return Response
      *
      * @throws GdbotsPbjxException
      * @throws \Exception
      */
-    public function handleRequest(DomainRequest $request, Pbjx $pbjx);
+    public function handleRequest(Request $request, Pbjx $pbjx);
 }

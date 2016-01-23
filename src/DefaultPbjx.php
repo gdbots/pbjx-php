@@ -2,9 +2,6 @@
 
 namespace Gdbots\Pbjx;
 
-use Gdbots\Pbj\DomainCommand;
-use Gdbots\Pbj\DomainEvent;
-use Gdbots\Pbj\DomainRequest;
 use Gdbots\Pbj\Message;
 use Gdbots\Pbjx\Event\BusExceptionEvent;
 use Gdbots\Pbjx\Event\GetResponseEvent;
@@ -12,7 +9,10 @@ use Gdbots\Pbjx\Event\PbjxEvent;
 use Gdbots\Pbjx\Event\PostResponseEvent;
 use Gdbots\Pbjx\Exception\InvalidArgumentException;
 use Gdbots\Pbjx\Exception\RequestHandlingFailed;
-use Gdbots\Pbjx\Request\RequestFailedResponse;
+use Gdbots\Schemas\Pbj\Command\Command;
+use Gdbots\Schemas\Pbj\Event\Event;
+use Gdbots\Schemas\Pbj\Request\Request;
+use Gdbots\Schemas\Pbjx\Request\RequestFailedResponse;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 class DefaultPbjx implements Pbjx
@@ -55,7 +55,7 @@ class DefaultPbjx implements Pbjx
     /**
      * {@inheritdoc}
      */
-    public function send(DomainCommand $command)
+    public function send(Command $command)
     {
         $event = new PbjxEvent($command);
         $this->trigger($command, PbjxEvents::SUFFIX_VALIDATE, $event);
@@ -66,18 +66,18 @@ class DefaultPbjx implements Pbjx
     /**
      * {@inheritdoc}
      */
-    public function publish(DomainEvent $domainEvent)
+    public function publish(Event $event)
     {
-        if (!$domainEvent->isFrozen()) {
-            $this->trigger($domainEvent, PbjxEvents::SUFFIX_ENRICH);
+        if (!$event->isFrozen()) {
+            $this->trigger($event, PbjxEvents::SUFFIX_ENRICH);
         }
-        $this->locator->getEventBus()->publish($domainEvent);
+        $this->locator->getEventBus()->publish($event);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function request(DomainRequest $request)
+    public function request(Request $request)
     {
         $event = new PbjxEvent($request);
         $this->trigger($request, PbjxEvents::SUFFIX_VALIDATE, $event);
