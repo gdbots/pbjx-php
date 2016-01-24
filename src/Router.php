@@ -21,10 +21,10 @@ interface Router
     public function forCommand(Command $command);
 
     /**
-     * @param Event $domainEvent
+     * @param Event $event
      * @return string
      */
-    public function forEvent(Event $domainEvent);
+    public function forEvent(Event $event);
 
     /**
      * @param Request $request
