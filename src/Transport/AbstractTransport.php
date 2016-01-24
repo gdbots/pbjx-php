@@ -4,16 +4,16 @@ namespace Gdbots\Pbjx\Transport;
 
 use Gdbots\Common\Util\ClassUtils;
 use Gdbots\Common\Util\StringUtils;
-use Gdbots\Pbj\DomainCommand;
-use Gdbots\Pbj\DomainEvent;
-use Gdbots\Pbj\DomainRequest;
-use Gdbots\Pbj\DomainResponse;
 use Gdbots\Pbjx\Event\TransportEvent;
 use Gdbots\Pbjx\Event\TransportExceptionEvent;
 use Gdbots\Pbjx\PbjxEvents;
-use Gdbots\Pbjx\Request\RequestFailedResponse;
 use Gdbots\Pbjx\ServiceLocator;
 use Gdbots\Pbjx\Transport;
+use Gdbots\Schemas\Pbj\Command\Command;
+use Gdbots\Schemas\Pbj\Event\Event;
+use Gdbots\Schemas\Pbj\Request\Request;
+use Gdbots\Schemas\Pbj\Request\Response;
+use Gdbots\Schemas\Pbjx\Request\RequestFailedResponseV1;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 abstract class AbstractTransport implements Transport
@@ -42,10 +42,10 @@ abstract class AbstractTransport implements Transport
     /**
      * {@inheritdoc}
      */
-    public function sendCommand(DomainCommand $command)
+    public function sendCommand(Command $command)
     {
-        $event = new TransportEvent($this->transportName, $command);
-        $this->dispatcher->dispatch(PbjxEvents::TRANSPORT_BEFORE_SEND, $event);
+        $transportEvent = new TransportEvent($this->transportName, $command);
+        $this->dispatcher->dispatch(PbjxEvents::TRANSPORT_BEFORE_SEND, $transportEvent);
 
         try {
             $this->doSendCommand($command);
@@ -56,16 +56,16 @@ abstract class AbstractTransport implements Transport
             throw $e;
         }
 
-        $this->dispatcher->dispatch(PbjxEvents::TRANSPORT_AFTER_SEND, $event);
+        $this->dispatcher->dispatch(PbjxEvents::TRANSPORT_AFTER_SEND, $transportEvent);
     }
 
     /**
      * Override in the transport to handle the actual send.
      *
-     * @param DomainCommand $command
+     * @param Command $command
      * @throws \Exception
      */
-    protected function doSendCommand(DomainCommand $command)
+    protected function doSendCommand(Command $command)
     {
         $this->locator->getCommandBus()->receiveCommand($command);
     }
@@ -73,41 +73,41 @@ abstract class AbstractTransport implements Transport
     /**
      * {@inheritdoc}
      */
-    public function sendEvent(DomainEvent $domainEvent)
+    public function sendEvent(Event $event)
     {
-        $event = new TransportEvent($this->transportName, $domainEvent);
-        $this->dispatcher->dispatch(PbjxEvents::TRANSPORT_BEFORE_SEND, $event);
+        $transportEvent = new TransportEvent($this->transportName, $event);
+        $this->dispatcher->dispatch(PbjxEvents::TRANSPORT_BEFORE_SEND, $transportEvent);
 
         try {
-            $this->doSendEvent($domainEvent);
+            $this->doSendEvent($event);
         } catch (\Exception $e) {
             $this->locator->getExceptionHandler()->onTransportException(
-                new TransportExceptionEvent($this->transportName, $domainEvent, $e)
+                new TransportExceptionEvent($this->transportName, $event, $e)
             );
             throw $e;
         }
 
-        $this->dispatcher->dispatch(PbjxEvents::TRANSPORT_AFTER_SEND, $event);
+        $this->dispatcher->dispatch(PbjxEvents::TRANSPORT_AFTER_SEND, $transportEvent);
     }
 
     /**
      * Override in the transport to handle the actual send.
      *
-     * @param DomainEvent $domainEvent
+     * @param Event $event
      * @throws \Exception
      */
-    protected function doSendEvent(DomainEvent $domainEvent)
+    protected function doSendEvent(Event $event)
     {
-        $this->locator->getEventBus()->receiveEvent($domainEvent);
+        $this->locator->getEventBus()->receiveEvent($event);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function sendRequest(DomainRequest $request)
+    public function sendRequest(Request $request)
     {
-        $event = new TransportEvent($this->transportName, $request);
-        $this->dispatcher->dispatch(PbjxEvents::TRANSPORT_BEFORE_SEND, $event);
+        $transportEvent = new TransportEvent($this->transportName, $request);
+        $this->dispatcher->dispatch(PbjxEvents::TRANSPORT_BEFORE_SEND, $transportEvent);
 
         try {
             $response = $this->doSendRequest($request);
@@ -131,37 +131,37 @@ abstract class AbstractTransport implements Transport
             }
         }
 
-        $event = new TransportEvent($this->transportName, $response);
-        $this->dispatcher->dispatch(PbjxEvents::TRANSPORT_AFTER_SEND, $event);
+        $transportEvent = new TransportEvent($this->transportName, $response);
+        $this->dispatcher->dispatch(PbjxEvents::TRANSPORT_AFTER_SEND, $transportEvent);
         return $response;
     }
 
     /**
      * Override in the transport to handle the actual send.
      *
-     * @param DomainRequest $request
-     * @return DomainResponse
+     * @param Request $request
+     * @return Response
      * @throws \Exception
      */
-    protected function doSendRequest(DomainRequest $request)
+    protected function doSendRequest(Request $request)
     {
         return $this->locator->getRequestBus()->receiveRequest($request);
     }
 
     /**
-     * @param DomainRequest $request
+     * @param Request $request
      * @param \Exception $exception
-     * @return DomainResponse
+     * @return Response
      */
-    protected function createResponseForFailedRequest(DomainRequest $request, \Exception $exception)
+    protected function createResponseForFailedRequest(Request $request, \Exception $exception)
     {
-        $response = RequestFailedResponse::create()
-            ->setRequestRef($request->generateMessageRef())
-            ->setFailedRequest($request)
-            ->setReason(ClassUtils::getShortName($exception) . '::' . $exception->getMessage());
+        $response = RequestFailedResponseV1::create()
+            ->set('request_ref', $request->generateMessageRef())
+            ->set('failed_request', $request)
+            ->set('reason', ClassUtils::getShortName($exception) . '::' . $exception->getMessage());
 
-        if ($request->hasCorrelator()) {
-            $response->setCorrelator($request->getCorrelator());
+        if ($request->has('correlator')) {
+            $response->set('correlator', $request->get('correlator'));
         }
 
         return $response;

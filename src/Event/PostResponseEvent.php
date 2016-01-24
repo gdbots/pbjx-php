@@ -2,28 +2,28 @@
 
 namespace Gdbots\Pbjx\Event;
 
-use Gdbots\Pbj\DomainRequest;
-use Gdbots\Pbj\DomainResponse;
+use Gdbots\Schemas\Pbj\Request\Request;
+use Gdbots\Schemas\Pbj\Request\Response;
 
 class PostResponseEvent extends PbjxEvent
 {
-    /** @var DomainRequest */
+    /** @var Request */
     protected $message;
 
-    /** @var DomainResponse */
+    /** @var Response */
     protected $response;
 
     /**
-     * @param DomainRequest $request
-     * @param DomainResponse $response
+     * @param Request $request
+     * @param Response $response
      */
-    public function __construct(DomainRequest $request, DomainResponse $response)
+    public function __construct(Request $request, Response $response)
     {
         parent::__construct($request);
     }
 
     /**
-     * @return DomainRequest
+     * @return Request
      */
     public function getRequest()
     {
@@ -31,7 +31,7 @@ class PostResponseEvent extends PbjxEvent
     }
 
     /**
-     * @return DomainResponse
+     * @return Response
      */
     public function getResponse()
     {

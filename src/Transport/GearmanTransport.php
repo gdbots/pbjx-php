@@ -3,14 +3,14 @@
 namespace Gdbots\Pbjx\Transport;
 
 use Gdbots\Common\Util\NumberUtils;
-use Gdbots\Pbj\DomainCommand;
-use Gdbots\Pbj\DomainEvent;
-use Gdbots\Pbj\DomainRequest;
-use Gdbots\Pbj\DomainResponse;
 use Gdbots\Pbj\Serializer\PhpSerializer;
 use Gdbots\Pbj\Serializer\Serializer;
 use Gdbots\Pbjx\Router;
 use Gdbots\Pbjx\ServiceLocator;
+use Gdbots\Schemas\Pbj\Command\Command;
+use Gdbots\Schemas\Pbj\Event\Event;
+use Gdbots\Schemas\Pbj\Request\Request;
+use Gdbots\Schemas\Pbj\Request\Response;
 
 class GearmanTransport extends AbstractTransport
 {
@@ -54,16 +54,16 @@ class GearmanTransport extends AbstractTransport
      * @see Router::forCommand
      * @see GearmanClient::doBackground
      *
-     * @param DomainCommand $command
+     * @param Command $command
      * @throws \Exception
      */
-    protected function doSendCommand(DomainCommand $command)
+    protected function doSendCommand(Command $command)
     {
         $workload = $this->serializer->serialize($command);
         $channel = $this->router->forCommand($command);
         $client = $this->getClient();
 
-        @$client->doBackground($channel, $workload, $command->getCommandId());
+        @$client->doBackground($channel, $workload, $command->get('command_id'));
         $this->validateReturnCode($client, $channel);
     }
 
@@ -71,33 +71,33 @@ class GearmanTransport extends AbstractTransport
      * @see Router::forEvent
      * @see GearmanClient::doBackground
      *
-     * @param DomainEvent $domainEvent
+     * @param Event $event
      * @throws \Exception
      */
-    protected function doSendEvent(DomainEvent $domainEvent)
+    protected function doSendEvent(Event $event)
     {
-        $workload = $this->serializer->serialize($domainEvent);
-        $channel = $this->router->forEvent($domainEvent);
+        $workload = $this->serializer->serialize($event);
+        $channel = $this->router->forEvent($event);
         $client = $this->getClient();
 
-        @$client->doBackground($channel, $workload, $domainEvent->getEventId());
+        @$client->doBackground($channel, $workload, $event->get('event_id'));
         $this->validateReturnCode($client, $channel);
     }
 
     /**
      * Processes the request in memory synchronously.
      *
-     * @param DomainRequest $request
-     * @return DomainResponse
+     * @param Request $request
+     * @return Response
      * @throws \Exception
      */
-    protected function doSendRequest(DomainRequest $request)
+    protected function doSendRequest(Request $request)
     {
         $workload = $this->serializer->serialize($request);
         $channel = $this->router->forRequest($request);
         $client = $this->getClient();
 
-        $result = @$client->doNormal($channel, $workload, $request->getRequestId());
+        $result = @$client->doNormal($channel, $workload, $request->get('request_id'));
         $this->validateReturnCode($client, $channel);
         return $this->serializer->deserialize($result);
     }

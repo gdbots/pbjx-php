@@ -80,7 +80,7 @@ class DefaultRequestBus implements RequestBus
         }
 
         try {
-            $response = $handler->handleRequest($request, $this->pbjx);
+            $response = $handler->handle($request, $this->pbjx);
             if (!$response instanceof Response) {
                 throw new UnexpectedValueException(
                     sprintf(

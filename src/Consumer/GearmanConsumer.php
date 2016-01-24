@@ -128,7 +128,7 @@ class GearmanConsumer extends AbstractConsumer
 
             shuffle($this->channels);
             foreach ($this->channels as $channel) {
-                $this->worker->addFunction($channel, array($this, 'handleJob'));
+                $this->worker->addFunction($channel, [$this, 'handleJob']);
             }
         }
     }

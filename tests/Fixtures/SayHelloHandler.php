@@ -2,27 +2,29 @@
 
 namespace Gdbots\Tests\Pbjx\Fixtures;
 
-use Gdbots\Pbj\DomainCommand;
 use Gdbots\Pbjx\CommandHandler;
-use Gdbots\Pbjx\ConventionalCommandHandling;
+use Gdbots\Pbjx\Pbjx;
 
 class SayHelloHandler implements CommandHandler
 {
-    use ConventionalCommandHandling;
-
+    /** @var SayHello */
     private $handled;
 
     /**
      * @param SayHello $command
-     *
-     * @throws \Exception
+     * @param Pbjx $pbjx
      */
-    protected function sayHello(SayHello $command)
+    public function handle(SayHello $command, Pbjx $pbjx)
     {
         $this->handled = $command;
     }
 
-    public function hasHandled(DomainCommand $command)
+    /**
+     * @param SayHello $command
+     *
+     * @return bool
+     */
+    public function hasHandled(SayHello $command)
     {
         return $this->handled === $command;
     }

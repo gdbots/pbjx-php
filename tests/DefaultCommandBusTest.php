@@ -12,7 +12,7 @@ class DefaultCommandBusTest extends AbstractBusTestCase
 {
     public function testSend()
     {
-        $command = SayHello::create()->setName('homer');
+        $command = SayHello::create()->set('name', 'homer');
         $handler = new SayHelloHandler();
         $this->locator->registerCommandHandler($command::schema()->getCurie(), $handler);
         $this->pbjx->send($command);

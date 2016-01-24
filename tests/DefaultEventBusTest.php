@@ -3,8 +3,8 @@
 namespace Gdbots\Tests\Pbjx;
 
 use Gdbots\Pbjx\Event\BusExceptionEvent;
-use Gdbots\Pbjx\Event\EventExecutionFailed;
 use Gdbots\Pbjx\PbjxEvents;
+use Gdbots\Schemas\Pbjx\Event\EventExecutionFailedV1;
 use Gdbots\Tests\Pbjx\Fixtures\FailingEvent;
 use Gdbots\Tests\Pbjx\Fixtures\SimpleEvent;
 
@@ -12,7 +12,7 @@ class DefaultEventBusTest extends AbstractBusTestCase
 {
     public function testPublish()
     {
-        $event = SimpleEvent::create()->setName('homer');
+        $event = SimpleEvent::create()->set('name', 'homer');
         $that = $this;
         $dispatcher = $this->locator->getDispatcher();
 
@@ -40,7 +40,7 @@ class DefaultEventBusTest extends AbstractBusTestCase
 
     public function testEventExecutionFailed()
     {
-        $event = FailingEvent::create()->setName('homer');
+        $event = FailingEvent::create()->set('name', 'homer');
         $dispatcher = $this->locator->getDispatcher();
         $schemaId = $event::schema()->getId();
         $handled = false;
@@ -53,7 +53,7 @@ class DefaultEventBusTest extends AbstractBusTestCase
         );
 
         $dispatcher->addListener(
-            EventExecutionFailed::schema()->getCurieWithMajorRev(),
+            EventExecutionFailedV1::schema()->getCurieWithMajorRev(),
             function () use (&$handled) {
                 $handled = true;
             }
@@ -72,7 +72,7 @@ class DefaultEventBusTest extends AbstractBusTestCase
 
     public function testEventBusExceptionEvent()
     {
-        $event = FailingEvent::create()->setName('marge');
+        $event = FailingEvent::create()->set('name', 'marge');
         $that = $this;
         $dispatcher = $this->locator->getDispatcher();
         $schemaId = $event::schema()->getId();
@@ -85,20 +85,20 @@ class DefaultEventBusTest extends AbstractBusTestCase
         );
 
         $dispatcher->addListener(
-            EventExecutionFailed::schema()->getCurieWithMajorRev(),
+            EventExecutionFailedV1::schema()->getCurieWithMajorRev(),
             function () {
-                throw new \LogicException('Failed to handle EventExecutionFailed.');
+                throw new \LogicException('Failed to handle EventExecutionFailedV1.');
             }
         );
 
         $dispatcher->addListener(
             PbjxEvents::EVENT_BUS_EXCEPTION,
             function (BusExceptionEvent $exceptionEvent) use ($that, $event) {
-                /** @var EventExecutionFailed $domainEvent */
+                /** @var EventExecutionFailedV1 $domainEvent */
                 $domainEvent = $exceptionEvent->getMessage();
                 $that->assertSame(
-                    $domainEvent->getFailedEvent()->get('name'),
-                    $event->getName()
+                    $domainEvent->get('failed_event')->get('name'),
+                    $event->get('name')
                 );
             }
         );

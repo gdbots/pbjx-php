@@ -24,6 +24,7 @@ final class RegisteringServiceLocator extends AbstractServiceLocator
         if (isset($this->handlers[$curie->toString()])) {
             return $this->handlers[$curie->toString()];
         }
+
         throw new HandlerNotFound($curie);
     }
 
@@ -35,6 +36,7 @@ final class RegisteringServiceLocator extends AbstractServiceLocator
         if (isset($this->handlers[$curie->toString()])) {
             return $this->handlers[$curie->toString()];
         }
+
         throw new HandlerNotFound($curie);
     }
 

@@ -3,16 +3,16 @@
 namespace Gdbots\Tests\Pbjx\Fixtures;
 
 use Gdbots\Pbj\AbstractMessage;
-use Gdbots\Pbj\DomainCommand;
 use Gdbots\Pbj\MessageResolver;
-use Gdbots\Pbj\Mixin\CommandMixin;
-use Gdbots\Pbj\Mixin\CommandTrait;
 use Gdbots\Pbj\Schema;
 use Gdbots\Pbj\Type as T;
+use Gdbots\Schemas\Pbj\Command\CommandV1;
+use Gdbots\Schemas\Pbj\Command\CommandV1Mixin;
+use Gdbots\Schemas\Pbj\Command\CommandV1Trait;
 
-final class FakeCommand extends AbstractMessage implements DomainCommand
+final class FakeCommand extends AbstractMessage implements CommandV1
 {
-    use CommandTrait;
+    use CommandV1Trait;
 
     /**
      * @return Schema
@@ -20,7 +20,7 @@ final class FakeCommand extends AbstractMessage implements DomainCommand
     protected static function defineSchema()
     {
         $schema = new Schema('pbj:gdbots:tests.pbjx:fixtures:fake-command:1-0-0', __CLASS__, [],
-            [CommandMixin::create()]
+            [CommandV1Mixin::create()]
         );
         MessageResolver::registerSchema($schema);
         return $schema;

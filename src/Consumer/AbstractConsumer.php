@@ -5,13 +5,13 @@ namespace Gdbots\Pbjx\Consumer;
 use Gdbots\Common\Util\ClassUtils;
 use Gdbots\Common\Util\NumberUtils;
 use Gdbots\Common\Util\StringUtils;
-use Gdbots\Pbj\DomainCommand;
-use Gdbots\Pbj\DomainEvent;
-use Gdbots\Pbj\DomainRequest;
-use Gdbots\Pbj\DomainResponse;
 use Gdbots\Pbj\Message;
 use Gdbots\Pbjx\PbjxEvents;
 use Gdbots\Pbjx\ServiceLocator;
+use Gdbots\Schemas\Pbj\Command\Command;
+use Gdbots\Schemas\Pbj\Event\Event;
+use Gdbots\Schemas\Pbj\Request\Request;
+use Gdbots\Schemas\Pbj\Request\Response;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
@@ -65,8 +65,8 @@ abstract class AbstractConsumer
         declare(ticks = 1);
         if (function_exists('pcntl_signal')) {
             pcntl_signal(SIGCHLD, SIG_IGN); // Zombies
-            pcntl_signal(SIGTERM, array($this, 'handleSignals')); // Kill
-            pcntl_signal(SIGINT, array($this, 'handleSignals')); // Control + C (from shell)
+            pcntl_signal(SIGTERM, [$this, 'handleSignals']); // Kill
+            pcntl_signal(SIGINT, [$this, 'handleSignals']); // Control + C (from shell)
         }
         $dispatcher = $this->locator->getDispatcher();
 
@@ -152,42 +152,42 @@ abstract class AbstractConsumer
      */
     final protected function handleMessage(Message $message)
     {
-        if ($message instanceof DomainCommand) {
+        if ($message instanceof Command) {
             $this->handleCommand($message);
             return null;
         }
 
-        if ($message instanceof DomainEvent) {
+        if ($message instanceof Event) {
             $this->handleEvent($message);
             return null;
         }
 
-        if ($message instanceof DomainRequest) {
+        if ($message instanceof Request) {
             return $this->handleRequest($message);
         }
     }
 
     /**
-     * @param DomainCommand $command
+     * @param Command $command
      */
-    private function handleCommand(DomainCommand $command)
+    private function handleCommand(Command $command)
     {
         $this->locator->getCommandBus()->receiveCommand($command);
     }
 
     /**
-     * @param DomainEvent $domainEvent
+     * @param Event $event
      */
-    private function handleEvent(DomainEvent $domainEvent)
+    private function handleEvent(Event $event)
     {
-        $this->locator->getEventBus()->receiveEvent($domainEvent);
+        $this->locator->getEventBus()->receiveEvent($event);
     }
 
     /**
-     * @param DomainRequest $request
-     * @return DomainResponse
+     * @param Request $request
+     * @return Response
      */
-    private function handleRequest(DomainRequest $request)
+    private function handleRequest(Request $request)
     {
         return $this->locator->getRequestBus()->receiveRequest($request);
     }

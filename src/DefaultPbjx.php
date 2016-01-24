@@ -42,14 +42,16 @@ class DefaultPbjx implements Pbjx
         if ('.' === $suffix) {
             throw new InvalidArgumentException('Trigger requires a non-empty suffix.');
         }
-        $event = $event ?: new PbjxEvent($message);
 
+        $event = $event ?: new PbjxEvent($message);
         $schema = $message::schema();
-        $this->dispatcher->dispatch($schema->getCurieWithMajorRev() . $suffix, $event);
-        $this->dispatcher->dispatch($schema->getCurie()->toString() . $suffix, $event);
+
         foreach ($schema->getMixinIds() as $mixinId) {
             $this->dispatcher->dispatch($mixinId . $suffix, $event);
         }
+
+        $this->dispatcher->dispatch($schema->getCurieWithMajorRev() . $suffix, $event);
+        $this->dispatcher->dispatch($schema->getCurie()->toString() . $suffix, $event);
     }
 
     /**
