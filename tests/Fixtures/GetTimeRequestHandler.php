@@ -2,18 +2,16 @@
 
 namespace Gdbots\Tests\Pbjx\Fixtures;
 
-use Gdbots\Pbjx\Pbjx;
 use Gdbots\Pbjx\RequestHandler;
 
 class GetTimeRequestHandler implements RequestHandler
 {
     /**
      * @param GetTimeRequest $request
-     * @param Pbjx $pbjx
      *
      * @return string|static
      */
-    public function handle(GetTimeRequest $request, Pbjx $pbjx)
+    public function handle(GetTimeRequest $request)
     {
         if ($request->get('test_fail')) {
             return 'test fail';

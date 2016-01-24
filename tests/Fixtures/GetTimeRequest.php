@@ -28,6 +28,7 @@ final class GetTimeRequest extends AbstractMessage implements RequestV1
                 RequestV1Mixin::create()
             ]
         );
+
         MessageResolver::registerSchema($schema);
         return $schema;
     }

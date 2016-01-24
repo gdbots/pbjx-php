@@ -32,8 +32,4 @@ final class SayHello extends AbstractMessage implements CommandV1
         MessageResolver::registerSchema($schema);
         return $schema;
     }
-
-    public function test()
-    {
-    }
 }
