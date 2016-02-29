@@ -76,15 +76,16 @@ class DefaultRequestBus implements RequestBus
             } catch (\Exception $e) {
                 return $this->createResponseForFailedRequest($request, $e);
             }
+
             $this->handlers[$curieStr] = $handler;
         }
 
         try {
-            $response = $handler->handle($request, $this->pbjx);
+            $response = $handler->handleRequest($request, $this->pbjx);
             if (!$response instanceof Response) {
                 throw new UnexpectedValueException(
                     sprintf(
-                        'The handler "%s" returned "%s" but a DomainResponse object was expected.',
+                        'The handler "%s" returned "%s" but a Response object was expected.',
                         get_class($handler),
                         StringUtils::varToString($response)
                     )

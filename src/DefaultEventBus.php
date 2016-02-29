@@ -71,6 +71,10 @@ class DefaultEventBus implements EventBus
             $this->doDispatch($mixinId, $event);
         }
 
+        foreach ($schema->getMixinCuries() as $mixinCurie) {
+            $this->doDispatch($mixinCurie, $event);
+        }
+
         $this->doDispatch($schema->getCurieWithMajorRev(), $event);
         $this->doDispatch($curie->toString(), $event);
 
@@ -97,13 +101,12 @@ class DefaultEventBus implements EventBus
                 call_user_func($listener, $event, $this->pbjx);
             } catch (\Exception $e) {
                 if ($event instanceof EventExecutionFailed) {
-                    $this->locator->getExceptionHandler()->onEventBusException(
-                        new BusExceptionEvent($event, $e)
-                    );
+                    $this->locator->getExceptionHandler()->onEventBusException(new BusExceptionEvent($event, $e));
                     return;
                 }
 
                 $failedEvent = EventExecutionFailedV1::create()
+                    ->set('causator', $event->generateMessageRef())
                     ->set('failed_event', $event)
                     ->set('reason', ClassUtils::getShortName($e) . '::' . $e->getMessage());
 

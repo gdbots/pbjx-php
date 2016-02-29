@@ -77,11 +77,16 @@ abstract class AbstractConsumer
                 $this->stop();
                 $this->logger->critical(
                     sprintf(
-                        'Consumer [%s] caught an exception with message [%s], shutting down.',
-                        $this->consumerName,
-                        $e->getMessage()
-                    )
+                        '%s::Consumer [%s] caught an exception, shutting down.',
+                        ClassUtils::getShortName($e),
+                        $this->consumerName
+                    ),
+                    [
+                        'exception' => $e,
+                        'consumer' => $this->consumerName,
+                    ]
                 );
+
                 $dispatcher->dispatch(PbjxEvents::CONSUMER_HANDLING_EXCEPTION);
                 break;
             }

@@ -2,6 +2,7 @@
 
 namespace Gdbots\Pbjx\Consumer;
 
+use Gdbots\Common\Util\ClassUtils;
 use Gdbots\Common\Util\NumberUtils;
 use Gdbots\Pbj\Message;
 use Gdbots\Pbj\Serializer\PhpSerializer;
@@ -22,6 +23,7 @@ class GearmanConsumer extends AbstractConsumer
     /**
      * The channels this consumer is listening to.  In gearman, this is the function name.
      * If the supplied array is empty the router default channels are used.
+     *
      * @see Router
      * @see \GearmanWorker::addFunction
      * @var array
@@ -183,11 +185,26 @@ class GearmanConsumer extends AbstractConsumer
             if ($result instanceof Message) {
                 return $this->serializer->serialize($result);
             }
+
         } catch (\Exception $e) {
             $job->sendFail();
             $this->logger->error(
-                sprintf('Failed to handle job [%s] with workload: %s', $job->handle(), $job->workload())
+                sprintf(
+                    '%s::Consumer [%s] failed to handle job [{job_handle}::{job_id}].',
+                    ClassUtils::getShortName($e),
+                    $this->consumerName
+                ),
+                [
+                    'exception' => $e,
+                    'consumer' => $this->consumerName,
+                    'gearman_function_name' => $job->functionName(),
+                    'gearman_worker_id' => $this->workerId,
+                    'job_handle' => $job->handle(),
+                    'job_id' => $job->unique(),
+                    'job_workload' => $job->workload(),
+                ]
             );
+
             throw $e;
         }
 

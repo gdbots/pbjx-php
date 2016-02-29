@@ -18,7 +18,8 @@ interface Pbjx
      *
      * curie:v[MAJOR VERSION].suffix
      * curie.suffix
-     * mixinId.suffix
+     * mixinId.suffix (mixinId is the mixin with the major rev)
+     * mixinCurie.suffix (mixinCurie is the curie ONLY)
      *
      * @param Message $message
      * @param string $suffix

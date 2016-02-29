@@ -50,6 +50,10 @@ class DefaultPbjx implements Pbjx
             $this->dispatcher->dispatch($mixinId . $suffix, $event);
         }
 
+        foreach ($schema->getMixinCuries() as $mixinCurie) {
+            $this->dispatcher->dispatch($mixinCurie . $suffix, $event);
+        }
+
         $this->dispatcher->dispatch($schema->getCurieWithMajorRev() . $suffix, $event);
         $this->dispatcher->dispatch($schema->getCurie()->toString() . $suffix, $event);
     }
@@ -59,9 +63,13 @@ class DefaultPbjx implements Pbjx
      */
     public function send(Command $command)
     {
-        $event = new PbjxEvent($command);
-        $this->trigger($command, PbjxEvents::SUFFIX_VALIDATE, $event);
-        $this->trigger($command, PbjxEvents::SUFFIX_ENRICH, $event);
+        if (!$command->isFrozen()) {
+            $event = new PbjxEvent($command);
+            $this->trigger($command, PbjxEvents::SUFFIX_BIND, $event);
+            $this->trigger($command, PbjxEvents::SUFFIX_VALIDATE, $event);
+            $this->trigger($command, PbjxEvents::SUFFIX_ENRICH, $event);
+        }
+
         $this->locator->getCommandBus()->send($command);
     }
 
@@ -71,8 +79,12 @@ class DefaultPbjx implements Pbjx
     public function publish(Event $event)
     {
         if (!$event->isFrozen()) {
-            $this->trigger($event, PbjxEvents::SUFFIX_ENRICH);
+            $pbjxEvent = new PbjxEvent($event);
+            $this->trigger($event, PbjxEvents::SUFFIX_BIND, $pbjxEvent);
+            $this->trigger($event, PbjxEvents::SUFFIX_VALIDATE, $pbjxEvent);
+            $this->trigger($event, PbjxEvents::SUFFIX_ENRICH, $pbjxEvent);
         }
+
         $this->locator->getEventBus()->publish($event);
     }
 
@@ -82,6 +94,7 @@ class DefaultPbjx implements Pbjx
     public function request(Request $request)
     {
         $event = new PbjxEvent($request);
+        $this->trigger($request, PbjxEvents::SUFFIX_BIND, $event);
         $this->trigger($request, PbjxEvents::SUFFIX_VALIDATE, $event);
         $this->trigger($request, PbjxEvents::SUFFIX_ENRICH, $event);
         $event = new GetResponseEvent($request);
@@ -103,9 +116,7 @@ class DefaultPbjx implements Pbjx
             $this->trigger($request, PbjxEvents::SUFFIX_AFTER_HANDLE, $event);
             $this->trigger($response, PbjxEvents::SUFFIX_CREATED, $event);
         } catch (\Exception $e) {
-            $this->locator->getExceptionHandler()->onRequestBusException(
-                new BusExceptionEvent($response, $e)
-            );
+            $this->locator->getExceptionHandler()->onRequestBusException(new BusExceptionEvent($response, $e));
         }
 
         return $response;

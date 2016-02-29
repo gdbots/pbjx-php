@@ -6,9 +6,8 @@ This changelog references the relevant changes done in 1.x versions.
 __BREAKING CHANGES__
 
 * Using new `gdbots/pbj` and `gdbots/pbj-schemas-php` libraries (schemas moved, php >=5.6 required).
-* Removed `ConventionalCommandHandling` and `ConventionalRequestHandling`.  Now that compiler won't be generating
-  getters/setters these classes don't help much.
-* `CommandHandler` and `RequestHandler` interfaces are now only used for auto discovering handlers (for now).
-  The "handle" method is implicitly required but not enforced by the interface.  This allows the handler to define
-  its own type hinting for the first argument (so long as it implement Command or Request).
-
+* Renamed `ConventionalCommandHandling` and `ConventionalRequestHandling` to `CommandHandlerTrait` and `RequestHandlerTrait`.
+  By default the trait will call `handle` but provides `getMethodForCommand` or `getMethodForRequest` so it can be modified.
+* The `DefaultPbjx` now triggers `bind`, `validate` and `enrich` when `send` or `publish` is called and the message isn't frozen.
+* `DefaultExceptionHandler` now logs the exception and pbj message in the context array.
+* Adds `KinesisTransport` and `KinesisConsumer`.

@@ -19,7 +19,6 @@ final class PbjxEvents
      * @var string
      */
     const SUFFIX_BIND = 'bind';
-    const SUFFIX_BIND_FROM = 'bind_from.';
     const SUFFIX_VALIDATE = 'validate';
     const SUFFIX_ENRICH = 'enrich';
     const SUFFIX_BEFORE_HANDLE = 'before_handle';
