@@ -6,8 +6,8 @@ use Gdbots\Common\Util\ClassUtils;
 use Gdbots\Common\Util\StringUtils;
 use Gdbots\Pbjx\Exception\InvalidHandler;
 use Gdbots\Pbjx\Exception\UnexpectedValueException;
-use Gdbots\Schemas\Pbj\Request\Request;
-use Gdbots\Schemas\Pbj\Request\Response;
+use Gdbots\Schemas\Pbjx\Request\Request;
+use Gdbots\Schemas\Pbjx\Request\Response;
 use Gdbots\Schemas\Pbjx\Request\RequestFailedResponseV1;
 
 class DefaultRequestBus implements RequestBus

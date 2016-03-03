@@ -4,8 +4,8 @@ namespace Gdbots\Pbjx\Exception;
 
 use Gdbots\Pbjx\CommandHandler;
 use Gdbots\Pbjx\RequestHandler;
-use Gdbots\Schemas\Pbj\Command\Command;
-use Gdbots\Schemas\Pbj\Request\Request;
+use Gdbots\Schemas\Pbjx\Command\Command;
+use Gdbots\Schemas\Pbjx\Request\Request;
 
 final class InvalidHandler extends \UnexpectedValueException implements GdbotsPbjxException
 {

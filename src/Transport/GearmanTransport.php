@@ -7,10 +7,10 @@ use Gdbots\Pbj\Serializer\PhpSerializer;
 use Gdbots\Pbj\Serializer\Serializer;
 use Gdbots\Pbjx\Router;
 use Gdbots\Pbjx\ServiceLocator;
-use Gdbots\Schemas\Pbj\Command\Command;
-use Gdbots\Schemas\Pbj\Event\Event;
-use Gdbots\Schemas\Pbj\Request\Request;
-use Gdbots\Schemas\Pbj\Request\Response;
+use Gdbots\Schemas\Pbjx\Command\Command;
+use Gdbots\Schemas\Pbjx\Event\Event;
+use Gdbots\Schemas\Pbjx\Request\Request;
+use Gdbots\Schemas\Pbjx\Request\Response;
 
 class GearmanTransport extends AbstractTransport
 {

@@ -3,10 +3,10 @@
 namespace Gdbots\Pbjx;
 
 use Gdbots\Pbjx\Exception\GdbotsPbjxException;
-use Gdbots\Schemas\Pbj\Command\Command;
-use Gdbots\Schemas\Pbj\Event\Event;
-use Gdbots\Schemas\Pbj\Request\Request;
-use Gdbots\Schemas\Pbj\Request\Response;
+use Gdbots\Schemas\Pbjx\Command\Command;
+use Gdbots\Schemas\Pbjx\Event\Event;
+use Gdbots\Schemas\Pbjx\Request\Request;
+use Gdbots\Schemas\Pbjx\Request\Response;
 
 interface Transport
 {

@@ -2,7 +2,7 @@
 
 namespace Gdbots\Pbjx\Exception;
 
-use Gdbots\Schemas\Pbj\Request\Request;
+use Gdbots\Schemas\Pbjx\Request\Request;
 use Gdbots\Schemas\Pbjx\Request\RequestFailedResponse;
 
 class RequestHandlingFailed extends \RuntimeException implements GdbotsPbjxException

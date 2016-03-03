@@ -6,8 +6,8 @@ use Aws\Kinesis\KinesisClient;
 use Gdbots\Pbj\Serializer\JsonSerializer;
 use Gdbots\Pbjx\PartitionableRouter;
 use Gdbots\Pbjx\ServiceLocator;
-use Gdbots\Schemas\Pbj\Command\Command;
-use Gdbots\Schemas\Pbj\Event\Event;
+use Gdbots\Schemas\Pbjx\Command\Command;
+use Gdbots\Schemas\Pbjx\Event\Event;
 
 class KinesisTransport extends AbstractTransport
 {
@@ -42,7 +42,7 @@ class KinesisTransport extends AbstractTransport
      */
     protected function doSendCommand(Command $command)
     {
-        $this->client->putRecord([
+        $result = $this->client->putRecord([
             'StreamName' => $this->router->forCommand($command),
             'PartitionKey' => $this->router->partitionForCommand($command),
             'Data' => $this->serializer->serialize($command),

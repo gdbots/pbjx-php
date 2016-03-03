@@ -3,9 +3,9 @@
 namespace Gdbots\Pbjx\Transport;
 
 use Gdbots\Pbjx\Router;
-use Gdbots\Schemas\Pbj\Command\Command;
-use Gdbots\Schemas\Pbj\Event\Event;
-use Gdbots\Schemas\Pbj\Request\Request;
+use Gdbots\Schemas\Pbjx\Command\Command;
+use Gdbots\Schemas\Pbjx\Event\Event;
+use Gdbots\Schemas\Pbjx\Request\Request;
 
 class GearmanRouter implements Router
 {

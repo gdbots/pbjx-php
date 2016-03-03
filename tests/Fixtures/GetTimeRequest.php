@@ -7,9 +7,9 @@ use Gdbots\Pbj\FieldBuilder as Fb;
 use Gdbots\Pbj\MessageResolver;
 use Gdbots\Pbj\Schema;
 use Gdbots\Pbj\Type as T;
-use Gdbots\Schemas\Pbj\Request\RequestV1;
-use Gdbots\Schemas\Pbj\Request\RequestV1Mixin;
-use Gdbots\Schemas\Pbj\Request\RequestV1Trait;
+use Gdbots\Schemas\Pbjx\Request\RequestV1;
+use Gdbots\Schemas\Pbjx\Request\RequestV1Mixin;
+use Gdbots\Schemas\Pbjx\Request\RequestV1Trait;
 
 final class GetTimeRequest extends AbstractMessage implements RequestV1
 {

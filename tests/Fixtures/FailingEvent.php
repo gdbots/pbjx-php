@@ -7,9 +7,9 @@ use Gdbots\Pbj\FieldBuilder as Fb;
 use Gdbots\Pbj\MessageResolver;
 use Gdbots\Pbj\Schema;
 use Gdbots\Pbj\Type as T;
-use Gdbots\Schemas\Pbj\Event\EventV1;
-use Gdbots\Schemas\Pbj\Event\EventV1Mixin;
-use Gdbots\Schemas\Pbj\Event\EventV1Trait;
+use Gdbots\Schemas\Pbjx\Event\EventV1;
+use Gdbots\Schemas\Pbjx\Event\EventV1Mixin;
+use Gdbots\Schemas\Pbjx\Event\EventV1Trait;
 
 final class FailingEvent extends AbstractMessage implements EventV1
 {

@@ -4,7 +4,7 @@ namespace Gdbots\Pbjx;
 
 use Gdbots\Common\Util\ClassUtils;
 use Gdbots\Pbjx\Event\BusExceptionEvent;
-use Gdbots\Schemas\Pbj\Event\Event;
+use Gdbots\Schemas\Pbjx\Event\Event;
 use Gdbots\Schemas\Pbjx\Event\EventExecutionFailed;
 use Gdbots\Schemas\Pbjx\Event\EventExecutionFailedV1;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;

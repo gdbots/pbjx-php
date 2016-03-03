@@ -2,9 +2,9 @@
 
 namespace Gdbots\Pbjx;
 
-use Gdbots\Schemas\Pbj\Command\Command;
-use Gdbots\Schemas\Pbj\Event\Event;
-use Gdbots\Schemas\Pbj\Request\Request;
+use Gdbots\Schemas\Pbjx\Command\Command;
+use Gdbots\Schemas\Pbjx\Event\Event;
+use Gdbots\Schemas\Pbjx\Request\Request;
 
 /**
  * A transport that supports partitioning will route messages

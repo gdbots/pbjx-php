@@ -9,9 +9,9 @@ use Gdbots\Pbjx\Event\PbjxEvent;
 use Gdbots\Pbjx\Event\PostResponseEvent;
 use Gdbots\Pbjx\Exception\InvalidArgumentException;
 use Gdbots\Pbjx\Exception\RequestHandlingFailed;
-use Gdbots\Schemas\Pbj\Command\Command;
-use Gdbots\Schemas\Pbj\Event\Event;
-use Gdbots\Schemas\Pbj\Request\Request;
+use Gdbots\Schemas\Pbjx\Command\Command;
+use Gdbots\Schemas\Pbjx\Event\Event;
+use Gdbots\Schemas\Pbjx\Request\Request;
 use Gdbots\Schemas\Pbjx\Request\RequestFailedResponse;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 

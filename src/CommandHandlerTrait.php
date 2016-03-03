@@ -4,7 +4,7 @@ namespace Gdbots\Pbjx;
 
 use Gdbots\Pbjx\Exception\GdbotsPbjxException;
 use Gdbots\Pbjx\Exception\InvalidHandler;
-use Gdbots\Schemas\Pbj\Command\Command;
+use Gdbots\Schemas\Pbjx\Command\Command;
 
 trait CommandHandlerTrait
 {

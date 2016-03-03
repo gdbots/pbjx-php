@@ -3,8 +3,8 @@
 namespace Gdbots\Pbjx\Event;
 
 use Gdbots\Pbjx\Exception\LogicException;
-use Gdbots\Schemas\Pbj\Request\Request;
-use Gdbots\Schemas\Pbj\Request\Response;
+use Gdbots\Schemas\Pbjx\Request\Request;
+use Gdbots\Schemas\Pbjx\Request\Response;
 
 class GetResponseEvent extends PbjxEvent
 {
