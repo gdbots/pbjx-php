@@ -35,8 +35,11 @@ class DefaultPbjx implements Pbjx
 
     /**
      * {@inheritdoc}
+     *
+     * todo: implement recursion on trigger.
+     *
      */
-    public function trigger(Message $message, $suffix, PbjxEvent $event = null)
+    public function trigger(Message $message, $suffix, PbjxEvent $event = null, $recursive = true, $depth = 0)
     {
         $suffix = '.' . trim($suffix, '.');
         if ('.' === $suffix) {

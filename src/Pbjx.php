@@ -21,15 +21,21 @@ interface Pbjx
      * mixinId.suffix (mixinId is the mixin with the major rev)
      * mixinCurie.suffix (mixinCurie is the curie ONLY)
      *
+     * When the recursive option is used, any fields with MessageType will also be run through
+     * the trigger process.  The PbjxEvent object will have a reference to the parent event
+     * and the depth of the recursion.
+     *
      * @param Message $message
      * @param string $suffix
      * @param PbjxEvent $event
+     * @param bool $recursive   If true, all field values with MessageType are also triggered.
+     * @param int $depth        When running recursively, this value is incremented on each level.
      *
      * @throws GdbotsPbjxException
      * @throws InvalidArgumentException
      * @throws \Exception
      */
-    public function trigger(Message $message, $suffix, PbjxEvent $event = null);
+    public function trigger(Message $message, $suffix, PbjxEvent $event = null, $recursive = true, $depth = 0);
 
     /**
      * Processes a command asynchronously.
