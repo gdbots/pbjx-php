@@ -6,6 +6,7 @@ use Gdbots\Common\Util\ClassUtils;
 use Gdbots\Common\Util\StringUtils;
 use Gdbots\Pbjx\Exception\InvalidHandler;
 use Gdbots\Pbjx\Exception\UnexpectedValueException;
+use Gdbots\Schemas\Pbjx\Enum\Code;
 use Gdbots\Schemas\Pbjx\Request\Request;
 use Gdbots\Schemas\Pbjx\Request\Response;
 use Gdbots\Schemas\Pbjx\Request\RequestFailedResponseV1;
@@ -110,10 +111,14 @@ class DefaultRequestBus implements RequestBus
      */
     private function createResponseForFailedRequest(Request $request, \Exception $exception)
     {
+        $code = $exception->getCode() > 0 ? $exception->getCode() : Code::UNKNOWN;
+
         $response = RequestFailedResponseV1::create()
             ->set('request_ref', $request->generateMessageRef())
-            ->set('failed_request', $request)
-            ->set('reason', ClassUtils::getShortName($exception) . '::' . $exception->getMessage());
+            ->set('request', $request)
+            ->set('error_code', $code)
+            ->set('error_name', ClassUtils::getShortName($exception))
+            ->set('error_message', $exception->getMessage());
 
         if ($request->has('correlator')) {
             $response->set('correlator', $request->get('correlator'));

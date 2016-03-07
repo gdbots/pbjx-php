@@ -4,6 +4,7 @@ namespace Gdbots\Pbjx;
 
 use Gdbots\Common\Util\ClassUtils;
 use Gdbots\Pbjx\Event\BusExceptionEvent;
+use Gdbots\Schemas\Pbjx\Enum\Code;
 use Gdbots\Schemas\Pbjx\Event\Event;
 use Gdbots\Schemas\Pbjx\Event\EventExecutionFailed;
 use Gdbots\Schemas\Pbjx\Event\EventExecutionFailedV1;
@@ -105,10 +106,14 @@ class DefaultEventBus implements EventBus
                     return;
                 }
 
+                $code = $e->getCode() > 0 ? $e->getCode() : Code::UNKNOWN;
+
                 $failedEvent = EventExecutionFailedV1::create()
                     ->set('causator', $event->generateMessageRef())
-                    ->set('failed_event', $event)
-                    ->set('reason', ClassUtils::getShortName($e) . '::' . $e->getMessage());
+                    ->set('event', $event)
+                    ->set('error_code', $code)
+                    ->set('error_name', ClassUtils::getShortName($e))
+                    ->set('error_message', $e->getMessage());
 
                 if ($event->has('correlator')) {
                     $failedEvent->set('correlator', $event->get('correlator'));

@@ -9,5 +9,7 @@ __BREAKING CHANGES__
 * Renamed `ConventionalCommandHandling` and `ConventionalRequestHandling` to `CommandHandlerTrait` and `RequestHandlerTrait`.
   By default the trait will call `handle` but provides `getMethodForCommand` or `getMethodForRequest` so it can be modified.
 * The `DefaultPbjx` now triggers `bind`, `validate` and `enrich` when `send` or `publish` is called and the message isn't frozen.
+* `Pbjx::trigger` now supports recursive event dispatching.  Any nested messages will also be run through the same event suffix.
+  This is useful for the standard set of bind, validate, enrich passes done on the root event.
 * `DefaultExceptionHandler` now logs the exception and pbj message in the context array.
 * Adds `KinesisTransport` and `KinesisConsumer`.

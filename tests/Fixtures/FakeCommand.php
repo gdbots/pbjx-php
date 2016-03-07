@@ -22,6 +22,7 @@ final class FakeCommand extends AbstractMessage implements CommandV1
         $schema = new Schema('pbj:gdbots:tests.pbjx:fixtures:fake-command:1-0-0', __CLASS__, [],
             [CommandV1Mixin::create()]
         );
+
         MessageResolver::registerSchema($schema);
         return $schema;
     }

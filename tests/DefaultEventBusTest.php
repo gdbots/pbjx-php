@@ -97,7 +97,7 @@ class DefaultEventBusTest extends AbstractBusTestCase
                 /** @var EventExecutionFailedV1 $domainEvent */
                 $domainEvent = $exceptionEvent->getMessage();
                 $that->assertSame(
-                    $domainEvent->get('failed_event')->get('name'),
+                    $domainEvent->get('event')->get('name'),
                     $event->get('name')
                 );
             }
