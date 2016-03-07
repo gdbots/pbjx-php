@@ -42,7 +42,7 @@ class KinesisTransport extends AbstractTransport
      */
     protected function doSendCommand(Command $command)
     {
-        $result = $this->client->putRecord([
+        $this->client->putRecord([
             'StreamName' => $this->router->forCommand($command),
             'PartitionKey' => $this->router->partitionForCommand($command),
             'Data' => $this->serializer->serialize($command),

@@ -26,4 +26,12 @@ class TransportEvent extends PbjxEvent
     {
         return $this->transportName;
     }
+
+    /**
+     * @return bool
+     */
+    public function supportsRecursion()
+    {
+        return false;
+    }
 }

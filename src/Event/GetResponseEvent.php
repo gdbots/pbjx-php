@@ -67,4 +67,12 @@ class GetResponseEvent extends PbjxEvent
         $this->response = $response;
         $this->stopPropagation();
     }
+
+    /**
+     * @return bool
+     */
+    public function supportsRecursion()
+    {
+        return false;
+    }
 }

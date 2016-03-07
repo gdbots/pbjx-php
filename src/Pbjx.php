@@ -6,6 +6,7 @@ use Gdbots\Pbj\Message;
 use Gdbots\Pbjx\Event\PbjxEvent;
 use Gdbots\Pbjx\Exception\GdbotsPbjxException;
 use Gdbots\Pbjx\Exception\InvalidArgumentException;
+use Gdbots\Pbjx\Exception\TooMuchRecursion;
 use Gdbots\Schemas\Pbjx\Command\Command;
 use Gdbots\Schemas\Pbjx\Event\Event;
 use Gdbots\Schemas\Pbjx\Request\Request;
@@ -29,13 +30,13 @@ interface Pbjx
      * @param string $suffix
      * @param PbjxEvent $event
      * @param bool $recursive   If true, all field values with MessageType are also triggered.
-     * @param int $depth        When running recursively, this value is incremented on each level.
      *
      * @throws GdbotsPbjxException
      * @throws InvalidArgumentException
+     * @throws TooMuchRecursion
      * @throws \Exception
      */
-    public function trigger(Message $message, $suffix, PbjxEvent $event = null, $recursive = true, $depth = 0);
+    public function trigger(Message $message, $suffix, PbjxEvent $event = null, $recursive = true);
 
     /**
      * Processes a command asynchronously.

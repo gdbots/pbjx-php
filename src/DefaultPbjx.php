@@ -2,13 +2,16 @@
 
 namespace Gdbots\Pbjx;
 
+use Gdbots\Common\Util\NumberUtils;
 use Gdbots\Pbj\Message;
+use Gdbots\Pbj\Schema;
 use Gdbots\Pbjx\Event\BusExceptionEvent;
 use Gdbots\Pbjx\Event\GetResponseEvent;
 use Gdbots\Pbjx\Event\PbjxEvent;
 use Gdbots\Pbjx\Event\PostResponseEvent;
 use Gdbots\Pbjx\Exception\InvalidArgumentException;
 use Gdbots\Pbjx\Exception\RequestHandlingFailed;
+use Gdbots\Pbjx\Exception\TooMuchRecursion;
 use Gdbots\Schemas\Pbjx\Command\Command;
 use Gdbots\Schemas\Pbjx\Event\Event;
 use Gdbots\Schemas\Pbjx\Request\Request;
@@ -23,23 +26,25 @@ class DefaultPbjx implements Pbjx
     /** @var ServiceLocator */
     protected $locator;
 
+    /** @var int */
+    protected $maxRecursion = 10;
+
     /**
      * @param ServiceLocator $locator
+     * @param int $maxRecursion
      */
-    public function __construct(ServiceLocator $locator)
+    public function __construct(ServiceLocator $locator, $maxRecursion = 10)
     {
         $this->locator = $locator;
         $this->dispatcher = $this->locator->getDispatcher();
+        $this->maxRecursion = NumberUtils::bound($maxRecursion, 2, 10);
         PbjxEvent::setPbjx($this);
     }
 
     /**
      * {@inheritdoc}
-     *
-     * todo: implement recursion on trigger.
-     *
      */
-    public function trigger(Message $message, $suffix, PbjxEvent $event = null, $recursive = true, $depth = 0)
+    public function trigger(Message $message, $suffix, PbjxEvent $event = null, $recursive = true)
     {
         $suffix = '.' . trim($suffix, '.');
         if ('.' === $suffix) {
@@ -48,6 +53,26 @@ class DefaultPbjx implements Pbjx
 
         $event = $event ?: new PbjxEvent($message);
         $schema = $message::schema();
+
+        if ($event->getDepth() > $this->maxRecursion) {
+            throw new TooMuchRecursion(sprintf(
+                'Pbjx::trigger encountered a schema that is too complex ' .
+                'or a nested message is being referenced multiple times in ' .
+                'the same tree.  Max recursion: %d, Current schema is "%s".',
+                $this->maxRecursion,
+                $schema->getId()->toString()
+            ));
+        }
+
+        if (true === $recursive && $event->supportsRecursion()) {
+            foreach ($this->getNestedMessages($message, $schema) as $nestedMessage) {
+                if ($nestedMessage->isFrozen()) {
+                    continue;
+                }
+
+                $this->trigger($nestedMessage, $suffix, $event->createChildEvent($nestedMessage), $recursive);
+            }
+        }
 
         foreach ($schema->getMixinIds() as $mixinId) {
             $this->dispatcher->dispatch($mixinId . $suffix, $event);
@@ -123,5 +148,34 @@ class DefaultPbjx implements Pbjx
         }
 
         return $response;
+    }
+
+    /**
+     * @param Message $message
+     * @param Schema $schema
+     *
+     * @return Message[]
+     */
+    protected function getNestedMessages(Message $message, Schema $schema)
+    {
+        $messages = [];
+
+        foreach ($schema->getFields() as $field) {
+            if (!$field->getType()->isMessage()) {
+                continue;
+            }
+
+            if (!$message->has($field->getName())) {
+                continue;
+            }
+
+            if ($field->isASingleValue()) {
+                $messages[] = $message->get($field->getName());
+            } else {
+                $messages = array_merge($messages, array_values($message->get($field->getName())));
+            }
+        }
+
+        return $messages;
     }
 }

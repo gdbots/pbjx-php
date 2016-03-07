@@ -37,4 +37,12 @@ class PostResponseEvent extends PbjxEvent
     {
         return $this->response;
     }
+
+    /**
+     * @return bool
+     */
+    public function supportsRecursion()
+    {
+        return false;
+    }
 }

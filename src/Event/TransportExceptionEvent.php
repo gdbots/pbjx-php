@@ -27,4 +27,12 @@ class TransportExceptionEvent extends TransportEvent
     {
         return $this->exception;
     }
+
+    /**
+     * @return bool
+     */
+    public function supportsRecursion()
+    {
+        return false;
+    }
 }

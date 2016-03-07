@@ -26,4 +26,12 @@ class BusExceptionEvent extends PbjxEvent
     {
         return $this->exception;
     }
+
+    /**
+     * @return bool
+     */
+    public function supportsRecursion()
+    {
+        return false;
+    }
 }
