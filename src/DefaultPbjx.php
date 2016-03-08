@@ -142,6 +142,7 @@ class DefaultPbjx implements Pbjx
         try {
             $event = new PostResponseEvent($request, $response);
             $this->trigger($request, PbjxEvents::SUFFIX_AFTER_HANDLE, $event);
+            // todo: review... add bind, validate, enrich here too?
             $this->trigger($response, PbjxEvents::SUFFIX_CREATED, $event);
         } catch (\Exception $e) {
             $this->locator->getExceptionHandler()->onRequestBusException(new BusExceptionEvent($response, $e));
