@@ -6,7 +6,7 @@
   "require": {
     "php": ">=5.6",
     "gdbots/pbj": "dev-aws3 as dev-master",
-    "gdbots/schemas-php": "dev-master",
+    "gdbots/schemas": "dev-master",
     "psr/log": "~1",
     "symfony/event-dispatcher": "~3.0"
   },

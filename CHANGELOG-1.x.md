@@ -5,7 +5,7 @@ This changelog references the relevant changes done in 1.x versions.
 ## v1.0.0
 __BREAKING CHANGES__
 
-* Using new `gdbots/pbj` and `gdbots/pbj-schemas-php` libraries (schemas moved, php >=5.6 required).
+* Using new `gdbots/pbj` and `gdbots/schemas` libraries (schemas moved, php >=5.6 required).
 * Renamed `ConventionalCommandHandling` and `ConventionalRequestHandling` to `CommandHandlerTrait` and `RequestHandlerTrait`.
   By default the trait will call `handle` but provides `getMethodForCommand` or `getMethodForRequest` so it can be modified.
 * The `DefaultPbjx` now triggers `bind`, `validate` and `enrich` when `send` or `publish` is called and the message isn't frozen.
