@@ -28,7 +28,7 @@ class DefaultEventBusTest extends AbstractBusTestCase
             $that->assertSame($publishedEvent, $event);
         };
 
-        $dispatcher->addListener($schemaId->getCurieWithMajorRev(), $func);
+        $dispatcher->addListener($schemaId->getCurieMajor(), $func);
         $dispatcher->addListener($curie->toString(), $func);
         $dispatcher->addListener(sprintf('%s:%s:%s:*', $vendor, $package, $category), $func);
         $dispatcher->addListener(sprintf('%s:%s:*', $vendor, $package), $func);
@@ -46,14 +46,14 @@ class DefaultEventBusTest extends AbstractBusTestCase
         $handled = false;
 
         $dispatcher->addListener(
-            $schemaId->getCurieWithMajorRev(),
+            $schemaId->getCurieMajor(),
             function () {
                 throw new \LogicException('Simulate failure 1.');
             }
         );
 
         $dispatcher->addListener(
-            EventExecutionFailedV1::schema()->getCurieWithMajorRev(),
+            EventExecutionFailedV1::schema()->getCurieMajor(),
             function () use (&$handled) {
                 $handled = true;
             }
@@ -65,7 +65,7 @@ class DefaultEventBusTest extends AbstractBusTestCase
             sprintf(
                 '%s failed because the event [%s] was never published.',
                 __FUNCTION__,
-                $schemaId->getCurieWithMajorRev()
+                $schemaId->getCurieMajor()
             )
         );
     }
@@ -78,14 +78,14 @@ class DefaultEventBusTest extends AbstractBusTestCase
         $schemaId = $event::schema()->getId();
 
         $dispatcher->addListener(
-            $schemaId->getCurieWithMajorRev(),
+            $schemaId->getCurieMajor(),
             function () {
                 throw new \LogicException('Simulate failure 2.');
             }
         );
 
         $dispatcher->addListener(
-            EventExecutionFailedV1::schema()->getCurieWithMajorRev(),
+            EventExecutionFailedV1::schema()->getCurieMajor(),
             function () {
                 throw new \LogicException('Failed to handle EventExecutionFailedV1.');
             }

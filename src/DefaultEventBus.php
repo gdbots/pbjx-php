@@ -76,7 +76,7 @@ class DefaultEventBus implements EventBus
             $this->doDispatch($mixinCurie, $event);
         }
 
-        $this->doDispatch($schema->getCurieWithMajorRev(), $event);
+        $this->doDispatch($schema->getCurieMajor(), $event);
         $this->doDispatch($curie->toString(), $event);
 
         $this->doDispatch(sprintf('%s:%s:%s:*', $vendor, $package, $category), $event);

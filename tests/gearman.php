@@ -17,7 +17,7 @@ $locator->registerRequestHandler(GetTimeRequest::schema()->getCurie(), new GetTi
 $pbjx = $locator->getPbjx();
 
 $locator->getDispatcher()->addListener(
-    SimpleEvent::schema()->getCurieWithMajorRev() . '.'. PbjxEvents::SUFFIX_ENRICH,
+    SimpleEvent::schema()->getCurieMajor() . '.'. PbjxEvents::SUFFIX_ENRICH,
     function (PbjxEvent $event, $eventName) {
         echo $eventName . PHP_EOL;
     }

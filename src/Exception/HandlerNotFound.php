@@ -2,18 +2,18 @@
 
 namespace Gdbots\Pbjx\Exception;
 
-use Gdbots\Pbj\MessageCurie;
+use Gdbots\Pbj\SchemaCurie;
 
 final class HandlerNotFound extends \LogicException implements GdbotsPbjxException
 {
-    /** @var MessageCurie */
+    /** @var SchemaCurie */
     private $curie;
 
     /**
-     * @param MessageCurie $curie
+     * @param SchemaCurie $curie
      * @param \Exception|null $previous
      */
-    public function __construct(MessageCurie $curie, \Exception $previous = null)
+    public function __construct(SchemaCurie $curie, \Exception $previous = null)
     {
         $this->curie = $curie;
         parent::__construct(
@@ -22,9 +22,9 @@ final class HandlerNotFound extends \LogicException implements GdbotsPbjxExcepti
     }
 
     /**
-     * @return MessageCurie
+     * @return SchemaCurie
      */
-    public function getMessageCurie()
+    public function getSchemaCurie()
     {
         return $this->curie;
     }

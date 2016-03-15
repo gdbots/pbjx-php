@@ -15,7 +15,7 @@ $locator->registerCommandHandler(SayHello::schema()->getCurie(), new SayHelloHan
 $locator->registerRequestHandler(GetTimeRequest::schema()->getCurie(), new GetTimeRequestHandler());
 
 $locator->getDispatcher()->addListener(
-    SimpleEvent::schema()->getCurieWithMajorRev(),
+    SimpleEvent::schema()->getCurieMajor(),
     function (SimpleEvent $publishedEvent) {
         echo $publishedEvent;
     }

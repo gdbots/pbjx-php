@@ -82,7 +82,7 @@ class DefaultPbjx implements Pbjx
             $this->dispatcher->dispatch($mixinCurie . $suffix, $event);
         }
 
-        $this->dispatcher->dispatch($schema->getCurieWithMajorRev() . $suffix, $event);
+        $this->dispatcher->dispatch($schema->getCurieMajor() . $suffix, $event);
         $this->dispatcher->dispatch($schema->getCurie()->toString() . $suffix, $event);
     }
 
