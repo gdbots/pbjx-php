@@ -77,6 +77,8 @@ class DefaultEventBusTest extends AbstractBusTestCase
         $dispatcher = $this->locator->getDispatcher();
         $schemaId = $event::schema()->getId();
 
+        echo $event;
+
         $dispatcher->addListener(
             $schemaId->getCurieMajor(),
             function () {
@@ -96,6 +98,9 @@ class DefaultEventBusTest extends AbstractBusTestCase
             function (BusExceptionEvent $exceptionEvent) use ($that, $event) {
                 /** @var EventExecutionFailedV1 $domainEvent */
                 $domainEvent = $exceptionEvent->getMessage();
+
+                echo $domainEvent;
+
                 $that->assertSame(
                     $domainEvent->get('event')->get('name'),
                     $event->get('name')

@@ -109,15 +109,12 @@ class DefaultEventBus implements EventBus
                 $code = $e->getCode() > 0 ? $e->getCode() : Code::UNKNOWN;
 
                 $failedEvent = EventExecutionFailedV1::create()
-                    ->set('causator', $event->generateMessageRef())
                     ->set('event', $event)
                     ->set('error_code', $code)
                     ->set('error_name', ClassUtils::getShortName($e))
                     ->set('error_message', $e->getMessage());
 
-                if ($event->has('correlator')) {
-                    $failedEvent->set('correlator', $event->get('correlator'));
-                }
+                $this->pbjx->copyContext($event, $failedEvent);
 
                 // running in process for now
                 $this->receiveEvent($failedEvent);

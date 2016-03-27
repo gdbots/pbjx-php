@@ -56,12 +56,12 @@ class GetResponseEvent extends PbjxEvent
             throw new LogicException('Response can only be set one time.');
         }
 
-        if (!$response->has('request_ref')) {
-            $response->set('request_ref', $this->message->generateMessageRef());
+        if (!$response->has('ctx_request_ref')) {
+            $response->set('ctx_request_ref', $this->message->generateMessageRef());
         }
 
-        if (!$response->has('correlator') && $this->message->has('correlator')) {
-            $response->set('correlator', $this->message->get('correlator'));
+        if (!$response->has('ctx_correlator_ref') && $this->message->has('ctx_correlator_ref')) {
+            $response->set('ctx_correlator_ref', $this->message->get('ctx_correlator_ref'));
         }
 
         $this->response = $response;

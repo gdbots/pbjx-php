@@ -20,7 +20,7 @@ class DefaultRequestBusTest extends AbstractBusTestCase
     public function testRequest()
     {
         $request = GetTimeRequest::create();
-        $expected = $request->get('microtime')->toDateTime();
+        $expected = $request->get('occurred_at')->toDateTime();
         /** @var GetTimeResponse $response */
         $response = $this->pbjx->request($request);
         $this->assertInstanceOf('Gdbots\Tests\Pbjx\Fixtures\GetTimeResponse', $response);

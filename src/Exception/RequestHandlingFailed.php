@@ -16,7 +16,7 @@ class RequestHandlingFailed extends \RuntimeException implements GdbotsPbjxExcep
     public function __construct(RequestFailedResponse $response)
     {
         $this->response = $response;
-        $ref = $response->get('request_ref') ?: $response->get('request')->get('request_id');
+        $ref = $response->get('ctx_request_ref') ?: $response->get('request')->get('request_id');
         parent::__construct(
             sprintf(
                 'Request [%s] could not be handled.  %s::%s::%s',

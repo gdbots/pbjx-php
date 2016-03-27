@@ -20,6 +20,6 @@ class GetTimeRequestHandler implements RequestHandler
             return 'test fail';
         }
 
-        return GetTimeResponse::create()->set('time', $request->get('microtime')->toDateTime());
+        return GetTimeResponse::create()->set('time', $request->get('occurred_at')->toDateTime());
     }
 }

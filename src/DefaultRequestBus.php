@@ -93,9 +93,9 @@ class DefaultRequestBus implements RequestBus
                 );
             }
 
-            $response->set('request_ref', $request->generateMessageRef());
-            if ($request->has('correlator')) {
-                $response->set('correlator', $request->get('correlator'));
+            $response->set('ctx_request_ref', $request->generateMessageRef());
+            if ($request->has('ctx_correlator_ref')) {
+                $response->set('ctx_correlator_ref', $request->get('ctx_correlator_ref'));
             }
 
             return $response;
@@ -114,14 +114,14 @@ class DefaultRequestBus implements RequestBus
         $code = $exception->getCode() > 0 ? $exception->getCode() : Code::UNKNOWN;
 
         $response = RequestFailedResponseV1::create()
-            ->set('request_ref', $request->generateMessageRef())
+            ->set('ctx_request_ref', $request->generateMessageRef())
             ->set('request', $request)
             ->set('error_code', $code)
             ->set('error_name', ClassUtils::getShortName($exception))
             ->set('error_message', $exception->getMessage());
 
-        if ($request->has('correlator')) {
-            $response->set('correlator', $request->get('correlator'));
+        if ($request->has('ctx_correlator_ref')) {
+            $response->set('ctx_correlator_ref', $request->get('ctx_correlator_ref'));
         }
 
         return $response;

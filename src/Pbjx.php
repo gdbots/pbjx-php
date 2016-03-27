@@ -39,6 +39,16 @@ interface Pbjx
     public function trigger(Message $message, $suffix, PbjxEvent $event = null, $recursive = true);
 
     /**
+     * Copies context fields (ip, user agent, correlator, etc.) from one message to another.
+     *
+     * @param Message $from
+     * @param Message $to
+     *
+     * @return Pbjx
+     */
+    public function copyContext(Message $from, Message $to);
+
+    /**
      * Processes a command asynchronously.
      *
      * @param Command $command

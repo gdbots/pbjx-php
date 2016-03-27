@@ -16,6 +16,7 @@ use Gdbots\Schemas\Pbjx\Command\Command;
 use Gdbots\Schemas\Pbjx\Event\Event;
 use Gdbots\Schemas\Pbjx\Request\Request;
 use Gdbots\Schemas\Pbjx\Request\RequestFailedResponse;
+use Gdbots\Schemas\Pbjx\StreamId;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 class DefaultPbjx implements Pbjx
@@ -84,6 +85,34 @@ class DefaultPbjx implements Pbjx
 
         $this->dispatcher->dispatch($schema->getCurieMajor() . $suffix, $event);
         $this->dispatcher->dispatch($schema->getCurie()->toString() . $suffix, $event);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function copyContext(Message $from, Message $to)
+    {
+        if (!$to->has('stream_id') && $from->has('stream_id')) {
+            /** @var StreamId $streamIdClass */
+            $streamIdClass = $to::schema()->getField('stream_id')->getClassName();
+            $to->set('stream_id', $streamIdClass::fromString((string)$from->get('stream_id')));
+        }
+
+        if (!$to->has('ctx_causator_ref')) {
+            $to->set('ctx_causator_ref', $from->generateMessageRef());
+        }
+
+        if (!$to->has('ctx_app') && $from->has('ctx_app')) {
+            $to->set('ctx_app', clone $from->get('ctx_app'));
+        }
+
+        foreach (['ctx_correlator_ref', 'ctx_user_ref', 'ctx_ip', 'ctx_ua'] as $ctx) {
+            if (!$to->has($ctx) && $from->has($ctx)) {
+                $to->set($ctx, $from->get($ctx));
+            }
+        }
+
+        return $this;
     }
 
     /**
