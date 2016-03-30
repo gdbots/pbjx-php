@@ -65,7 +65,7 @@ class DefaultPbjx implements Pbjx
             ));
         }
 
-        if (true === $recursive && $event->supportsRecursion()) {
+        if ($recursive && $event->supportsRecursion()) {
             foreach ($this->getNestedMessages($message, $schema) as $nestedMessage) {
                 if ($nestedMessage->isFrozen()) {
                     continue;
@@ -74,6 +74,8 @@ class DefaultPbjx implements Pbjx
                 $this->trigger($nestedMessage, $suffix, $event->createChildEvent($nestedMessage), $recursive);
             }
         }
+
+        $this->dispatcher->dispatch('gdbots_pbjx.message' . $suffix, $event);
 
         foreach ($schema->getMixinIds() as $mixinId) {
             $this->dispatcher->dispatch($mixinId . $suffix, $event);
@@ -85,6 +87,20 @@ class DefaultPbjx implements Pbjx
 
         $this->dispatcher->dispatch($schema->getCurieMajor() . $suffix, $event);
         $this->dispatcher->dispatch($schema->getCurie()->toString() . $suffix, $event);
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function triggerLifecycle(Message $message, PbjxEvent $event = null)
+    {
+        $event = $event ?: new PbjxEvent($message);
+        $this->trigger($message, PbjxEvents::SUFFIX_BIND, $event);
+        $this->trigger($message, PbjxEvents::SUFFIX_VALIDATE, $event);
+        $this->trigger($message, PbjxEvents::SUFFIX_ENRICH, $event);
+        return $this;
     }
 
     /**
@@ -121,10 +137,7 @@ class DefaultPbjx implements Pbjx
     public function send(Command $command)
     {
         if (!$command->isFrozen()) {
-            $event = new PbjxEvent($command);
-            $this->trigger($command, PbjxEvents::SUFFIX_BIND, $event);
-            $this->trigger($command, PbjxEvents::SUFFIX_VALIDATE, $event);
-            $this->trigger($command, PbjxEvents::SUFFIX_ENRICH, $event);
+            $this->triggerLifecycle($command);
         }
 
         $this->locator->getCommandBus()->send($command);
@@ -136,10 +149,7 @@ class DefaultPbjx implements Pbjx
     public function publish(Event $event)
     {
         if (!$event->isFrozen()) {
-            $pbjxEvent = new PbjxEvent($event);
-            $this->trigger($event, PbjxEvents::SUFFIX_BIND, $pbjxEvent);
-            $this->trigger($event, PbjxEvents::SUFFIX_VALIDATE, $pbjxEvent);
-            $this->trigger($event, PbjxEvents::SUFFIX_ENRICH, $pbjxEvent);
+            $this->triggerLifecycle($event);
         }
 
         $this->locator->getEventBus()->publish($event);
@@ -150,12 +160,9 @@ class DefaultPbjx implements Pbjx
      */
     public function request(Request $request)
     {
-        $event = new PbjxEvent($request);
-        $this->trigger($request, PbjxEvents::SUFFIX_BIND, $event);
-        $this->trigger($request, PbjxEvents::SUFFIX_VALIDATE, $event);
-        $this->trigger($request, PbjxEvents::SUFFIX_ENRICH, $event);
+        $this->triggerLifecycle($request);
         $event = new GetResponseEvent($request);
-        $this->trigger($request, PbjxEvents::SUFFIX_BEFORE_HANDLE, $event);
+        $this->trigger($request, PbjxEvents::SUFFIX_BEFORE_HANDLE, $event, false);
 
         if ($event->hasResponse()) {
             return $event->getResponse();
@@ -170,9 +177,8 @@ class DefaultPbjx implements Pbjx
 
         try {
             $event = new PostResponseEvent($request, $response);
-            $this->trigger($request, PbjxEvents::SUFFIX_AFTER_HANDLE, $event);
-            // todo: review... add bind, validate, enrich here too?
-            $this->trigger($response, PbjxEvents::SUFFIX_CREATED, $event);
+            $this->trigger($request, PbjxEvents::SUFFIX_AFTER_HANDLE, $event, false);
+            $this->trigger($response, PbjxEvents::SUFFIX_CREATED, $event, false);
         } catch (\Exception $e) {
             $this->locator->getExceptionHandler()->onRequestBusException(new BusExceptionEvent($response, $e));
         }

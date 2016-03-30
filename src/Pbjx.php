@@ -31,12 +31,29 @@ interface Pbjx
      * @param PbjxEvent $event
      * @param bool $recursive   If true, all field values with MessageType are also triggered.
      *
+     * @return Pbjx
+     *
      * @throws GdbotsPbjxException
      * @throws InvalidArgumentException
      * @throws TooMuchRecursion
      * @throws \Exception
      */
     public function trigger(Message $message, $suffix, PbjxEvent $event = null, $recursive = true);
+
+    /**
+     * Runs the "standard" lifecycle for a message prior to send, publish or request.
+     * Internally this is a call to Pbjx::trigger for suffixes bind, validate and enrich.
+     *
+     * After the lifecycle completes the message should be ready to be sent via a transport.
+     *
+     * @param Message $message
+     * @param PbjxEvent $event
+     *
+     * @return Pbjx
+     *
+     * @throws \Exception
+     */
+    public function triggerLifecycle(Message $message, PbjxEvent $event = null);
 
     /**
      * Copies context fields (ip, user agent, correlator, etc.) from one message to another.
