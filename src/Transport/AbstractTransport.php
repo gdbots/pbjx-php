@@ -117,10 +117,7 @@ abstract class AbstractTransport implements Transport
                 new TransportExceptionEvent($this->transportName, $request, $e)
             );
 
-            /*
-             * fallback handling if the transport is down
-             * todo: review, should we just die here?
-             */
+            // fallback handling if the transport is down
             if ('in_memory' !== $this->transportName) {
                 try {
                     $response = $this->locator->getRequestBus()->receiveRequest($request);

@@ -94,12 +94,12 @@ class DefaultPbjx implements Pbjx
     /**
      * {@inheritdoc}
      */
-    public function triggerLifecycle(Message $message, PbjxEvent $event = null)
+    public function triggerLifecycle(Message $message, $recursive = true)
     {
-        $event = $event ?: new PbjxEvent($message);
-        $this->trigger($message, PbjxEvents::SUFFIX_BIND, $event);
-        $this->trigger($message, PbjxEvents::SUFFIX_VALIDATE, $event);
-        $this->trigger($message, PbjxEvents::SUFFIX_ENRICH, $event);
+        $event = new PbjxEvent($message);
+        $this->trigger($message, PbjxEvents::SUFFIX_BIND, $event, $recursive);
+        $this->trigger($message, PbjxEvents::SUFFIX_VALIDATE, $event, $recursive);
+        $this->trigger($message, PbjxEvents::SUFFIX_ENRICH, $event, $recursive);
         return $this;
     }
 

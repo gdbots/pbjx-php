@@ -15,8 +15,9 @@ use Gdbots\Schemas\Pbjx\Request\Response;
 interface Pbjx
 {
     /**
-     * Triggers in-process events using the dispatcher which will announce an event for each of:
+     * Triggers lifecycle events using the dispatcher which will announce an event for each of:
      *
+     * gdbots_pbjx.message.suffix
      * curie:v[MAJOR VERSION].suffix
      * curie.suffix
      * mixinId.suffix (mixinId is the mixin with the major rev)
@@ -26,9 +27,9 @@ interface Pbjx
      * the trigger process.  The PbjxEvent object will have a reference to the parent event
      * and the depth of the recursion.
      *
-     * @param Message $message
-     * @param string $suffix
-     * @param PbjxEvent $event
+     * @param Message $message  The message that will be processed.
+     * @param string $suffix    A string indicating the lifecycle phase (bind, validate, enrich, etc.)
+     * @param PbjxEvent $event  An event object containing the message.
      * @param bool $recursive   If true, all field values with MessageType are also triggered.
      *
      * @return Pbjx
@@ -44,16 +45,17 @@ interface Pbjx
      * Runs the "standard" lifecycle for a message prior to send, publish or request.
      * Internally this is a call to Pbjx::trigger for suffixes bind, validate and enrich.
      *
-     * After the lifecycle completes the message should be ready to be sent via a transport.
+     * After the lifecycle completes the message should be ready to be sent via a transport
+     * or frozen and persisted to storage.
      *
      * @param Message $message
-     * @param PbjxEvent $event
+     * @param bool $recursive
      *
      * @return Pbjx
      *
      * @throws \Exception
      */
-    public function triggerLifecycle(Message $message, PbjxEvent $event = null);
+    public function triggerLifecycle(Message $message, $recursive = true);
 
     /**
      * Copies context fields (ip, user agent, correlator, etc.) from one message to another.
