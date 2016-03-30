@@ -85,9 +85,9 @@ class DefaultCommandBus implements CommandBus
 
         try {
             $event = new PbjxEvent($command);
-            $this->pbjx->trigger($command, PbjxEvents::SUFFIX_BEFORE_HANDLE, $event);
+            $this->pbjx->trigger($command, PbjxEvents::SUFFIX_BEFORE_HANDLE, $event, false);
             $handler->handleCommand($command, $this->pbjx);
-            $this->pbjx->trigger($command, PbjxEvents::SUFFIX_AFTER_HANDLE, $event);
+            $this->pbjx->trigger($command, PbjxEvents::SUFFIX_AFTER_HANDLE, $event, false);
         } catch (\Exception $e) {
             $this->locator->getExceptionHandler()->onCommandBusException(new BusExceptionEvent($command, $e));
         }
