@@ -141,9 +141,10 @@ class GearmanConsumer extends AbstractConsumer
      */
     protected function work()
     {
-        if (@$this->worker->work() ||
-            $this->worker->returnCode() == GEARMAN_IO_WAIT ||
-            $this->worker->returnCode() == GEARMAN_NO_JOBS
+        if (@$this->worker->work()
+            || $this->worker->returnCode() == GEARMAN_IO_WAIT
+            || $this->worker->returnCode() == GEARMAN_NO_JOBS
+            || $this->worker->returnCode() == GEARMAN_TIMEOUT
         ) {
             if ($this->worker->returnCode() == GEARMAN_SUCCESS) {
                 return;
@@ -152,6 +153,8 @@ class GearmanConsumer extends AbstractConsumer
             if (!@$this->worker->wait()) {
                 if ($this->worker->returnCode() == GEARMAN_NO_ACTIVE_FDS) {
                     sleep(5);
+                } elseif ($this->worker->returnCode() == GEARMAN_TIMEOUT) {
+                    sleep(1);
                 }
             }
         }
