@@ -9,11 +9,11 @@ use Gdbots\Pbjx\Event\TransportExceptionEvent;
 use Gdbots\Pbjx\PbjxEvents;
 use Gdbots\Pbjx\ServiceLocator;
 use Gdbots\Pbjx\Transport;
-use Gdbots\Schemas\Pbjx\Command\Command;
+use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
 use Gdbots\Schemas\Pbjx\Enum\Code;
-use Gdbots\Schemas\Pbjx\Event\Event;
-use Gdbots\Schemas\Pbjx\Request\Request;
-use Gdbots\Schemas\Pbjx\Request\Response;
+use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
+use Gdbots\Schemas\Pbjx\Mixin\Request\Request;
+use Gdbots\Schemas\Pbjx\Mixin\Response\Response;
 use Gdbots\Schemas\Pbjx\Request\RequestFailedResponseV1;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 

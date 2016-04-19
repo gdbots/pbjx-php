@@ -2,8 +2,8 @@
 
 namespace Gdbots\Pbjx;
 
-use Gdbots\Schemas\Pbjx\Request\Request;
-use Gdbots\Schemas\Pbjx\Request\Response;
+use Gdbots\Schemas\Pbjx\Mixin\Request\Request;
+use Gdbots\Schemas\Pbjx\Mixin\Response\Response;
 
 interface RequestBus
 {

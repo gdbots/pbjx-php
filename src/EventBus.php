@@ -3,7 +3,7 @@
 namespace Gdbots\Pbjx;
 
 use Gdbots\Pbjx\Exception\GdbotsPbjxException;
-use Gdbots\Schemas\Pbjx\Event\Event;
+use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
 
 interface EventBus
 {

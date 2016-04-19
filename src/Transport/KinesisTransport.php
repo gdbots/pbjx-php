@@ -6,8 +6,8 @@ use Aws\Kinesis\KinesisClient;
 use Gdbots\Pbj\Serializer\JsonSerializer;
 use Gdbots\Pbjx\PartitionableRouter;
 use Gdbots\Pbjx\ServiceLocator;
-use Gdbots\Schemas\Pbjx\Command\Command;
-use Gdbots\Schemas\Pbjx\Event\Event;
+use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
+use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
 
 class KinesisTransport extends AbstractTransport
 {

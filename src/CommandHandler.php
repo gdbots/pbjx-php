@@ -3,7 +3,7 @@
 namespace Gdbots\Pbjx;
 
 use Gdbots\Pbjx\Exception\GdbotsPbjxException;
-use Gdbots\Schemas\Pbjx\Command\Command;
+use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
 
 interface CommandHandler
 {

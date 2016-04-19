@@ -3,8 +3,8 @@
 namespace Gdbots\Pbjx;
 
 use Gdbots\Pbjx\Exception\GdbotsPbjxException;
-use Gdbots\Schemas\Pbjx\Request\Request;
-use Gdbots\Schemas\Pbjx\Request\Response;
+use Gdbots\Schemas\Pbjx\Mixin\Request\Request;
+use Gdbots\Schemas\Pbjx\Mixin\Response\Response;
 
 interface RequestHandler
 {

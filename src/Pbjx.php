@@ -7,10 +7,10 @@ use Gdbots\Pbjx\Event\PbjxEvent;
 use Gdbots\Pbjx\Exception\GdbotsPbjxException;
 use Gdbots\Pbjx\Exception\InvalidArgumentException;
 use Gdbots\Pbjx\Exception\TooMuchRecursion;
-use Gdbots\Schemas\Pbjx\Command\Command;
-use Gdbots\Schemas\Pbjx\Event\Event;
-use Gdbots\Schemas\Pbjx\Request\Request;
-use Gdbots\Schemas\Pbjx\Request\Response;
+use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
+use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
+use Gdbots\Schemas\Pbjx\Mixin\Request\Request;
+use Gdbots\Schemas\Pbjx\Mixin\Response\Response;
 
 interface Pbjx
 {
