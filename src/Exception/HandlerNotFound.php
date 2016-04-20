@@ -3,6 +3,7 @@
 namespace Gdbots\Pbjx\Exception;
 
 use Gdbots\Pbj\SchemaCurie;
+use Gdbots\Schemas\Pbjx\Enum\Code;
 
 final class HandlerNotFound extends \LogicException implements GdbotsPbjxException
 {
@@ -17,7 +18,9 @@ final class HandlerNotFound extends \LogicException implements GdbotsPbjxExcepti
     {
         $this->curie = $curie;
         parent::__construct(
-            sprintf('ServiceLocator did not find a handler for curie [%s].', $curie->toString()), 0, $previous
+            sprintf('ServiceLocator did not find a handler for curie [%s].', $curie->toString()),
+            Code::UNIMPLEMENTED,
+            $previous
         );
     }
 

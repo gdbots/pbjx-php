@@ -2,6 +2,7 @@
 
 namespace Gdbots\Pbjx\Exception;
 
+use Gdbots\Schemas\Pbjx\Enum\Code;
 use Gdbots\Schemas\Pbjx\Mixin\Request\Request;
 use Gdbots\Schemas\Pbjx\Request\RequestFailedResponse;
 
@@ -24,7 +25,8 @@ class RequestHandlingFailed extends \RuntimeException implements GdbotsPbjxExcep
                 $this->response->get('error_name'),
                 $this->response->get('error_code'),
                 $this->response->get('error_message')
-            )
+            ),
+            $this->response->get('error_code', Code::UNKNOWN)
         );
     }
 

@@ -4,6 +4,7 @@ namespace Gdbots\Pbjx\Exception;
 
 use Gdbots\Pbjx\CommandHandler;
 use Gdbots\Pbjx\RequestHandler;
+use Gdbots\Schemas\Pbjx\Enum\Code;
 use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
 use Gdbots\Schemas\Pbjx\Mixin\Request\Request;
 
@@ -23,7 +24,8 @@ final class InvalidHandler extends \UnexpectedValueException implements GdbotsPb
                 $command::schema()->getId()->toString(),
                 get_class($handler),
                 $message
-            )
+            ),
+            Code::INTERNAL
         );
     }
 
@@ -41,7 +43,8 @@ final class InvalidHandler extends \UnexpectedValueException implements GdbotsPb
                 $request::schema()->getId()->toString(),
                 get_class($handler),
                 $message
-            )
+            ),
+            Code::INTERNAL
         );
     }
 }
