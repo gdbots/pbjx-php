@@ -3,6 +3,7 @@
 namespace Gdbots\Pbjx\Consumer;
 
 use Gdbots\Pbj\Serializer\JsonSerializer;
+use Gdbots\Pbjx\Exception\LogicException;
 use Gdbots\Pbjx\ServiceLocator;
 use Psr\Log\LoggerInterface;
 
@@ -28,12 +29,15 @@ class KinesisConsumer extends AbstractConsumer
 
     /**
      * Reads from STDIN and processes records.
+     * todo: write the multilangdaemon handlers
      */
     protected function work()
     {
+        throw new LogicException(__CLASS__ . '::' . __FUNCTION__ . ' is not implemented yet.');
+        /*
         $data = fgets(STDIN);
         error_log($data);
-        // todo: write the multilangdaemon handlers
         sleep(3);
+        */
     }
 }

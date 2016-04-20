@@ -16,7 +16,6 @@ use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
 use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
 use Gdbots\Schemas\Pbjx\Mixin\Request\Request;
 use Gdbots\Schemas\Pbjx\Request\RequestFailedResponse;
-use Gdbots\Schemas\Pbjx\StreamId;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 class DefaultPbjx implements Pbjx
@@ -108,12 +107,6 @@ class DefaultPbjx implements Pbjx
      */
     public function copyContext(Message $from, Message $to)
     {
-        if (!$to->has('stream_id') && $from->has('stream_id')) {
-            /** @var StreamId $streamIdClass */
-            $streamIdClass = $to::schema()->getField('stream_id')->getClassName();
-            $to->set('stream_id', $streamIdClass::fromString((string)$from->get('stream_id')));
-        }
-
         if (!$to->has('ctx_causator_ref')) {
             $to->set('ctx_causator_ref', $from->generateMessageRef());
         }
@@ -122,7 +115,11 @@ class DefaultPbjx implements Pbjx
             $to->set('ctx_app', clone $from->get('ctx_app'));
         }
 
-        foreach (['ctx_correlator_ref', 'ctx_user_ref', 'ctx_ip', 'ctx_ua'] as $ctx) {
+        if (!$to->has('ctx_cloud') && $from->has('ctx_cloud')) {
+            $to->set('ctx_cloud', clone $from->get('ctx_cloud'));
+        }
+
+        foreach (['stream_id', 'ctx_correlator_ref', 'ctx_user_ref', 'ctx_ip', 'ctx_ua'] as $ctx) {
             if (!$to->has($ctx) && $from->has($ctx)) {
                 $to->set($ctx, $from->get($ctx));
             }

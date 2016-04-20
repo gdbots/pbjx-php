@@ -12,4 +12,4 @@ __BREAKING CHANGES__
 * `Pbjx::trigger` now supports recursive event dispatching.  Any nested messages will also be run through the same event suffix.
   This is useful for the standard set of bind, validate, enrich passes done on the root event.
 * `DefaultExceptionHandler` now logs the exception and pbj message in the context array.
-* Adds `KinesisTransport` and `KinesisConsumer`.
+* Adds `KinesisTransport`... `KinesisConsumer` coming in patch rev soon.
