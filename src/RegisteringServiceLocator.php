@@ -2,7 +2,7 @@
 
 namespace Gdbots\Pbjx;
 
-use Gdbots\Pbj\MessageCurie;
+use Gdbots\Pbj\SchemaCurie;
 use Gdbots\Pbjx\Exception\HandlerNotFound;
 
 /**
@@ -19,39 +19,41 @@ final class RegisteringServiceLocator extends AbstractServiceLocator
     /**
      * {@inheritdoc}
      */
-    public function getCommandHandler(MessageCurie $curie)
+    public function getCommandHandler(SchemaCurie $curie)
     {
         if (isset($this->handlers[$curie->toString()])) {
             return $this->handlers[$curie->toString()];
         }
+
         throw new HandlerNotFound($curie);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getRequestHandler(MessageCurie $curie)
+    public function getRequestHandler(SchemaCurie $curie)
     {
         if (isset($this->handlers[$curie->toString()])) {
             return $this->handlers[$curie->toString()];
         }
+
         throw new HandlerNotFound($curie);
     }
 
     /**
-     * @param MessageCurie $curie
+     * @param SchemaCurie $curie
      * @param CommandHandler $handler
      */
-    public function registerCommandHandler(MessageCurie $curie, CommandHandler $handler)
+    public function registerCommandHandler(SchemaCurie $curie, CommandHandler $handler)
     {
         $this->handlers[$curie->toString()] = $handler;
     }
 
     /**
-     * @param MessageCurie $curie
+     * @param SchemaCurie $curie
      * @param RequestHandler $handler
      */
-    public function registerRequestHandler(MessageCurie $curie, RequestHandler $handler)
+    public function registerRequestHandler(SchemaCurie $curie, RequestHandler $handler)
     {
         $this->handlers[$curie->toString()] = $handler;
     }

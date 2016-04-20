@@ -17,7 +17,7 @@ $locator->registerRequestHandler(GetTimeRequest::schema()->getCurie(), new GetTi
 $pbjx = $locator->getPbjx();
 
 $locator->getDispatcher()->addListener(
-    SimpleEvent::schema()->getCurieWithMajorRev() . '.'. PbjxEvents::SUFFIX_ENRICH,
+    SimpleEvent::schema()->getCurieMajor() . '.'. PbjxEvents::SUFFIX_ENRICH,
     function (PbjxEvent $event, $eventName) {
         echo $eventName . PHP_EOL;
     }
@@ -26,22 +26,22 @@ $locator->getDispatcher()->addListener(
 while (true) {
     $time = time();
 
-    $command = SayHello::create()->setName('marge :: ' . $time);
+    $command = SayHello::create()->set('name', 'marge :: ' . $time);
     $pbjx->send($command);
-    echo 'Sent -> ' . $command->getCommandId() . PHP_EOL;
+    echo 'Sent -> ' . $command->get('command_id') . PHP_EOL;
     echo $command . PHP_EOL . PHP_EOL;
 
-    $event = SimpleEvent::create()->setName('homer :: ' . $time);
+    $event = SimpleEvent::create()->set('name', 'homer :: ' . $time);
     $pbjx->publish($event);
-    echo 'Enriched, then Published -> ' . $event->getEventId() . PHP_EOL;
+    echo 'Enriched, then Published -> ' . $event->get('event_id') . PHP_EOL;
     echo $event . PHP_EOL . PHP_EOL;
 
     $pbjx->publish($event);
-    echo '(Enriched should not run again) Published -> ' . $event->getEventId() . PHP_EOL;
+    echo '(Enriched should not run again) Published -> ' . $event->get('event_id') . PHP_EOL;
     echo $event . PHP_EOL . PHP_EOL;
 
     $request = GetTimeRequest::create();
-    echo 'Requested -> ' . $request->getRequestId() . PHP_EOL;
+    echo 'Requested -> ' . $request->get('request_id') . PHP_EOL;
     try {
         $response = $pbjx->request($request);
         echo $response . PHP_EOL . PHP_EOL;

@@ -3,8 +3,8 @@
 namespace Gdbots\Tests\Pbjx;
 
 use Gdbots\Pbjx\Event\BusExceptionEvent;
-use Gdbots\Pbjx\Event\EventExecutionFailed;
 use Gdbots\Pbjx\PbjxEvents;
+use Gdbots\Schemas\Pbjx\Event\EventExecutionFailedV1;
 use Gdbots\Tests\Pbjx\Fixtures\FailingEvent;
 use Gdbots\Tests\Pbjx\Fixtures\SimpleEvent;
 
@@ -12,7 +12,7 @@ class DefaultEventBusTest extends AbstractBusTestCase
 {
     public function testPublish()
     {
-        $event = SimpleEvent::create()->setName('homer');
+        $event = SimpleEvent::create()->set('name', 'homer');
         $that = $this;
         $dispatcher = $this->locator->getDispatcher();
 
@@ -28,7 +28,7 @@ class DefaultEventBusTest extends AbstractBusTestCase
             $that->assertSame($publishedEvent, $event);
         };
 
-        $dispatcher->addListener($schemaId->getCurieWithMajorRev(), $func);
+        $dispatcher->addListener($schemaId->getCurieMajor(), $func);
         $dispatcher->addListener($curie->toString(), $func);
         $dispatcher->addListener(sprintf('%s:%s:%s:*', $vendor, $package, $category), $func);
         $dispatcher->addListener(sprintf('%s:%s:*', $vendor, $package), $func);
@@ -40,20 +40,20 @@ class DefaultEventBusTest extends AbstractBusTestCase
 
     public function testEventExecutionFailed()
     {
-        $event = FailingEvent::create()->setName('homer');
+        $event = FailingEvent::create()->set('name', 'homer');
         $dispatcher = $this->locator->getDispatcher();
         $schemaId = $event::schema()->getId();
         $handled = false;
 
         $dispatcher->addListener(
-            $schemaId->getCurieWithMajorRev(),
+            $schemaId->getCurieMajor(),
             function () {
                 throw new \LogicException('Simulate failure 1.');
             }
         );
 
         $dispatcher->addListener(
-            EventExecutionFailed::schema()->getCurieWithMajorRev(),
+            EventExecutionFailedV1::schema()->getCurieMajor(),
             function () use (&$handled) {
                 $handled = true;
             }
@@ -65,40 +65,40 @@ class DefaultEventBusTest extends AbstractBusTestCase
             sprintf(
                 '%s failed because the event [%s] was never published.',
                 __FUNCTION__,
-                $schemaId->getCurieWithMajorRev()
+                $schemaId->getCurieMajor()
             )
         );
     }
 
     public function testEventBusExceptionEvent()
     {
-        $event = FailingEvent::create()->setName('marge');
+        $event = FailingEvent::create()->set('name', 'marge');
         $that = $this;
         $dispatcher = $this->locator->getDispatcher();
         $schemaId = $event::schema()->getId();
 
         $dispatcher->addListener(
-            $schemaId->getCurieWithMajorRev(),
+            $schemaId->getCurieMajor(),
             function () {
                 throw new \LogicException('Simulate failure 2.');
             }
         );
 
         $dispatcher->addListener(
-            EventExecutionFailed::schema()->getCurieWithMajorRev(),
+            EventExecutionFailedV1::schema()->getCurieMajor(),
             function () {
-                throw new \LogicException('Failed to handle EventExecutionFailed.');
+                throw new \LogicException('Failed to handle EventExecutionFailedV1.');
             }
         );
 
         $dispatcher->addListener(
             PbjxEvents::EVENT_BUS_EXCEPTION,
             function (BusExceptionEvent $exceptionEvent) use ($that, $event) {
-                /** @var EventExecutionFailed $domainEvent */
+                /** @var EventExecutionFailedV1 $domainEvent */
                 $domainEvent = $exceptionEvent->getMessage();
                 $that->assertSame(
-                    $domainEvent->getFailedEvent()->get('name'),
-                    $event->getName()
+                    $domainEvent->get('event')->get('name'),
+                    $event->get('name')
                 );
             }
         );

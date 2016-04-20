@@ -2,7 +2,7 @@
 
 namespace Gdbots\Pbjx;
 
-use Gdbots\Pbj\MessageCurie;
+use Gdbots\Pbj\SchemaCurie;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 interface ServiceLocator
@@ -40,18 +40,18 @@ interface ServiceLocator
     /**
      * Returns the handler for the provided command.
      *
-     * @param MessageCurie $curie
+     * @param SchemaCurie $curie
      * @return CommandHandler
      * @throws Exception\HandlerNotFound
      */
-    public function getCommandHandler(MessageCurie $curie);
+    public function getCommandHandler(SchemaCurie $curie);
 
     /**
      * Returns the handler for the provided request.
      *
-     * @param MessageCurie $curie
+     * @param SchemaCurie $curie
      * @return RequestHandler
      * @throws Exception\HandlerNotFound
      */
-    public function getRequestHandler(MessageCurie $curie);
+    public function getRequestHandler(SchemaCurie $curie);
 }

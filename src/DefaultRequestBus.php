@@ -4,12 +4,12 @@ namespace Gdbots\Pbjx;
 
 use Gdbots\Common\Util\ClassUtils;
 use Gdbots\Common\Util\StringUtils;
-use Gdbots\Pbj\DomainRequest;
-use Gdbots\Pbj\DomainResponse;
-use Gdbots\Pbj\MessageResolver;
 use Gdbots\Pbjx\Exception\InvalidHandler;
 use Gdbots\Pbjx\Exception\UnexpectedValueException;
-use Gdbots\Pbjx\Request\RequestFailedResponse;
+use Gdbots\Schemas\Pbjx\Enum\Code;
+use Gdbots\Schemas\Pbjx\Mixin\Request\Request;
+use Gdbots\Schemas\Pbjx\Mixin\Response\Response;
+use Gdbots\Schemas\Pbjx\Request\RequestFailedResponseV1;
 
 class DefaultRequestBus implements RequestBus
 {
@@ -34,13 +34,12 @@ class DefaultRequestBus implements RequestBus
         $this->locator = $locator;
         $this->transport = $transport;
         $this->pbjx = $this->locator->getPbjx();
-        MessageResolver::registerSchema(RequestFailedResponse::schema());
     }
 
     /**
      * {@inheritdoc}
      */
-    public function request(DomainRequest $request)
+    public function request(Request $request)
     {
         return $this->transport->sendRequest($request->freeze());
     }
@@ -48,7 +47,7 @@ class DefaultRequestBus implements RequestBus
     /**
      * {@inheritdoc}
      */
-    public function receiveRequest(DomainRequest $request)
+    public function receiveRequest(Request $request)
     {
         return $this->handleRequest($request->freeze());
     }
@@ -57,10 +56,10 @@ class DefaultRequestBus implements RequestBus
      * Invokes the handler that services the given request.  If an exception occurs
      * it will be caught and a RequestFailedResponse will be created with the reason.
      *
-     * @param DomainRequest $request
-     * @return DomainResponse
+     * @param Request $request
+     * @return Response
      */
-    final protected function handleRequest(DomainRequest $request)
+    final protected function handleRequest(Request $request)
     {
         $curie = $request::schema()->getCurie();
         $curieStr = $curie->toString();
@@ -78,24 +77,25 @@ class DefaultRequestBus implements RequestBus
             } catch (\Exception $e) {
                 return $this->createResponseForFailedRequest($request, $e);
             }
+
             $this->handlers[$curieStr] = $handler;
         }
 
         try {
             $response = $handler->handleRequest($request, $this->pbjx);
-            if (!$response instanceof DomainResponse) {
+            if (!$response instanceof Response) {
                 throw new UnexpectedValueException(
                     sprintf(
-                        'The handler "%s" returned "%s" but a DomainResponse object was expected.',
+                        'The handler "%s" returned "%s" but a Response object was expected.',
                         get_class($handler),
                         StringUtils::varToString($response)
                     )
                 );
             }
 
-            $response->setRequestRef($request->generateMessageRef());
-            if ($request->hasCorrelator()) {
-                $response->setCorrelator($request->getCorrelator());
+            $response->set('ctx_request_ref', $request->generateMessageRef());
+            if ($request->has('ctx_correlator_ref')) {
+                $response->set('ctx_correlator_ref', $request->get('ctx_correlator_ref'));
             }
 
             return $response;
@@ -105,19 +105,23 @@ class DefaultRequestBus implements RequestBus
     }
 
     /**
-     * @param DomainRequest $request
+     * @param Request $request
      * @param \Exception $exception
-     * @return DomainResponse
+     * @return Response
      */
-    private function createResponseForFailedRequest(DomainRequest $request, \Exception $exception)
+    private function createResponseForFailedRequest(Request $request, \Exception $exception)
     {
-        $response = RequestFailedResponse::create()
-            ->setRequestRef($request->generateMessageRef())
-            ->setFailedRequest($request)
-            ->setReason(ClassUtils::getShortName($exception) . '::' . $exception->getMessage());
+        $code = $exception->getCode() > 0 ? $exception->getCode() : Code::UNKNOWN;
 
-        if ($request->hasCorrelator()) {
-            $response->setCorrelator($request->getCorrelator());
+        $response = RequestFailedResponseV1::create()
+            ->set('ctx_request_ref', $request->generateMessageRef())
+            ->set('request', $request)
+            ->set('error_code', $code)
+            ->set('error_name', ClassUtils::getShortName($exception))
+            ->set('error_message', $exception->getMessage());
+
+        if ($request->has('ctx_correlator_ref')) {
+            $response->set('ctx_correlator_ref', $request->get('ctx_correlator_ref'));
         }
 
         return $response;

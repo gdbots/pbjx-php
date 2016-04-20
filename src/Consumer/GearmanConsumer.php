@@ -2,6 +2,7 @@
 
 namespace Gdbots\Pbjx\Consumer;
 
+use Gdbots\Common\Util\ClassUtils;
 use Gdbots\Common\Util\NumberUtils;
 use Gdbots\Pbj\Message;
 use Gdbots\Pbj\Serializer\PhpSerializer;
@@ -22,6 +23,7 @@ class GearmanConsumer extends AbstractConsumer
     /**
      * The channels this consumer is listening to.  In gearman, this is the function name.
      * If the supplied array is empty the router default channels are used.
+     *
      * @see Router
      * @see \GearmanWorker::addFunction
      * @var array
@@ -128,7 +130,7 @@ class GearmanConsumer extends AbstractConsumer
 
             shuffle($this->channels);
             foreach ($this->channels as $channel) {
-                $this->worker->addFunction($channel, array($this, 'handleJob'));
+                $this->worker->addFunction($channel, [$this, 'handleJob']);
             }
         }
     }
@@ -139,9 +141,10 @@ class GearmanConsumer extends AbstractConsumer
      */
     protected function work()
     {
-        if (@$this->worker->work() ||
-            $this->worker->returnCode() == GEARMAN_IO_WAIT ||
-            $this->worker->returnCode() == GEARMAN_NO_JOBS
+        if (@$this->worker->work()
+            || $this->worker->returnCode() == GEARMAN_IO_WAIT
+            || $this->worker->returnCode() == GEARMAN_NO_JOBS
+            || $this->worker->returnCode() == GEARMAN_TIMEOUT
         ) {
             if ($this->worker->returnCode() == GEARMAN_SUCCESS) {
                 return;
@@ -150,6 +153,8 @@ class GearmanConsumer extends AbstractConsumer
             if (!@$this->worker->wait()) {
                 if ($this->worker->returnCode() == GEARMAN_NO_ACTIVE_FDS) {
                     sleep(5);
+                } elseif ($this->worker->returnCode() == GEARMAN_TIMEOUT) {
+                    sleep(1);
                 }
             }
         }
@@ -183,11 +188,26 @@ class GearmanConsumer extends AbstractConsumer
             if ($result instanceof Message) {
                 return $this->serializer->serialize($result);
             }
+
         } catch (\Exception $e) {
             $job->sendFail();
             $this->logger->error(
-                sprintf('Failed to handle job [%s] with workload: %s', $job->handle(), $job->workload())
+                sprintf(
+                    '%s::Consumer [%s] failed to handle job [{job_handle}::{job_id}].',
+                    ClassUtils::getShortName($e),
+                    $this->consumerName
+                ),
+                [
+                    'exception' => $e,
+                    'consumer' => $this->consumerName,
+                    'gearman_function_name' => $job->functionName(),
+                    'gearman_worker_id' => $this->workerId,
+                    'job_handle' => $job->handle(),
+                    'job_id' => $job->unique(),
+                    'job_workload' => $job->workload(),
+                ]
             );
+
             throw $e;
         }
 

@@ -3,17 +3,17 @@
 namespace Gdbots\Tests\Pbjx\Fixtures;
 
 use Gdbots\Pbj\AbstractMessage;
-use Gdbots\Pbj\DomainRequest;
 use Gdbots\Pbj\FieldBuilder as Fb;
 use Gdbots\Pbj\MessageResolver;
-use Gdbots\Pbj\Mixin\RequestMixin;
-use Gdbots\Pbj\Mixin\RequestTrait;
 use Gdbots\Pbj\Schema;
 use Gdbots\Pbj\Type as T;
+use Gdbots\Schemas\Pbjx\Mixin\Request\RequestV1;
+use Gdbots\Schemas\Pbjx\Mixin\Request\RequestV1Mixin;
+use Gdbots\Schemas\Pbjx\Mixin\Request\RequestV1Trait;
 
-final class GetTimeRequest extends AbstractMessage implements DomainRequest
+final class GetTimeRequest extends AbstractMessage implements RequestV1
 {
-    use RequestTrait;
+    use RequestV1Trait;
 
     /**
      * @return Schema
@@ -25,27 +25,11 @@ final class GetTimeRequest extends AbstractMessage implements DomainRequest
                 Fb::create('test_fail', T\BooleanType::create())->build(),
             ],
             [
-                RequestMixin::create()
+                RequestV1Mixin::create()
             ]
         );
+
         MessageResolver::registerSchema($schema);
         return $schema;
-    }
-
-    /**
-     * @return bool
-     */
-    public function getTestFail()
-    {
-        return $this->get('test_fail');
-    }
-
-    /**
-     * @param bool $testFail
-     * @return self
-     */
-    public function setTestFail($testFail)
-    {
-        return $this->setSingleValue('test_fail', $testFail);
     }
 }

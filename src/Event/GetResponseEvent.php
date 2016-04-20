@@ -2,28 +2,28 @@
 
 namespace Gdbots\Pbjx\Event;
 
-use Gdbots\Pbj\DomainRequest;
-use Gdbots\Pbj\DomainResponse;
 use Gdbots\Pbjx\Exception\LogicException;
+use Gdbots\Schemas\Pbjx\Mixin\Request\Request;
+use Gdbots\Schemas\Pbjx\Mixin\Response\Response;
 
 class GetResponseEvent extends PbjxEvent
 {
-    /** @var DomainRequest */
+    /** @var Request */
     protected $message;
 
-    /** @var DomainResponse */
+    /** @var Response */
     protected $response;
 
     /**
-     * @param DomainRequest $request
+     * @param Request $request
      */
-    public function __construct(DomainRequest $request)
+    public function __construct(Request $request)
     {
         parent::__construct($request);
     }
 
     /**
-     * @return DomainRequest
+     * @return Request
      */
     public function getRequest()
     {
@@ -39,7 +39,7 @@ class GetResponseEvent extends PbjxEvent
     }
 
     /**
-     * @return DomainResponse
+     * @return Response
      */
     public function getResponse()
     {
@@ -47,24 +47,32 @@ class GetResponseEvent extends PbjxEvent
     }
 
     /**
-     * @param DomainResponse $response
+     * @param Response $response
      * @throws LogicException
      */
-    public function setResponse(DomainResponse $response)
+    public function setResponse(Response $response)
     {
         if ($this->hasResponse()) {
             throw new LogicException('Response can only be set one time.');
         }
 
-        if (!$response->hasRequestRef()) {
-            $response->setRequestRef($this->message->generateMessageRef());
+        if (!$response->has('ctx_request_ref')) {
+            $response->set('ctx_request_ref', $this->message->generateMessageRef());
         }
 
-        if (!$response->hasCorrelator() && $this->message->hasCorrelator()) {
-            $response->setCorrelator($this->message->getCorrelator());
+        if (!$response->has('ctx_correlator_ref') && $this->message->has('ctx_correlator_ref')) {
+            $response->set('ctx_correlator_ref', $this->message->get('ctx_correlator_ref'));
         }
 
         $this->response = $response;
         $this->stopPropagation();
+    }
+
+    /**
+     * @return bool
+     */
+    public function supportsRecursion()
+    {
+        return false;
     }
 }

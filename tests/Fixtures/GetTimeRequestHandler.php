@@ -2,23 +2,24 @@
 
 namespace Gdbots\Tests\Pbjx\Fixtures;
 
-use Gdbots\Pbjx\ConventionalRequestHandling;
 use Gdbots\Pbjx\RequestHandler;
+use Gdbots\Pbjx\RequestHandlerTrait;
 
 class GetTimeRequestHandler implements RequestHandler
 {
-    use ConventionalRequestHandling;
+    use RequestHandlerTrait;
 
     /**
      * @param GetTimeRequest $request
      *
-     * @return GetTimeResponse
+     * @return string|GetTimeResponse
      */
-    protected function getTimeRequest(GetTimeRequest $request)
+    protected function handle(GetTimeRequest $request)
     {
-        if ($request->getTestFail()) {
+        if ($request->get('test_fail')) {
             return 'test fail';
         }
-        return GetTimeResponse::create()->setTime($request->getMicrotime()->toDateTime());
+
+        return GetTimeResponse::create()->set('time', $request->get('occurred_at')->toDateTime());
     }
 }

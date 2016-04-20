@@ -2,62 +2,99 @@
 
 namespace Gdbots\Pbjx;
 
-use Gdbots\Pbj\DomainCommand;
-use Gdbots\Pbj\DomainEvent;
-use Gdbots\Pbj\DomainRequest;
-use Gdbots\Pbj\DomainResponse;
 use Gdbots\Pbj\Message;
 use Gdbots\Pbjx\Event\PbjxEvent;
 use Gdbots\Pbjx\Exception\GdbotsPbjxException;
 use Gdbots\Pbjx\Exception\InvalidArgumentException;
+use Gdbots\Pbjx\Exception\TooMuchRecursion;
+use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
+use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
+use Gdbots\Schemas\Pbjx\Mixin\Request\Request;
+use Gdbots\Schemas\Pbjx\Mixin\Response\Response;
 
 interface Pbjx
 {
     /**
-     * Triggers in-process events using the dispatcher which will announce an event for each of:
+     * Triggers lifecycle events using the dispatcher which will announce an event for each of:
      *
+     * gdbots_pbjx.message.suffix
      * curie:v[MAJOR VERSION].suffix
      * curie.suffix
-     * mixinId.suffix
+     * mixinId.suffix (mixinId is the mixin with the major rev)
+     * mixinCurie.suffix (mixinCurie is the curie ONLY)
      *
-     * @param Message $message
-     * @param string $suffix
-     * @param PbjxEvent $event
+     * When the recursive option is used, any fields with MessageType will also be run through
+     * the trigger process.  The PbjxEvent object will have a reference to the parent event
+     * and the depth of the recursion.
+     *
+     * @param Message $message  The message that will be processed.
+     * @param string $suffix    A string indicating the lifecycle phase (bind, validate, enrich, etc.)
+     * @param PbjxEvent $event  An event object containing the message.
+     * @param bool $recursive   If true, all field values with MessageType are also triggered.
+     *
+     * @return Pbjx
      *
      * @throws GdbotsPbjxException
      * @throws InvalidArgumentException
+     * @throws TooMuchRecursion
      * @throws \Exception
      */
-    public function trigger(Message $message, $suffix, PbjxEvent $event = null);
+    public function trigger(Message $message, $suffix, PbjxEvent $event = null, $recursive = true);
+
+    /**
+     * Runs the "standard" lifecycle for a message prior to send, publish or request.
+     * Internally this is a call to Pbjx::trigger for suffixes bind, validate and enrich.
+     *
+     * After the lifecycle completes the message should be ready to be sent via a transport
+     * or frozen and persisted to storage.
+     *
+     * @param Message $message
+     * @param bool $recursive
+     *
+     * @return Pbjx
+     *
+     * @throws \Exception
+     */
+    public function triggerLifecycle(Message $message, $recursive = true);
+
+    /**
+     * Copies context fields (ip, user agent, correlator, etc.) from one message to another.
+     *
+     * @param Message $from
+     * @param Message $to
+     *
+     * @return Pbjx
+     */
+    public function copyContext(Message $from, Message $to);
 
     /**
      * Processes a command asynchronously.
      *
-     * @param DomainCommand $command
+     * @param Command $command
      *
      * @throws GdbotsPbjxException
      * @throws \Exception
      */
-    public function send(DomainCommand $command);
+    public function send(Command $command);
 
     /**
      * Publishes events to all subscribers.
      *
-     * @param DomainEvent $domainEvent
+     * @param Event $event
      *
      * @throws GdbotsPbjxException
      * @throws \Exception
      */
-    public function publish(DomainEvent $domainEvent);
+    public function publish(Event $event);
 
     /**
      * Processes a request synchronously and returns the response.
      *
-     * @param DomainRequest $request
-     * @return DomainResponse
+     * @param Request $request
+     * @return Response
      *
      * @throws GdbotsPbjxException
      * @throws \Exception
      */
-    public function request(DomainRequest $request);
+    public function request(Request $request);
 }

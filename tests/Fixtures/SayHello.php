@@ -3,17 +3,17 @@
 namespace Gdbots\Tests\Pbjx\Fixtures;
 
 use Gdbots\Pbj\AbstractMessage;
-use Gdbots\Pbj\DomainCommand;
 use Gdbots\Pbj\FieldBuilder as Fb;
 use Gdbots\Pbj\MessageResolver;
-use Gdbots\Pbj\Mixin\CommandMixin;
-use Gdbots\Pbj\Mixin\CommandTrait;
 use Gdbots\Pbj\Schema;
 use Gdbots\Pbj\Type as T;
+use Gdbots\Schemas\Pbjx\Mixin\Command\CommandV1;
+use Gdbots\Schemas\Pbjx\Mixin\Command\CommandV1Mixin;
+use Gdbots\Schemas\Pbjx\Mixin\Command\CommandV1Trait;
 
-final class SayHello extends AbstractMessage implements DomainCommand
+final class SayHello extends AbstractMessage implements CommandV1
 {
-    use CommandTrait;
+    use CommandV1Trait;
 
     /**
      * @return Schema
@@ -25,28 +25,11 @@ final class SayHello extends AbstractMessage implements DomainCommand
                 Fb::create('name', T\StringType::create())->build(),
             ],
             [
-                CommandMixin::create()
+                CommandV1Mixin::create()
             ]
         );
 
         MessageResolver::registerSchema($schema);
         return $schema;
-    }
-
-    /**
-     * @return string
-     */
-    public function getName()
-    {
-        return $this->get('name');
-    }
-
-    /**
-     * @param string $name
-     * @return self
-     */
-    public function setName($name)
-    {
-        return $this->setSingleValue('name', $name);
     }
 }

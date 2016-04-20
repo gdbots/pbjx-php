@@ -3,17 +3,17 @@
 namespace Gdbots\Tests\Pbjx\Fixtures;
 
 use Gdbots\Pbj\AbstractMessage;
-use Gdbots\Pbj\DomainResponse;
 use Gdbots\Pbj\FieldBuilder as Fb;
 use Gdbots\Pbj\MessageResolver;
-use Gdbots\Pbj\Mixin\ResponseMixin;
-use Gdbots\Pbj\Mixin\ResponseTrait;
 use Gdbots\Pbj\Schema;
 use Gdbots\Pbj\Type as T;
+use Gdbots\Schemas\Pbjx\Mixin\Response\ResponseV1;
+use Gdbots\Schemas\Pbjx\Mixin\Response\ResponseV1Mixin;
+use Gdbots\Schemas\Pbjx\Mixin\Response\ResponseV1Trait;
 
-final class GetTimeResponse extends AbstractMessage implements DomainResponse
+final class GetTimeResponse extends AbstractMessage implements ResponseV1
 {
-    use ResponseTrait;
+    use ResponseV1Trait;
 
     /**
      * @return Schema
@@ -25,27 +25,11 @@ final class GetTimeResponse extends AbstractMessage implements DomainResponse
                 Fb::create('time', T\DateTimeType::create())->build()
             ],
             [
-                ResponseMixin::create()
+                ResponseV1Mixin::create()
             ]
         );
+
         MessageResolver::registerSchema($schema);
         return $schema;
-    }
-
-    /**
-     * @return \DateTime
-     */
-    public function getTime()
-    {
-        return $this->get('time');
-    }
-
-    /**
-     * @param \DateTime $time
-     * @return self
-     */
-    public function setTime(\DateTime $time)
-    {
-        return $this->setSingleValue('time', $time);
     }
 }

@@ -2,20 +2,21 @@
 
 namespace Gdbots\Pbjx\Exception;
 
-use Gdbots\Pbj\DomainCommand;
-use Gdbots\Pbj\DomainRequest;
 use Gdbots\Pbjx\CommandHandler;
 use Gdbots\Pbjx\RequestHandler;
+use Gdbots\Schemas\Pbjx\Enum\Code;
+use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
+use Gdbots\Schemas\Pbjx\Mixin\Request\Request;
 
 final class InvalidHandler extends \UnexpectedValueException implements GdbotsPbjxException
 {
     /**
-     * @param DomainCommand $command
+     * @param Command $command
      * @param CommandHandler $handler
      * @param string $message
      * @return static
      */
-    public static function forCommand(DomainCommand $command, CommandHandler $handler, $message = '')
+    public static function forCommand(Command $command, CommandHandler $handler, $message = '')
     {
         return new static(
             sprintf(
@@ -23,17 +24,18 @@ final class InvalidHandler extends \UnexpectedValueException implements GdbotsPb
                 $command::schema()->getId()->toString(),
                 get_class($handler),
                 $message
-            )
+            ),
+            Code::INTERNAL
         );
     }
 
     /**
-     * @param DomainRequest $request
+     * @param Request $request
      * @param RequestHandler $handler
      * @param string $message
      * @return static
      */
-    public static function forRequest(DomainRequest $request, RequestHandler $handler, $message = '')
+    public static function forRequest(Request $request, RequestHandler $handler, $message = '')
     {
         return new static(
             sprintf(
@@ -41,7 +43,8 @@ final class InvalidHandler extends \UnexpectedValueException implements GdbotsPb
                 $request::schema()->getId()->toString(),
                 get_class($handler),
                 $message
-            )
+            ),
+            Code::INTERNAL
         );
     }
 }

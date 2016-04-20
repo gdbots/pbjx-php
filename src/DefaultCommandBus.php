@@ -2,10 +2,10 @@
 
 namespace Gdbots\Pbjx;
 
-use Gdbots\Pbj\DomainCommand;
 use Gdbots\Pbjx\Event\BusExceptionEvent;
 use Gdbots\Pbjx\Event\PbjxEvent;
 use Gdbots\Pbjx\Exception\InvalidHandler;
+use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
 
 class DefaultCommandBus implements CommandBus
 {
@@ -35,7 +35,7 @@ class DefaultCommandBus implements CommandBus
     /**
      * {@inheritdoc}
      */
-    public function send(DomainCommand $command)
+    public function send(Command $command)
     {
         $this->transport->sendCommand($command->freeze());
     }
@@ -43,7 +43,7 @@ class DefaultCommandBus implements CommandBus
     /**
      * {@inheritdoc}
      */
-    public function receiveCommand(DomainCommand $command)
+    public function receiveCommand(Command $command)
     {
         $this->handleCommand($command->freeze());
     }
@@ -58,9 +58,9 @@ class DefaultCommandBus implements CommandBus
      * allowing an exception to just bubble up and break the service handling commands
      * will not be seen by anyone except an error log.
      *
-     * @param DomainCommand $command
+     * @param Command $command
      */
-    final protected function handleCommand(DomainCommand $command)
+    final protected function handleCommand(Command $command)
     {
         $curie = $command::schema()->getCurie();
         $curieStr = $curie->toString();
@@ -76,23 +76,20 @@ class DefaultCommandBus implements CommandBus
                     );
                 }
             } catch (\Exception $e) {
-                $this->locator->getExceptionHandler()->onCommandBusException(
-                    new BusExceptionEvent($command, $e)
-                );
+                $this->locator->getExceptionHandler()->onCommandBusException(new BusExceptionEvent($command, $e));
                 return;
             }
+
             $this->handlers[$curieStr] = $handler;
         }
 
         try {
             $event = new PbjxEvent($command);
-            $this->pbjx->trigger($command, PbjxEvents::SUFFIX_BEFORE_HANDLE, $event);
+            $this->pbjx->trigger($command, PbjxEvents::SUFFIX_BEFORE_HANDLE, $event, false);
             $handler->handleCommand($command, $this->pbjx);
-            $this->pbjx->trigger($command, PbjxEvents::SUFFIX_AFTER_HANDLE, $event);
+            $this->pbjx->trigger($command, PbjxEvents::SUFFIX_AFTER_HANDLE, $event, false);
         } catch (\Exception $e) {
-            $this->locator->getExceptionHandler()->onCommandBusException(
-                new BusExceptionEvent($command, $e)
-            );
+            $this->locator->getExceptionHandler()->onCommandBusException(new BusExceptionEvent($command, $e));
         }
     }
 }

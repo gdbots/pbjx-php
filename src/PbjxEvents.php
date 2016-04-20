@@ -19,7 +19,6 @@ final class PbjxEvents
      * @var string
      */
     const SUFFIX_BIND = 'bind';
-    const SUFFIX_BIND_FROM = 'bind_from.';
     const SUFFIX_VALIDATE = 'validate';
     const SUFFIX_ENRICH = 'enrich';
     const SUFFIX_BEFORE_HANDLE = 'before_handle';
@@ -39,7 +38,7 @@ final class PbjxEvents
 
     /**
      * Occurs during event dispatching, where events are actually handled.  If the
-     * subscriber throws and exception and the EventExecutionFailed also fails
+     * subscriber throws an exception and the EventExecutionFailed also fails
      * to be handled, then this event is announced.  This should be very rare.
      *
      * @see Gdbots\Pbjx\Event\BusExceptionEvent

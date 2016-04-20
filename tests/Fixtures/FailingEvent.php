@@ -3,17 +3,17 @@
 namespace Gdbots\Tests\Pbjx\Fixtures;
 
 use Gdbots\Pbj\AbstractMessage;
-use Gdbots\Pbj\DomainEvent;
 use Gdbots\Pbj\FieldBuilder as Fb;
 use Gdbots\Pbj\MessageResolver;
-use Gdbots\Pbj\Mixin\EventMixin;
-use Gdbots\Pbj\Mixin\EventTrait;
 use Gdbots\Pbj\Schema;
 use Gdbots\Pbj\Type as T;
+use Gdbots\Schemas\Pbjx\Mixin\Event\EventV1;
+use Gdbots\Schemas\Pbjx\Mixin\Event\EventV1Mixin;
+use Gdbots\Schemas\Pbjx\Mixin\Event\EventV1Trait;
 
-final class FailingEvent extends AbstractMessage implements DomainEvent
+final class FailingEvent extends AbstractMessage implements EventV1
 {
-    use EventTrait;
+    use EventV1Trait;
 
     /**
      * @return Schema
@@ -25,28 +25,11 @@ final class FailingEvent extends AbstractMessage implements DomainEvent
                 Fb::create('name', T\StringType::create())->build(),
             ],
             [
-                EventMixin::create()
+                EventV1Mixin::create()
             ]
         );
 
         MessageResolver::registerSchema($schema);
         return $schema;
-    }
-
-    /**
-     * @return string
-     */
-    public function getName()
-    {
-        return $this->get('name');
-    }
-
-    /**
-     * @param string $name
-     * @return self
-     */
-    public function setName($name)
-    {
-        return $this->setSingleValue('name', $name);
     }
 }
