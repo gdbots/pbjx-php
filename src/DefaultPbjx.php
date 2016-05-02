@@ -119,7 +119,7 @@ class DefaultPbjx implements Pbjx
             $to->set('ctx_cloud', clone $from->get('ctx_cloud'));
         }
 
-        foreach (['stream_id', 'ctx_correlator_ref', 'ctx_user_ref', 'ctx_ip', 'ctx_ua'] as $ctx) {
+        foreach (['ctx_correlator_ref', 'ctx_user_ref', 'ctx_ip', 'ctx_ua'] as $ctx) {
             if (!$to->has($ctx) && $from->has($ctx)) {
                 $to->set($ctx, $from->get($ctx));
             }

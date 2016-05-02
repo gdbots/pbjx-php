@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 1.x versions.
 
 
+## v1.0.1
+* Remove all references to `stream_id` as it's removed from the `gdbots/schemas` library.
+
+
 ## v1.0.0
 __BREAKING CHANGES__
 
