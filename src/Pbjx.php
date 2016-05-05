@@ -4,6 +4,7 @@ namespace Gdbots\Pbjx;
 
 use Gdbots\Pbj\Message;
 use Gdbots\Pbjx\Event\PbjxEvent;
+use Gdbots\Pbjx\EventStore\EventStore;
 use Gdbots\Pbjx\Exception\GdbotsPbjxException;
 use Gdbots\Pbjx\Exception\InvalidArgumentException;
 use Gdbots\Pbjx\Exception\TooMuchRecursion;
@@ -97,4 +98,9 @@ interface Pbjx
      * @throws \Exception
      */
     public function request(Request $request);
+
+    /**
+     * @return EventStore
+     */
+    public function getEventStore();
 }
