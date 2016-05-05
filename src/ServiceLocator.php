@@ -3,6 +3,7 @@
 namespace Gdbots\Pbjx;
 
 use Gdbots\Pbj\SchemaCurie;
+use Gdbots\Pbjx\EventStore\EventStore;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 interface ServiceLocator
@@ -54,4 +55,9 @@ interface ServiceLocator
      * @throws Exception\HandlerNotFound
      */
     public function getRequestHandler(SchemaCurie $curie);
+
+    /**
+     * @return EventStore
+     */
+    public function getEventStore();
 }

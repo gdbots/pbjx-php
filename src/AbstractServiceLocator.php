@@ -2,6 +2,9 @@
 
 namespace Gdbots\Pbjx;
 
+use Gdbots\Pbjx\EventStore\EventStore;
+use Gdbots\Pbjx\Exception\LogicException;
+use Gdbots\Schemas\Pbjx\Enum\Code;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
@@ -24,6 +27,9 @@ abstract class AbstractServiceLocator implements ServiceLocator
 
     /** @var ExceptionHandler */
     private $exceptionHandler;
+
+    /** @var EventStore */
+    protected $eventStore;
 
     /** @var Transport */
     protected $defaultTransport;
@@ -140,6 +146,25 @@ abstract class AbstractServiceLocator implements ServiceLocator
     protected function doGetExceptionHandler()
     {
         return new DefaultExceptionHandler($this);
+    }
+
+    /**
+     * @return EventStore
+     */
+    final public function getEventStore()
+    {
+        if (null === $this->eventStore) {
+            $this->eventStore = $this->doGetEventStore();
+        }
+        return $this->eventStore;
+    }
+
+    /**
+     * @return EventStore
+     */
+    protected function doGetEventStore()
+    {
+        return new LogicException('No EventStore has been configured.', Code::UNIMPLEMENTED);
     }
 
     /**

@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 1.x versions.
 
 
+## v1.0.2
+* Adds `EventStore` and `EventSearch` with DynamoDb and Elastica implementations.
+
+
 ## v1.0.1
 * Remove all references to `stream_id` as it's removed from the `gdbots/schemas` library.
 
