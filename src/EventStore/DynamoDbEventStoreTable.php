@@ -9,6 +9,8 @@ final class DynamoDbEventStoreTable
 {
     const SCHEMA_VERSION = 'v1';
     const DEFAULT_NAME = 'event_store_v1';
+    const HASH_KEY_NAME = '__stream_id';
+    const RANGE_KEY_NAME = 'occurred_at';
 
     /** @var DynamoDbClient */
     private $client;
@@ -45,16 +47,36 @@ final class DynamoDbEventStoreTable
         $this->client->createTable([
             'TableName' => $this->name,
             'AttributeDefinitions' => [
-                ['AttributeName' => '__stream_id', 'AttributeType' => 'S'],
-                ['AttributeName' => 'occurred_at', 'AttributeType' => 'N'],
+                ['AttributeName' => self::HASH_KEY_NAME, 'AttributeType' => 'S'],
+                ['AttributeName' => self::RANGE_KEY_NAME, 'AttributeType' => 'N'],
+                ['AttributeName' => 'event_id', 'AttributeType' => 'S'],
             ],
             'KeySchema' => [
-                ['AttributeName' => '__stream_id', 'KeyType' => 'HASH'],
-                ['AttributeName' => 'occurred_at', 'KeyType' => 'RANGE'],
+                ['AttributeName' => self::HASH_KEY_NAME, 'KeyType' => 'HASH'],
+                ['AttributeName' => self::RANGE_KEY_NAME, 'KeyType' => 'RANGE'],
+            ],
+            'GlobalSecondaryIndexes' => [
+                [
+                    'IndexName' => 'event_id_index',
+                    'KeySchema' => [
+                        ['AttributeName' => 'event_id', 'KeyType' => 'HASH'],
+                    ],
+                    'Projection' => [
+                        'ProjectionType' => 'KEYS_ONLY',
+                    ],
+                    'ProvisionedThroughput' => [
+                        'ReadCapacityUnits'  => 2,
+                        'WriteCapacityUnits' => 2
+                    ]
+                ],
+            ],
+            'StreamSpecification' => [
+                'StreamEnabled' => true,
+                'StreamViewType' => 'NEW_IMAGE',
             ],
             'ProvisionedThroughput' => [
-                'ReadCapacityUnits'  => 5,
-                'WriteCapacityUnits' => 5
+                'ReadCapacityUnits'  => 2,
+                'WriteCapacityUnits' => 2
             ]
         ]);
 
