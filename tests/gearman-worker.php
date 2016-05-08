@@ -18,6 +18,7 @@ $locator->getDispatcher()->addListener(
     SimpleEvent::schema()->getCurieMajor(),
     function (SimpleEvent $publishedEvent) {
         echo $publishedEvent;
+        echo $publishedEvent->isReplay() ? 'replayed' . PHP_EOL : '';
     }
 );
 

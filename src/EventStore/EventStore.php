@@ -39,10 +39,13 @@ interface EventStore
     public function getEvents($streamId, Microtime $start = null, $count = 25, $forward = true);
 
     /**
+     * Returns a generator which yields all events (forward only) from the beginning
+     * of the stream or the start time provided.
+     *
      * @param string $streamId
      * @param Microtime $start
      *
-     * @return \Generator|Event
+     * @return \Generator
      *
      * @throws GdbotsPbjxException
      */

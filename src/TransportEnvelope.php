@@ -67,15 +67,22 @@ final class TransportEnvelope
     {
         $envelope = json_decode($envelope, true);
         if (!is_array($envelope)) {
-            throw new \InvalidArgumentException('Envelope is invalid.');
+            throw new \InvalidArgumentException('Envelope is invalid. ' . json_last_error_msg());
         }
 
         $serializer = isset($envelope['serializer']) ? $envelope['serializer'] : 'php';
-        $isReplay = isset($envelope['replay']) ? filter_var($envelope['replay'], FILTER_VALIDATE_BOOLEAN) : false;
-        $data = isset($envelope['data']) ? $envelope['data'] : '';
-        $message = self::getSerializer($serializer)->deserialize($data);
+        $isReplay = isset($envelope['is_replay']) ? filter_var($envelope['is_replay'], FILTER_VALIDATE_BOOLEAN) : false;
+        $message = self::getSerializer($serializer)->deserialize(isset($envelope['message']) ? $envelope['message'] : '');
 
-        if ($isReplay) {
+        /*
+         * don't attempt to set replay if it's the php serializer because it already knows
+         * if it's a replay as the entire object is serialized with its internal state.
+         *
+         * this is a PHP feature only, all other serializers have no notion of the
+         * language specific in memory object.  we use php serializer because it's
+         * very fast to un/de-serialize the objects.
+         */
+        if ($isReplay && 'php' !== $serializer) {
             $message->isReplay(true);
         }
 
@@ -91,8 +98,8 @@ final class TransportEnvelope
     {
         return json_encode([
             'serializer' => $this->serializer,
-            'replay' => $this->message->isReplay(),
-            'data' => self::getSerializer($this->serializer)->serialize($this->message)
+            'is_replay' => $this->message->isReplay(),
+            'message' => self::getSerializer($this->serializer)->serialize($this->message)
         ]);
     }
 
