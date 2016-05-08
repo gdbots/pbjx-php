@@ -3,12 +3,15 @@
 namespace Gdbots\Pbjx\EventStore;
 
 use Aws\DynamoDb\DynamoDbClient;
+use Aws\DynamoDb\WriteRequestBatch;
 use Aws\Exception\AwsException;
 use Gdbots\Common\Microtime;
 use Gdbots\Common\Util\ClassUtils;
 use Gdbots\Common\Util\NumberUtils;
 use Gdbots\Pbj\Marshaler\DynamoDb\ItemMarshaler;
+use Gdbots\Pbjx\Exception\EventStoreOperationFailed;
 use Gdbots\Pbjx\Pbjx;
+use Gdbots\Schemas\Pbjx\Enum\Code;
 use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -45,32 +48,37 @@ class DynamoDbEventStore implements EventStore
      */
     public function putEvents($streamId, array $events)
     {
-        $puts = [];
+        $tableName = $this->getTableName();
+        $batch = new WriteRequestBatch($this->client, [
+            'table' => $tableName,
+            'autoflush' => false,
+            'error' => function(AwsException $e) use ($streamId, $tableName) {
+                throw new EventStoreOperationFailed(
+                    sprintf(
+                        'Failed to put some or all events into DynamoDb table [%s:%s] with message: %s',
+                        $tableName,
+                        $streamId,
+                        ClassUtils::getShortName($e) . '::' . $e->getMessage()
+                    ),
+                    Code::DATA_LOSS,
+                    $e
+                );
+            }
+        ]);
 
-        /*
-         * todo: handle in loop
-         * chunk if > 25 (or throw exception?)
-         * handle unprocessed items
-         *
-         * http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/LowLevelPHPItemCRUD.html#WriteMultipleItemsLowLevelPHP
-         *
-         * throw exceptions on marshalling
-         * add derived fields (mixins?)
-         * log critical issues or just throw exception?
-         *
-         */
+        /** @var Event[] $events */
         foreach ($events as $event) {
-            $this->pbjx->triggerLifecycle($event);
+            if (!$event->isFrozen()) {
+                $this->pbjx->triggerLifecycle($event);
+            }
 
             $item = $this->marshaler->marshal($event);
             $item[DynamoDbEventStoreTable::HASH_KEY_NAME] = ['S' => $streamId];
-            $this->beforePutItem($event, $item);
-            $puts[] = ['PutRequest' => ['Item' => $item]];
+            $this->beforePutItem($streamId, $event, $item);
+            $batch->put($item);
         }
 
-        $response = $this->client->batchWriteItem([
-            'RequestItems' => [$this->getTableName() => $puts]
-        ]);
+        $batch->flush();
     }
 
     /**
@@ -103,32 +111,65 @@ class DynamoDbEventStore implements EventStore
                 'Limit' => $count,
                 'ConsistentRead' => false
             ]);
+
         } catch (AwsException $e) {
-            echo $e;
+            if ('ProvisionedThroughputExceededException' === $e->getAwsErrorCode()) {
+                throw new EventStoreOperationFailed(
+                    sprintf('Read provisioning exceeded on DynamoDb table [%s:%s].', $tableName, $streamId),
+                    Code::RESOURCE_EXHAUSTED,
+                    $e
+                );
+            }
+
+            throw new EventStoreOperationFailed(
+                sprintf(
+                    'Failed to query events from DynamoDb table [%s:%s] with message: %s',
+                    $tableName,
+                    $streamId,
+                    ClassUtils::getShortName($e) . '::' . $e->getMessage()
+                ),
+                Code::UNAVAILABLE,
+                $e
+            );
+
+        } catch (\Exception $e) {
+            throw new EventStoreOperationFailed(
+                sprintf(
+                    'Failed to query events from DynamoDb table [%s:%s] with message: %s',
+                    $tableName,
+                    $streamId,
+                    ClassUtils::getShortName($e) . '::' . $e->getMessage()
+                ),
+                Code::INTERNAL,
+                $e
+            );
         }
 
-
-        if (!$response->count()) {
+        if (!$response['Count']) {
             return new EventCollection([], $streamId, $forward);
         }
 
         $events = [];
-        foreach ($response['Items'] as $result) {
+        foreach ($response['Items'] as $item) {
             try {
                 /** @var Event $event */
-                $events[] = $this->marshaler->unmarshal($result);
+                $events[] = $this->marshaler->unmarshal($item);
             } catch (\Exception $e) {
                 $this->logger->error(
                     sprintf(
-                        'Event returned from Dynamo table [%s:%s] could not be unmarshaled.  %s',
+                        'Item returned from DynamoDb table [%s] could not be unmarshaled. %s',
                         $tableName,
                         ClassUtils::getShortName($e) . '::' . $e->getMessage()
-                    )
+                    ),
+                    [
+                        'exception' => $e,
+                        'item' => $item
+                    ]
                 );
             }
         }
 
-        return new EventCollection($events, $streamId, $forward, $response->count() >= $count);
+        return new EventCollection($events, $streamId, $forward, $response['Count'] >= $count);
     }
 
     /**
@@ -136,6 +177,15 @@ class DynamoDbEventStore implements EventStore
      */
     public function streamEvents($streamId, Microtime $start = null)
     {
+        do {
+            $collection = $this->getEvents($streamId, $start, 100);
+            $start = $collection->getLastMicrotime();
+
+            foreach ($collection as $item) {
+                yield $item;
+            }
+
+        } while ($collection->hasMore());
     }
 
     /**
@@ -151,11 +201,12 @@ class DynamoDbEventStore implements EventStore
     }
 
     /**
+     * @param string $streamId
      * @param Event $event
      * @param array $item
      */
-    protected function beforePutItem(Event $event, array &$item)
+    protected function beforePutItem($streamId, Event $event, array &$item)
     {
-        // allow for customization of DynamoDb before it's pushed.
+        // allows for customization of DynamoDb item before it's pushed.
     }
 }

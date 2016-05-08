@@ -3,9 +3,9 @@
 namespace Gdbots\Pbjx\Transport;
 
 use Aws\Kinesis\KinesisClient;
-use Gdbots\Pbj\Serializer\JsonSerializer;
 use Gdbots\Pbjx\PartitionableRouter;
 use Gdbots\Pbjx\ServiceLocator;
+use Gdbots\Pbjx\TransportEnvelope;
 use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
 use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
 
@@ -13,9 +13,6 @@ class KinesisTransport extends AbstractTransport
 {
     /** @var KinesisClient */
     protected $client;
-
-    /** @var JsonSerializer */
-    protected $serializer;
 
     /** @var PartitionableRouter */
     protected $router;
@@ -30,7 +27,6 @@ class KinesisTransport extends AbstractTransport
         parent::__construct($locator);
         $this->client = $client;
         $this->router = $router;
-        $this->serializer = new JsonSerializer();
     }
 
     /**
@@ -42,10 +38,11 @@ class KinesisTransport extends AbstractTransport
      */
     protected function doSendCommand(Command $command)
     {
+        $envelope = new TransportEnvelope($command, 'json');
         $this->client->putRecord([
             'StreamName' => $this->router->forCommand($command),
             'PartitionKey' => $this->router->partitionForCommand($command),
-            'Data' => $this->serializer->serialize($command),
+            'Data' => $envelope->toString(),
         ]);
     }
 
@@ -58,10 +55,11 @@ class KinesisTransport extends AbstractTransport
      */
     protected function doSendEvent(Event $event)
     {
+        $envelope = new TransportEnvelope($event, 'json');
         $this->client->putRecord([
             'StreamName' => $this->router->forEvent($event),
             'PartitionKey' => $this->router->partitionForEvent($event),
-            'Data' => $this->serializer->serialize($event),
+            'Data' => $envelope->toString(),
         ]);
     }
 }

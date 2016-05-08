@@ -2,7 +2,6 @@
 
 namespace Gdbots\Pbjx\Consumer;
 
-use Gdbots\Pbj\Serializer\JsonSerializer;
 use Gdbots\Pbjx\Exception\LogicException;
 use Gdbots\Pbjx\ServiceLocator;
 use Psr\Log\LoggerInterface;
@@ -14,9 +13,6 @@ use Psr\Log\LoggerInterface;
  */
 class KinesisConsumer extends AbstractConsumer
 {
-    /** @var JsonSerializer */
-    protected $serializer;
-
     /**
      * @param ServiceLocator $locator
      * @param LoggerInterface $logger
@@ -24,7 +20,6 @@ class KinesisConsumer extends AbstractConsumer
     public function __construct(ServiceLocator $locator, LoggerInterface $logger = null)
     {
         parent::__construct($locator, $logger);
-        $this->serializer = new JsonSerializer();
     }
 
     /**

@@ -15,7 +15,6 @@ use Gdbots\Schemas\Pbjx\Mixin\Response\Response;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
-// todo: implement "replay" logic for messages?
 abstract class AbstractConsumer
 {
     /* @var bool */

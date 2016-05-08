@@ -3,10 +3,9 @@
 namespace Gdbots\Pbjx\Transport;
 
 use Gdbots\Common\Util\NumberUtils;
-use Gdbots\Pbj\Serializer\PhpSerializer;
-use Gdbots\Pbj\Serializer\Serializer;
 use Gdbots\Pbjx\Router;
 use Gdbots\Pbjx\ServiceLocator;
+use Gdbots\Pbjx\TransportEnvelope;
 use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
 use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
 use Gdbots\Schemas\Pbjx\Mixin\Request\Request;
@@ -16,9 +15,6 @@ class GearmanTransport extends AbstractTransport
 {
     /** @var \GearmanClient */
     protected $client;
-
-    /** @var Serializer */
-    protected $serializer;
 
     /** @var Router */
     protected $router;
@@ -47,7 +43,6 @@ class GearmanTransport extends AbstractTransport
         $this->servers = $servers;
         $this->timeout = NumberUtils::bound($timeout, 200, 10000);
         $this->router = $router ?: new GearmanRouter();
-        $this->serializer = new PhpSerializer();
     }
 
     /**
@@ -59,11 +54,11 @@ class GearmanTransport extends AbstractTransport
      */
     protected function doSendCommand(Command $command)
     {
-        $workload = $this->serializer->serialize($command);
+        $envelope = new TransportEnvelope($command, 'php');
         $channel = $this->router->forCommand($command);
         $client = $this->getClient();
 
-        @$client->doBackground($channel, $workload, $command->get('command_id'));
+        @$client->doBackground($channel, $envelope->toString(), $command->get('command_id'));
         $this->validateReturnCode($client, $channel);
     }
 
@@ -76,11 +71,11 @@ class GearmanTransport extends AbstractTransport
      */
     protected function doSendEvent(Event $event)
     {
-        $workload = $this->serializer->serialize($event);
+        $envelope = new TransportEnvelope($event, 'php');
         $channel = $this->router->forEvent($event);
         $client = $this->getClient();
 
-        @$client->doBackground($channel, $workload, $event->get('event_id'));
+        @$client->doBackground($channel, $envelope->toString(), $event->get('event_id'));
         $this->validateReturnCode($client, $channel);
     }
 
@@ -93,13 +88,13 @@ class GearmanTransport extends AbstractTransport
      */
     protected function doSendRequest(Request $request)
     {
-        $workload = $this->serializer->serialize($request);
+        $envelope = new TransportEnvelope($request, 'php');
         $channel = $this->router->forRequest($request);
         $client = $this->getClient();
 
-        $result = @$client->doNormal($channel, $workload, $request->get('request_id'));
+        $result = @$client->doNormal($channel, $envelope->toString(), $request->get('request_id'));
         $this->validateReturnCode($client, $channel);
-        return $this->serializer->deserialize($result);
+        return TransportEnvelope::fromString($result)->getMessage();
     }
 
     /**

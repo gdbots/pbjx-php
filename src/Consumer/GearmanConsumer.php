@@ -5,20 +5,16 @@ namespace Gdbots\Pbjx\Consumer;
 use Gdbots\Common\Util\ClassUtils;
 use Gdbots\Common\Util\NumberUtils;
 use Gdbots\Pbj\Message;
-use Gdbots\Pbj\Serializer\PhpSerializer;
-use Gdbots\Pbj\Serializer\Serializer;
 use Gdbots\Pbjx\PbjxEvents;
 use Gdbots\Pbjx\ServiceLocator;
 use Gdbots\Pbjx\Transport\GearmanRouter;
+use Gdbots\Pbjx\TransportEnvelope;
 use Psr\Log\LoggerInterface;
 
 class GearmanConsumer extends AbstractConsumer
 {
     /** @var \GearmanWorker */
     protected $worker;
-
-    /** @var Serializer */
-    protected $serializer;
 
     /**
      * The channels this consumer is listening to.  In gearman, this is the function name.
@@ -75,7 +71,6 @@ class GearmanConsumer extends AbstractConsumer
         ;
         $this->servers = $servers;
         $this->timeout = NumberUtils::bound($timeout, 200, 10000);
-        $this->serializer = new PhpSerializer();
     }
 
     /**
@@ -180,13 +175,14 @@ class GearmanConsumer extends AbstractConsumer
         $dispatcher = $this->locator->getDispatcher();
 
         try {
-            $message = $this->serializer->deserialize($job->workload());
+            $envelope = TransportEnvelope::fromString($job->workload());
             $dispatcher->dispatch(PbjxEvents::CONSUMER_BEFORE_HANDLE);
-            $result = $this->handleMessage($message);
+            $result = $this->handleMessage($envelope->getMessage());
             $dispatcher->dispatch(PbjxEvents::CONSUMER_AFTER_HANDLE);
 
             if ($result instanceof Message) {
-                return $this->serializer->serialize($result);
+                // if the request is a replay, does that imply the response is too?
+                return (new TransportEnvelope($result, $envelope->getSerializerUsed()))->toString();
             }
 
         } catch (\Exception $e) {

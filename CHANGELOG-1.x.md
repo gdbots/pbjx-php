@@ -2,8 +2,10 @@
 This changelog references the relevant changes done in 1.x versions.
 
 
-## v1.0.2
+## v1.1.0
 * Adds `EventStore` and `EventSearch` with DynamoDb and Elastica implementations.
+* Transports now use a `TransportEnvelope` so the consumers can handle multiple serializers and properly set replay
+  flag on messages that are handled in a separate process or separate machine entirely (e.g. gearman)
 
 
 ## v1.0.1
