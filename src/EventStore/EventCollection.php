@@ -31,8 +31,6 @@ final class EventCollection implements ToArray, \JsonSerializable, \IteratorAggr
     private $hasMore = false;
 
     /**
-     * EventCollection constructor.
-     *
      * @param Event[] $events
      * @param string $streamId
      * @param bool $forward

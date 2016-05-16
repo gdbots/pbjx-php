@@ -8,7 +8,6 @@ use Aws\DynamoDb\Exception\DynamoDbException;
 final class DynamoDbEventStoreTable
 {
     const SCHEMA_VERSION = 'v1';
-    const DEFAULT_NAME = 'event_store_v1';
     const HASH_KEY_NAME = '__stream_id';
     const RANGE_KEY_NAME = 'occurred_at';
 
@@ -26,7 +25,7 @@ final class DynamoDbEventStoreTable
      * @param DynamoDbClient $client
      * @param string $name
      */
-    public function __construct(DynamoDbClient $client, $name = self::DEFAULT_NAME)
+    public function __construct(DynamoDbClient $client, $name)
     {
         $this->client = $client;
         $this->name = $name;
