@@ -60,7 +60,7 @@ interface EventStore
      * The order of events returned will be ordered per stream but not necessarily
      * globally ordered.
      *
-     * @param \Closure $callback The function that will receive "callback(event, streamId)"
+     * @param \Closure $callback The function that will receive "$callback($event, $streamId);"
      * @param Microtime $since   Return events greater than this time.
      * @param array $hints       Allows the event store provider to decide where to read/write data from.
      *

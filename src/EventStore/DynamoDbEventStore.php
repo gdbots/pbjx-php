@@ -6,8 +6,8 @@ use Aws\CommandPool;
 use Aws\DynamoDb\DynamoDbClient;
 use Aws\DynamoDb\WriteRequestBatch;
 use Aws\Exception\AwsException;
+use Aws\Result;
 use Gdbots\Common\Microtime;
-use Gdbots\Common\Util\ClassUtils;
 use Gdbots\Common\Util\NumberUtils;
 use Gdbots\Pbj\Marshaler\DynamoDb\ItemMarshaler;
 use Gdbots\Pbjx\Exception\EventStoreOperationFailed;
@@ -78,10 +78,9 @@ class DynamoDbEventStore implements EventStore
             'error' => function(AwsException $e) use ($streamId, $tableName) {
                 throw new EventStoreOperationFailed(
                     sprintf(
-                        'Failed to put some or all events into DynamoDb table [%s] for stream [%s] with message: %s',
+                        'Failed to put some or all events into DynamoDb table [%s] for stream [%s].',
                         $tableName,
-                        $streamId,
-                        ClassUtils::getShortName($e) . '::' . $e->getMessage()
+                        $streamId
                     ),
                     Code::DATA_LOSS,
                     $e
@@ -139,31 +138,23 @@ class DynamoDbEventStore implements EventStore
         } catch (AwsException $e) {
             if ('ProvisionedThroughputExceededException' === $e->getAwsErrorCode()) {
                 throw new EventStoreOperationFailed(
-                    sprintf('Read provisioning exceeded on DynamoDb table [%s:%s].', $tableName, $streamId),
+                    sprintf(
+                        'Read provisioning exceeded on DynamoDb table [%s] for stream [%s].', $tableName, $streamId
+                    ),
                     Code::RESOURCE_EXHAUSTED,
                     $e
                 );
             }
 
             throw new EventStoreOperationFailed(
-                sprintf(
-                    'Failed to query events from DynamoDb table [%s] for stream [%s] with message: %s',
-                    $tableName,
-                    $streamId,
-                    ClassUtils::getShortName($e) . '::' . $e->getMessage()
-                ),
+                sprintf('Failed to query events from DynamoDb table [%s] for stream [%s].', $tableName, $streamId),
                 Code::UNAVAILABLE,
                 $e
             );
 
         } catch (\Exception $e) {
             throw new EventStoreOperationFailed(
-                sprintf(
-                    'Failed to query events from DynamoDb table [%s] for stream [%s] with message: %s',
-                    $tableName,
-                    $streamId,
-                    ClassUtils::getShortName($e) . '::' . $e->getMessage()
-                ),
+                sprintf('Failed to query events from DynamoDb table [%s] for stream [%s].', $tableName, $streamId),
                 Code::INTERNAL,
                 $e
             );
@@ -179,16 +170,13 @@ class DynamoDbEventStore implements EventStore
                 $events[] = $this->unmarshalItem($item);
             } catch (\Exception $e) {
                 $this->logger->error(
-                    sprintf(
-                        'Item returned from DynamoDb table [%s] from stream [%s] could not be unmarshaled. %s',
-                        $tableName,
-                        $streamId,
-                        ClassUtils::getShortName($e) . '::' . $e->getMessage()
-                    ),
+                    'Item returned from DynamoDb table [{table_name}] from stream [{stream_id}] could not be unmarshaled.',
                     [
                         'exception' => $e,
                         'item' => $item,
                         'hints' => $hints,
+                        'table_name' => $tableName,
+                        'stream_id' => $streamId
                     ]
                 );
             }
@@ -220,10 +208,9 @@ class DynamoDbEventStore implements EventStore
     {
         $tableName = $this->determineTableNameForRead($hints);
         $skipErrors = isset($hints['skip_errors']) ? filter_var($hints['skip_errors'], FILTER_VALIDATE_BOOLEAN) : false;
-        $limit = isset($hints['limit']) ? $hints['limit'] : 2;
-        $limit = NumberUtils::bound($limit, 1, 100);
-        $totalSegments = isset($hints['total_segments']) ? $hints['total_segments'] : 5;
-        $totalSegments = NumberUtils::bound($totalSegments, 1, 64);
+        $limit = NumberUtils::bound(isset($hints['limit']) ? $hints['limit'] : 100, 1, 500);
+        $totalSegments = NumberUtils::bound(isset($hints['total_segments']) ? $hints['total_segments'] : 16, 1, 64);
+        $poolDelay = NumberUtils::bound(isset($hints['pool_delay']) ? $hints['pool_delay'] : 500, 100, 10000);
 
         if (null !== $since) {
             $params = [
@@ -242,58 +229,100 @@ class DynamoDbEventStore implements EventStore
             $params = ['TableName' => $tableName, 'Limit' => $limit, 'TotalSegments' => $totalSegments];
         }
 
-        $commands = [];
+        $pending = [];
+        $iter2seg = ['prev' => [], 'next' => []];
         for ($segment = 0; $segment < $totalSegments; $segment++) {
             $params['Segment'] = $segment;
-            $commands[] = $this->client->getCommand('Scan', $params);
+            $iter2seg['prev'][] = $segment;
+            $pending[] = $this->client->getCommand('Scan', $params);
         }
 
-        $pool = new CommandPool($this->client, $commands, [
-            'before' => function ($command, $key) {
-                echo get_class($command).'=>'.$key.PHP_EOL;
-            },
-            'fulfilled' => function($result, $segmentKey, PromiseInterface $promise) use ($callback, $tableName, $hints) {
-                foreach ($result['Items'] as $item) {
-                    try {
-                        $callback($this->unmarshalItem($item));
-                    } catch (\Exception $e) {
-                        $this->logger->error(
-                            sprintf(
-                                'Item returned from DynamoDb table [%s#segment=%s] from stream [%s] could not be unmarshaled. %s',
-                                $tableName,
-                                $segmentKey,
-                                $item[DynamoDbEventStoreTable::HASH_KEY_NAME]['S'],
-                                ClassUtils::getShortName($e) . '::' . $e->getMessage()
-                            ),
-                            [
-                                'exception' => $e,
-                                'item' => $item,
-                                'hints' => $hints,
-                                'segment' => $segmentKey
-                            ]
-                        );
-                    }
-                }
-            },
+        $fulfilled = function(Result $result, $iterKey)
+            use ($callback, $tableName, $hints, $params, &$pending, &$iter2seg)
+        {
+            $segment = $iter2seg['prev'][$iterKey];
 
-            'rejected' => function ($exception, $segmentKey, PromiseInterface $promise) use ($tableName, $hints, $skipErrors) {
-                echo $exception->getMessage().PHP_EOL;
-                $msg = sprintf(
-                    'Parallel scan failed on DynamoDb table [%s] on segment [%s].  Reason: %s',
-                    $tableName,
-                    $segmentKey,
-                    $exception->getMessage()
+            foreach ($result['Items'] as $item) {
+                try {
+                    $event = $this->unmarshalItem($item);
+                } catch (\Exception $e) {
+                    $this->logger->error(
+                        'Item returned from DynamoDb table [{table_name}] segment [{segment}] ' .
+                        'from stream [{stream_id}] could not be unmarshaled.',
+                        [
+                            'exception' => $e,
+                            'item' => $item,
+                            'hints' => $hints,
+                            'table_name' => $tableName,
+                            'segment' => $segment,
+                            'stream_id' => $item[DynamoDbEventStoreTable::HASH_KEY_NAME]['S']
+                        ]
+                    );
+
+                    continue;
+                }
+
+                $callback($event, $item[DynamoDbEventStoreTable::HASH_KEY_NAME]['S']);
+            }
+
+            if ($result['LastEvaluatedKey']) {
+                $params['Segment'] = $segment;
+                $params['ExclusiveStartKey'] = $result['LastEvaluatedKey'];
+                $pending[] = $this->client->getCommand('Scan', $params);
+                $iter2seg['next'][] = $segment;
+            } else {
+                $this->logger->info(
+                    'Scan of DynamoDb table [{table_name}] segment [{segment}] is complete.',
+                    [
+                        'hints' => $hints,
+                        'table_name' => $tableName,
+                        'segment' => $segment,
+                    ]
+                );
+            }
+        };
+
+        $rejected = function (AwsException $exception, $iterKey, PromiseInterface $aggregatePromise)
+            use ($tableName, $hints, $skipErrors, &$iter2seg)
+        {
+            $segment = $iter2seg['prev'][$iterKey];
+
+            if ($skipErrors) {
+                $this->logger->error(
+                    'Scan failed on DynamoDb table [{table_name}] segment [{segment}].',
+                    [
+                        'exception' => $exception,
+                        'hints' => $hints,
+                        'table_name' => $tableName,
+                        'segment' => $segment,
+                    ]
                 );
 
-                if (!$skipErrors) {
-                    throw new EventStoreOperationFailed($msg, Code::INTERNAL, $exception);
-                }
-
-                $promise->reject($msg);
+                return;
             }
-        ]);
 
-        $pool->promise()->wait();
+            $aggregatePromise->reject(
+                new EventStoreOperationFailed(
+                    sprintf('Scan failed on DynamoDb table [%s] segment [%s].', $tableName, $segment),
+                    Code::INTERNAL,
+                    $exception
+                )
+            );
+        };
+
+        while (count($pending) > 0) {
+            $commands = $pending;
+            $pending = [];
+            $pool = new CommandPool($this->client, $commands, ['fulfilled' => $fulfilled, 'rejected' => $rejected]);
+            $pool->promise()->wait();
+            $iter2seg['prev'] = $iter2seg['next'];
+            $iter2seg['next'] = [];
+
+            if (count($pending) > 0) {
+                $this->logger->info(sprintf('Pausing for %d milliseconds', $poolDelay));
+                usleep($poolDelay * 1000);
+            }
+        }
     }
 
     /**
