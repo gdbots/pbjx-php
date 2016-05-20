@@ -18,5 +18,5 @@ interface EventSearch
      * @throws OptimisticCheckFailed
      * @throws GdbotsPbjxException
      */
-    public function search($streamId, array $events);
+    public function index($streamId, array $events);
 }

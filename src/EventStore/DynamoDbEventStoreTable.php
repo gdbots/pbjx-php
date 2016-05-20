@@ -10,6 +10,7 @@ final class DynamoDbEventStoreTable
     const SCHEMA_VERSION = 'v1';
     const HASH_KEY_NAME = '__stream_id';
     const RANGE_KEY_NAME = 'occurred_at';
+    const INDEXED_KEY_NAME = '__indexed';
 
     /** @var DynamoDbClient */
     private $client;
@@ -49,6 +50,7 @@ final class DynamoDbEventStoreTable
                 ['AttributeName' => self::HASH_KEY_NAME, 'AttributeType' => 'S'],
                 ['AttributeName' => self::RANGE_KEY_NAME, 'AttributeType' => 'N'],
                 ['AttributeName' => 'event_id', 'AttributeType' => 'S'],
+                ['AttributeName' => self::INDEXED_KEY_NAME, 'AttributeType' => 'BOOL'],
             ],
             'KeySchema' => [
                 ['AttributeName' => self::HASH_KEY_NAME, 'KeyType' => 'HASH'],

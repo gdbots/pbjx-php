@@ -5,6 +5,7 @@ namespace Gdbots\Pbjx\EventStore;
 use Gdbots\Common\Microtime;
 use Gdbots\Common\ToArray;
 use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
+use Gdbots\Schemas\Pbjx\StreamId;
 
 final class EventCollection implements ToArray, \JsonSerializable, \IteratorAggregate, \Countable
 {
@@ -14,7 +15,8 @@ final class EventCollection implements ToArray, \JsonSerializable, \IteratorAggr
     /**
      * The stream this collection belongs to.  A null value means this collection
      * can be from multiple streams (or all of them).
-     * @var bool
+     *
+     * @var StreamId
      */
     private $streamId;
 
@@ -32,11 +34,11 @@ final class EventCollection implements ToArray, \JsonSerializable, \IteratorAggr
 
     /**
      * @param Event[] $events
-     * @param string $streamId
+     * @param StreamId $streamId
      * @param bool $forward
      * @param bool $hasMore
      */
-    public function __construct(array $events = [], $streamId = null, $forward = true, $hasMore = false)
+    public function __construct(array $events = [], StreamId $streamId = null, $forward = true, $hasMore = false)
     {
         $this->events = $events;
         $this->streamId = $streamId;
@@ -51,7 +53,7 @@ final class EventCollection implements ToArray, \JsonSerializable, \IteratorAggr
     {
         return [
             'events' => $this->events,
-            'stream_id' => $this->streamId,
+            'stream_id' => (string)$this->streamId ?: null,
             'forward' => $this->forward,
             'has_more' => $this->hasMore,
         ];
@@ -82,7 +84,7 @@ final class EventCollection implements ToArray, \JsonSerializable, \IteratorAggr
     }
 
     /**
-     * @return string
+     * @return StreamId
      */
     public function getStreamId()
     {

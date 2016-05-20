@@ -4,6 +4,7 @@ namespace Gdbots\Pbjx\EventStore;
 
 use Gdbots\Common\Microtime;
 use Gdbots\Pbjx\Pbjx;
+use Gdbots\Schemas\Pbjx\StreamId;
 
 /**
  * If you want events to be published after being stored you can use this
@@ -38,7 +39,7 @@ class TwoPhaseCommitEventStore implements EventStore
     /**
      * {@inheritdoc}
      */
-    public function putEvents($streamId, array $events, array $hints = [], $expectedEtag = null)
+    public function putEvents(StreamId $streamId, array $events, array $hints = [], $expectedEtag = null)
     {
         $this->next->putEvents($streamId, $events, $hints, $expectedEtag);
         foreach ($events as $event) {
@@ -49,7 +50,7 @@ class TwoPhaseCommitEventStore implements EventStore
     /**
      * {@inheritdoc}
      */
-    public function getEvents($streamId, Microtime $since = null, $count = 25, $forward = true, array $hints = [])
+    public function getEvents(StreamId $streamId, Microtime $since = null, $count = 25, $forward = true, array $hints = [])
     {
         return $this->next->getEvents($streamId, $since, $count, $forward, $hints);
     }
@@ -57,7 +58,7 @@ class TwoPhaseCommitEventStore implements EventStore
     /**
      * {@inheritdoc}
      */
-    public function streamEvents($streamId, Microtime $since = null, array $hints = [])
+    public function streamEvents(StreamId $streamId, Microtime $since = null, array $hints = [])
     {
         return $this->next->streamEvents($streamId, $since, $hints);
     }
