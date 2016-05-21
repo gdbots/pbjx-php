@@ -50,7 +50,6 @@ final class DynamoDbEventStoreTable
                 ['AttributeName' => self::HASH_KEY_NAME, 'AttributeType' => 'S'],
                 ['AttributeName' => self::RANGE_KEY_NAME, 'AttributeType' => 'N'],
                 ['AttributeName' => 'event_id', 'AttributeType' => 'S'],
-                ['AttributeName' => self::INDEXED_KEY_NAME, 'AttributeType' => 'BOOL'],
             ],
             'KeySchema' => [
                 ['AttributeName' => self::HASH_KEY_NAME, 'KeyType' => 'HASH'],

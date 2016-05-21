@@ -69,6 +69,8 @@ class DynamoDbEventStore implements EventStore
             return;
         }
 
+        $hints['stream_id'] = $streamId->toString();
+
         if (null !== $expectedEtag) {
             $this->optimisticCheck($streamId, $hints, $expectedEtag);
         }
@@ -101,7 +103,7 @@ class DynamoDbEventStore implements EventStore
             if ($event instanceof Indexed) {
                 $item[DynamoDbEventStoreTable::INDEXED_KEY_NAME] = ['BOOL' => true];
             }
-            $this->beforePutItem($event, $item);
+            $this->beforePutItem($item, $event);
             $batch->put($item);
         }
 
@@ -113,6 +115,7 @@ class DynamoDbEventStore implements EventStore
      */
     final public function getEvents(StreamId $streamId, Microtime $since = null, $count = 25, $forward = true, array $hints = [])
     {
+        $hints['stream_id'] = $streamId->toString();
         $tableName = $this->determineTableNameForRead($hints);
         $consistentRead = isset($hints['consistent_read']) ? filter_var($hints['consistent_read'], FILTER_VALIDATE_BOOLEAN) : false;
         $count = NumberUtils::bound($count, 1, 100);
@@ -195,6 +198,8 @@ class DynamoDbEventStore implements EventStore
      */
     final public function streamEvents(StreamId $streamId, Microtime $since = null, array $hints = [])
     {
+        $hints['stream_id'] = $streamId->toString();
+
         do {
             $collection = $this->getEvents($streamId, $since, 100, true, $hints);
             $since = $collection->getLastMicrotime();
@@ -243,6 +248,8 @@ class DynamoDbEventStore implements EventStore
         if (!empty($filterExpressions)) {
             $params['FilterExpression'] = implode(' AND ', $filterExpressions);
         }
+
+        $this->beforeStreamAllEvents($params, $hints, $since);
 
         $params['TableName'] = $tableName;
         $params['Limit'] = $limit;
@@ -376,12 +383,22 @@ class DynamoDbEventStore implements EventStore
     }
 
     /**
-     * @param Event $event
      * @param array $item
+     * @param Event $event
      */
-    protected function beforePutItem(Event $event, array &$item)
+    protected function beforePutItem(array &$item, Event $event)
     {
         // allows for customization of DynamoDb item before it's pushed.
+    }
+
+    /**
+     * @param array $params
+     * @param array $hints
+     * @param Microtime $since
+     */
+    protected function beforeStreamAllEvents(array &$params, array $hints, Microtime $since = null)
+    {
+        // allows for customization of the DynamoDb parallel scan parameters before the scan runs.
     }
 
     /**
