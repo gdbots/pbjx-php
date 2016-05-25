@@ -66,8 +66,8 @@ class TwoPhaseCommitEventStore implements EventStore
     /**
      * {@inheritdoc}
      */
-    public function streamAllEvents(\Closure $callback, Microtime $since = null, array $hints = [])
+    public function streamAllEvents(\Closure $callback, Microtime $since = null, Microtime $until = null, array $hints = [])
     {
-        $this->next->streamAllEvents($callback, $since, $hints);
+        $this->next->streamAllEvents($callback, $since, $until, $hints);
     }
 }

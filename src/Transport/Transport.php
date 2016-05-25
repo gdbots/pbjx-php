@@ -1,6 +1,6 @@
 <?php
 
-namespace Gdbots\Pbjx;
+namespace Gdbots\Pbjx\Transport;
 
 use Gdbots\Pbjx\Exception\GdbotsPbjxException;
 use Gdbots\Schemas\Pbjx\Mixin\Command\Command;

@@ -1,6 +1,6 @@
 <?php
 
-namespace Gdbots\Pbjx;
+namespace Gdbots\Pbjx\Transport;
 
 use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
 use Gdbots\Schemas\Pbjx\Mixin\Event\Event;

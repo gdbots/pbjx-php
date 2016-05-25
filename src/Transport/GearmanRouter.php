@@ -2,7 +2,6 @@
 
 namespace Gdbots\Pbjx\Transport;
 
-use Gdbots\Pbjx\Router;
 use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
 use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
 use Gdbots\Schemas\Pbjx\Mixin\Request\Request;

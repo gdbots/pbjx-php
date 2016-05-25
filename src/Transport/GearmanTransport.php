@@ -3,9 +3,7 @@
 namespace Gdbots\Pbjx\Transport;
 
 use Gdbots\Common\Util\NumberUtils;
-use Gdbots\Pbjx\Router;
 use Gdbots\Pbjx\ServiceLocator;
-use Gdbots\Pbjx\TransportEnvelope;
 use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
 use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
 use Gdbots\Schemas\Pbjx\Mixin\Request\Request;

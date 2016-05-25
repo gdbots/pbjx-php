@@ -4,6 +4,7 @@ namespace Gdbots\Pbjx;
 
 use Gdbots\Pbj\Message;
 use Gdbots\Pbjx\Event\PbjxEvent;
+use Gdbots\Pbjx\EventSearch\EventSearch;
 use Gdbots\Pbjx\EventStore\EventStore;
 use Gdbots\Pbjx\Exception\GdbotsPbjxException;
 use Gdbots\Pbjx\Exception\InvalidArgumentException;
@@ -103,4 +104,9 @@ interface Pbjx
      * @return EventStore
      */
     public function getEventStore();
+
+    /**
+     * @return EventSearch
+     */
+    public function getEventSearch();
 }

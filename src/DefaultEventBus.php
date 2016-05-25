@@ -4,6 +4,7 @@ namespace Gdbots\Pbjx;
 
 use Gdbots\Common\Util\ClassUtils;
 use Gdbots\Pbjx\Event\BusExceptionEvent;
+use Gdbots\Pbjx\Transport\Transport;
 use Gdbots\Schemas\Pbjx\Enum\Code;
 use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
 use Gdbots\Schemas\Pbjx\Event\EventExecutionFailed;

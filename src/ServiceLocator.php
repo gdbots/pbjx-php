@@ -3,6 +3,7 @@
 namespace Gdbots\Pbjx;
 
 use Gdbots\Pbj\SchemaCurie;
+use Gdbots\Pbjx\EventSearch\EventSearch;
 use Gdbots\Pbjx\EventStore\EventStore;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
@@ -60,4 +61,9 @@ interface ServiceLocator
      * @return EventStore
      */
     public function getEventStore();
+
+    /**
+     * @return EventSearch
+     */
+    public function getEventSearch();
 }

@@ -15,7 +15,7 @@ interface EventStore
      *
      * @param StreamId $streamId    The id of the stream to read from, e.g. "article:1234"
      * @param Event[] $events       An array of events.
-     * @param array $hints          Allows the event store provider to decide where to read/write data from.
+     * @param array $hints          Data that helps the event store provider decide where to read/write data from.
      * @param string $expectedEtag  Used to perform optimistic concurrency check.
      *
      * @throws OptimisticCheckFailed
@@ -34,7 +34,7 @@ interface EventStore
      * @param Microtime $since      Return events since this time (exclusive greater than if forward=true, less than if forward=false)
      * @param int $count            The number of events to return.
      * @param bool $forward         When true, the events are read from oldest to newest, otherwise newest to oldest.
-     * @param array $hints          Allows the event store provider to decide where to read/write data from.
+     * @param array $hints          Data that helps the event store provider decide where to read/write data from.
      *
      * @return EventCollection
      *
@@ -48,7 +48,7 @@ interface EventStore
      *
      * @param StreamId $streamId    The id of the stream to read from, e.g. "article:1234"
      * @param Microtime $since      Return events greater than this time.
-     * @param array $hints          Allows the event store provider to decide where to read/write data from.
+     * @param array $hints          Data that helps the event store provider decide where to read/write data from.
      *
      * @return \Generator
      *
@@ -61,11 +61,12 @@ interface EventStore
      * the provided $callback. The order of events returned will be ordered per
      * stream but not necessarily globally ordered.
      *
-     * @param \Closure $callback    The function that will receive "$callback($event, StreamId $streamId);"
+     * @param \Closure $callback    The function that will receive "$callback(Event $event, StreamId $streamId);"
      * @param Microtime $since      Return events greater than this time (exclusive).
-     * @param array $hints          Allows the event store provider to decide where to read/write data from.
+     * @param Microtime $until      Return events less than this time (exclusive).
+     * @param array $hints          Data that helps the event store provider decide where to read/write data from.
      *
      * @throws GdbotsPbjxException
      */
-    public function streamAllEvents(\Closure $callback, Microtime $since = null, array $hints = []);
+    public function streamAllEvents(\Closure $callback, Microtime $since = null, Microtime $until = null, array $hints = []);
 }

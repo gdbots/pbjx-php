@@ -192,6 +192,14 @@ class DefaultPbjx implements Pbjx
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function getEventSearch()
+    {
+        return $this->locator->getEventSearch();
+    }
+
+    /**
      * @param Message $message
      * @param Schema $schema
      *

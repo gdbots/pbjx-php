@@ -1,6 +1,6 @@
 <?php
 
-namespace Gdbots\Pbjx;
+namespace Gdbots\Pbjx\Transport;
 
 use Gdbots\Pbj\Message;
 use Gdbots\Pbj\Serializer\JsonSerializer;

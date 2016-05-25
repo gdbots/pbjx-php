@@ -5,6 +5,7 @@ namespace Gdbots\Pbjx;
 use Gdbots\Pbjx\Event\BusExceptionEvent;
 use Gdbots\Pbjx\Event\PbjxEvent;
 use Gdbots\Pbjx\Exception\InvalidHandler;
+use Gdbots\Pbjx\Transport\Transport;
 use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
 
 class DefaultCommandBus implements CommandBus

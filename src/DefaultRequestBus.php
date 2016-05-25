@@ -6,6 +6,7 @@ use Gdbots\Common\Util\ClassUtils;
 use Gdbots\Common\Util\StringUtils;
 use Gdbots\Pbjx\Exception\InvalidHandler;
 use Gdbots\Pbjx\Exception\UnexpectedValueException;
+use Gdbots\Pbjx\Transport\Transport;
 use Gdbots\Schemas\Pbjx\Enum\Code;
 use Gdbots\Schemas\Pbjx\Mixin\Request\Request;
 use Gdbots\Schemas\Pbjx\Mixin\Response\Response;

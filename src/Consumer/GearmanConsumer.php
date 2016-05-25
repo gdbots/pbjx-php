@@ -8,7 +8,7 @@ use Gdbots\Pbj\Message;
 use Gdbots\Pbjx\PbjxEvents;
 use Gdbots\Pbjx\ServiceLocator;
 use Gdbots\Pbjx\Transport\GearmanRouter;
-use Gdbots\Pbjx\TransportEnvelope;
+use Gdbots\Pbjx\Transport\TransportEnvelope;
 use Psr\Log\LoggerInterface;
 
 class GearmanConsumer extends AbstractConsumer

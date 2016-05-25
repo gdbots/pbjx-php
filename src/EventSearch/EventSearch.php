@@ -1,22 +1,34 @@
 <?php
 
-namespace Gdbots\Pbjx\EventStore;
+namespace Gdbots\Pbjx\EventSearch;
 
-use Gdbots\Common\Microtime;
 use Gdbots\Pbjx\Exception\GdbotsPbjxException;
-use Gdbots\Pbjx\Exception\OptimisticCheckFailed;
+use Gdbots\QueryParser\ParsedQuery;
 use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
+use Gdbots\Schemas\Pbjx\Mixin\SearchEventsRequest\SearchEventsRequest;
+use Gdbots\Schemas\Pbjx\Mixin\SearchEventsResponse\SearchEventsResponse;
 
 interface EventSearch
 {
     /**
-     * Appends an array of events to a stream.
+     * Adds an array of events to the search index.
      *
-     * @param string $streamId
      * @param Event[] $events
-     *
-     * @throws OptimisticCheckFailed
      * @throws GdbotsPbjxException
      */
-    public function index($streamId, array $events);
+    public function index(array $events);
+
+    /**
+     * Executes a search request and populates the provided response object with
+     * the events found, total, time_taken, etc.
+     *
+     * @param SearchEventsRequest $request
+     * @param ParsedQuery $parsedQuery
+     * @param SearchEventsResponse $response
+     *
+     * @return SearchEventsResponse
+     *
+     * @throws GdbotsPbjxException
+     */
+    public function search(SearchEventsRequest $request, ParsedQuery $parsedQuery, SearchEventsResponse $response);
 }

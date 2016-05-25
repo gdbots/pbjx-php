@@ -3,8 +3,10 @@
 namespace Gdbots\Pbjx;
 
 use Gdbots\Pbj\SchemaCurie;
+use Gdbots\Pbjx\EventSearch\EventSearch;
 use Gdbots\Pbjx\EventStore\EventStore;
 use Gdbots\Pbjx\Exception\HandlerNotFound;
+use Gdbots\Pbjx\Transport\Transport;
 
 /**
  * This service locator requires that you register the handlers
@@ -73,5 +75,13 @@ final class RegisteringServiceLocator extends AbstractServiceLocator
     public function setEventStore(EventStore $eventStore)
     {
         $this->eventStore = $eventStore;
+    }
+
+    /**
+     * @param EventSearch $eventSearch
+     */
+    public function setEventSearch(EventSearch $eventSearch)
+    {
+        $this->eventSearch = $eventSearch;
     }
 }

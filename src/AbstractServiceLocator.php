@@ -2,8 +2,11 @@
 
 namespace Gdbots\Pbjx;
 
+use Gdbots\Pbjx\EventSearch\EventSearch;
 use Gdbots\Pbjx\EventStore\EventStore;
 use Gdbots\Pbjx\Exception\LogicException;
+use Gdbots\Pbjx\Transport\InMemoryTransport;
+use Gdbots\Pbjx\Transport\Transport;
 use Gdbots\Schemas\Pbjx\Enum\Code;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -30,6 +33,9 @@ abstract class AbstractServiceLocator implements ServiceLocator
 
     /** @var EventStore */
     protected $eventStore;
+
+    /** @var EventSearch */
+    protected $eventSearch;
 
     /** @var Transport */
     protected $defaultTransport;
@@ -164,7 +170,26 @@ abstract class AbstractServiceLocator implements ServiceLocator
      */
     protected function doGetEventStore()
     {
-        return new LogicException('No EventStore has been configured.', Code::UNIMPLEMENTED);
+        throw new LogicException('No EventStore has been configured.', Code::UNIMPLEMENTED);
+    }
+
+    /**
+     * @return EventSearch
+     */
+    final public function getEventSearch()
+    {
+        if (null === $this->eventSearch) {
+            $this->eventSearch = $this->doGetEventSearch();
+        }
+        return $this->eventSearch;
+    }
+
+    /**
+     * @return EventSearch
+     */
+    protected function doGetEventSearch()
+    {
+        throw new LogicException('No EventSearch has been configured.', Code::UNIMPLEMENTED);
     }
 
     /**
@@ -183,6 +208,6 @@ abstract class AbstractServiceLocator implements ServiceLocator
      */
     protected function doGetDefaultTransport()
     {
-        return new Transport\InMemoryTransport($this);
+        return new InMemoryTransport($this);
     }
 }

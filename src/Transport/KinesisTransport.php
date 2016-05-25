@@ -3,9 +3,7 @@
 namespace Gdbots\Pbjx\Transport;
 
 use Aws\Kinesis\KinesisClient;
-use Gdbots\Pbjx\PartitionableRouter;
 use Gdbots\Pbjx\ServiceLocator;
-use Gdbots\Pbjx\TransportEnvelope;
 use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
 use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
 

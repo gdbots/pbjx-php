@@ -8,7 +8,6 @@ use Gdbots\Pbjx\Event\TransportEvent;
 use Gdbots\Pbjx\Event\TransportExceptionEvent;
 use Gdbots\Pbjx\PbjxEvents;
 use Gdbots\Pbjx\ServiceLocator;
-use Gdbots\Pbjx\Transport;
 use Gdbots\Schemas\Pbjx\Enum\Code;
 use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
 use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
