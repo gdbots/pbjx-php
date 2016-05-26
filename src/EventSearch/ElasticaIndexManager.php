@@ -13,6 +13,7 @@ use Gdbots\Pbj\Marshaler\Elastica\MappingFactory;
 use Gdbots\Pbj\MessageResolver;
 use Gdbots\Pbj\Schema;
 use Gdbots\Pbjx\Exception\EventSearchOperationFailed;
+use Gdbots\Schemas\Pbjx\Enum\Code;
 use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
 use Gdbots\Schemas\Pbjx\Mixin\Event\EventV1Mixin;
 use Gdbots\Schemas\Pbjx\Mixin\Indexed\IndexedV1Mixin;
@@ -153,6 +154,72 @@ class ElasticaIndexManager
         $this->beforeUpdateTemplate($params);
         $template = new IndexTemplate($client, $name);
         $template->create($params);
+    }
+
+    /**
+     * Updates an existing index settings and all of its mappings.
+     * The index template handles this for any newly created indices but
+     * the existing ones need to be updated directly.
+     *
+     * This is generally only needed for indices that you're still actively
+     * writing data to.  If this fails you'll need to delete the index and
+     * re-index all data for that time frame.
+     *
+     * @param Client $client
+     * @param string $name
+     */
+    final public function updateIndex(Client $client, $name)
+    {
+        $index = new Index($client, $name);
+
+        foreach ($this->createMappings() as $typeName => $mapping) {
+            try {
+                $mapping->setType(new Type($index, $typeName));
+                $mapping->send();
+            } catch (\Exception $e) {
+                throw new EventSearchOperationFailed(
+                    sprintf('Failed to put mapping for type [%s/%s] into ElasticSearch.', $name, $typeName),
+                    Code::INTERNAL,
+                    $e
+                );
+            }
+
+            $this->logger->info(sprintf('Successfully put mapping for type [%s/%s]', $name, $typeName));
+        }
+
+        $settings = $index->getSettings();
+        $customAnalyzers = MappingFactory::getCustomAnalyzers();
+        $missingAnalyzers = [];
+
+        foreach ($customAnalyzers as $id => $analyzer) {
+            if (!$settings->get("analysis.analyzer.{$id}")) {
+                $missingAnalyzers[$id] = $analyzer;
+            }
+        }
+
+        if (empty($missingAnalyzers)) {
+            $this->logger->info(
+                sprintf(
+                    'Index [%s] has all custom analyzers [%s].',
+                    $name,
+                    implode(',', array_keys($customAnalyzers))
+                )
+            );
+            return;
+        }
+
+        $this->logger->warning(
+            sprintf(
+                'Closing index [%s] to add custom analyzers [%s].',
+                $name,
+                implode(',', array_keys($missingAnalyzers))
+            )
+        );
+
+        $index->close();
+        $index->setSettings(['analysis' => ['analyzer' => $missingAnalyzers]]);
+        $index->open();
+        $this->logger->info(sprintf('Successfully added missing analyzers to index [%s]', $name));
     }
 
     /**
