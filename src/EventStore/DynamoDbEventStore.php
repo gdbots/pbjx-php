@@ -128,7 +128,6 @@ class DynamoDbEventStore implements EventStore
 
         try {
             $response = $this->client->query([
-                '@region' => 'test',
                 'TableName' => $tableName,
                 'ExpressionAttributeNames' => [
                     '#HASH' => DynamoDbEventStoreTable::HASH_KEY_NAME,
