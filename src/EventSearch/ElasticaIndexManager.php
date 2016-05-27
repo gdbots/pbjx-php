@@ -281,7 +281,7 @@ class ElasticaIndexManager
             $mapping = $mappingFactory->create($schema, 'english');
             $properties = $mapping->getProperties();
             $properties[self::OCCURRED_AT_ISO_FIELD_NAME] = ['type' => 'date', 'include_in_all' => false];
-            $mapping->enableAllField(false)->setProperties($properties);
+            $mapping->setAllField(['enabled' => true, '_analyzer' => 'english'])->setProperties($properties);
 
             $dynamicTemplates = $mapping->getParam('dynamic_templates');
             if (!empty($dynamicTemplates)) {
