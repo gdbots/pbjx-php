@@ -7,15 +7,12 @@ use Elastica\Index;
 use Elastica\IndexTemplate;
 use Elastica\Type;
 use Elastica\Type\Mapping;
-use Gdbots\Common\Microtime;
-use Gdbots\Common\Util\ClassUtils;
 use Gdbots\Pbj\Marshaler\Elastica\MappingFactory;
 use Gdbots\Pbj\MessageResolver;
 use Gdbots\Pbj\Schema;
 use Gdbots\Pbjx\Exception\EventSearchOperationFailed;
 use Gdbots\Schemas\Pbjx\Enum\Code;
 use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
-use Gdbots\Schemas\Pbjx\Mixin\Event\EventV1Mixin;
 use Gdbots\Schemas\Pbjx\Mixin\Indexed\IndexedV1Mixin;
 use Gdbots\Schemas\Pbjx\Mixin\SearchEventsRequest\SearchEventsRequest;
 use Psr\Log\LoggerInterface;
@@ -101,7 +98,7 @@ class ElasticaIndexManager
         /*
          * now, while start is less than end... accumulate the intervals as indices
          * if the span results in too many indices, use a wildcard to prevent urls
-         * being too long for a GET request (multi-indice searchs have index in url)
+         * being too long for a GET request (multi-index searches have index in url)
          */
         $indices = [];
         $start = clone $after;
@@ -216,9 +213,17 @@ class ElasticaIndexManager
             )
         );
 
-        $index->close();
-        $index->setSettings(['analysis' => ['analyzer' => $missingAnalyzers]]);
-        $index->open();
+        try {
+            $index->close();
+            $index->setSettings(['analysis' => ['analyzer' => $customAnalyzers]]);
+            $index->open();
+        } catch (\Exception $e) {
+            $this->logger->error(
+                sprintf('Unable to close index [%s] and update settings.', $name),
+                ['exception' => $e, 'index_name' => $name]
+            );
+        }
+
         $this->logger->info(sprintf('Successfully added missing analyzers to index [%s]', $name));
     }
 
@@ -266,7 +271,7 @@ class ElasticaIndexManager
      */
     private function createMappings()
     {
-        $schemas = MessageResolver::findAllUsingMixin(EventV1Mixin::create());
+        $schemas = MessageResolver::findAllUsingMixin(IndexedV1Mixin::create());
         $mappingFactory = new MappingFactory();
         $mappings = [];
 
