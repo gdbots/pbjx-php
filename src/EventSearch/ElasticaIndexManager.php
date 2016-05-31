@@ -13,6 +13,7 @@ use Gdbots\Pbj\Schema;
 use Gdbots\Pbjx\Exception\EventSearchOperationFailed;
 use Gdbots\Schemas\Pbjx\Enum\Code;
 use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
+use Gdbots\Schemas\Pbjx\Mixin\Event\EventV1Mixin;
 use Gdbots\Schemas\Pbjx\Mixin\Indexed\IndexedV1Mixin;
 use Gdbots\Schemas\Pbjx\Mixin\SearchEventsRequest\SearchEventsRequest;
 use Psr\Log\LoggerInterface;
@@ -80,7 +81,8 @@ class ElasticaIndexManager
      */
     public function getIndexNamesForSearch(SearchEventsRequest $request)
     {
-        /** @var \DateTime $after ,$before */
+        /** @var \DateTime $after */
+        /** @var \DateTime $before */
         $after = $request->get('occurred_after');
         $before = $request->get('occurred_before');
 
@@ -222,6 +224,7 @@ class ElasticaIndexManager
                 sprintf('Unable to close index [%s] and update settings.', $name),
                 ['exception' => $e, 'index_name' => $name]
             );
+            return;
         }
 
         $this->logger->info(sprintf('Successfully added missing analyzers to index [%s]', $name));
@@ -271,7 +274,7 @@ class ElasticaIndexManager
      */
     private function createMappings()
     {
-        $schemas = MessageResolver::findAllUsingMixin(IndexedV1Mixin::create());
+        $schemas = MessageResolver::findAllUsingMixin(EventV1Mixin::create());
         $mappingFactory = new MappingFactory();
         $mappings = [];
 

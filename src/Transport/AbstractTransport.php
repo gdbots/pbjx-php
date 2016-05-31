@@ -156,7 +156,7 @@ abstract class AbstractTransport implements Transport
 
         $response = RequestFailedResponseV1::create()
             ->set('ctx_request_ref', $request->generateMessageRef())
-            ->set('request', $request)
+            ->set('ctx_request', $request)
             ->set('error_code', $code)
             ->set('error_name', ClassUtils::getShortName($exception))
             ->set('error_message', $exception->getMessage());

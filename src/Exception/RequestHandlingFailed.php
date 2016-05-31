@@ -17,7 +17,7 @@ class RequestHandlingFailed extends \RuntimeException implements GdbotsPbjxExcep
     public function __construct(RequestFailedResponse $response)
     {
         $this->response = $response;
-        $ref = $response->get('ctx_request_ref') ?: $response->get('request')->get('request_id');
+        $ref = $response->get('ctx_request_ref') ?: $response->get('ctx_request')->get('request_id');
         parent::__construct(
             sprintf(
                 'Request [%s] could not be handled.  %s::%s::%s',
@@ -43,6 +43,6 @@ class RequestHandlingFailed extends \RuntimeException implements GdbotsPbjxExcep
      */
     public function getRequest()
     {
-        return $this->response->get('request');
+        return $this->response->get('ctx_request');
     }
 }
