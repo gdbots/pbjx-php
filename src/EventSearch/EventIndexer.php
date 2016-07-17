@@ -4,7 +4,6 @@ namespace Gdbots\Pbjx\EventSearch;
 
 use Gdbots\Pbjx\EventSubscriber;
 use Gdbots\Pbjx\Pbjx;
-use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
 use Gdbots\Schemas\Pbjx\Mixin\Indexed\Indexed;
 
 class EventIndexer implements EventSubscriber
@@ -13,7 +12,7 @@ class EventIndexer implements EventSubscriber
      * @param Indexed $event
      * @param Pbjx $pbjx
      */
-    public function onIndexed(Event $event, Pbjx $pbjx)
+    public function onIndexed(Indexed $event, Pbjx $pbjx)
     {
         if ($event->isReplay()) {
             return;
@@ -29,7 +28,6 @@ class EventIndexer implements EventSubscriber
     {
         return [
             'gdbots:pbjx:mixin:indexed' => 'onIndexed',
-            'gdbots:pbjx:mixin:event' => 'onIndexed',
         ];
     }
 }

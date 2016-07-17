@@ -22,7 +22,7 @@ use Gdbots\QueryParser\Node\Number;
 use Gdbots\QueryParser\ParsedQuery;
 use Gdbots\Schemas\Pbjx\Enum\Code;
 use Gdbots\Schemas\Pbjx\Enum\SearchSort;
-use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
+use Gdbots\Schemas\Pbjx\Mixin\Indexed\Indexed;
 use Gdbots\Schemas\Pbjx\Mixin\SearchEventsRequest\SearchEventsRequest;
 use Gdbots\Schemas\Pbjx\Mixin\SearchEventsResponse\SearchEventsResponse;
 use Psr\Log\LoggerInterface;
@@ -73,7 +73,7 @@ class ElasticaEventSearch implements EventSearch
 
     /**
      * {@inheritdoc}
-     * @param Event[] $events
+     * @param Indexed[] $events
      */
     final public function index(array $events)
     {
@@ -251,10 +251,10 @@ class ElasticaEventSearch implements EventSearch
      * The message is provided so you can dynamically decide which cluster to use
      * based on the message content itself.  (e.g. for multi-tenant apps)
      *
-     * @param Event $event
+     * @param Indexed $event
      * @return \Elastica\Client
      */
-    protected function getClientForWrite(Event $event)
+    protected function getClientForWrite(Indexed $event)
     {
         // override to provide your own logic for client creation.
         return $this->clientManager->getClient();
@@ -276,9 +276,9 @@ class ElasticaEventSearch implements EventSearch
 
     /**
      * @param Document $document
-     * @param Event $event
+     * @param Indexed $event
      */
-    protected function beforeIndex(Document $document, Event $event)
+    protected function beforeIndex(Document $document, Indexed $event)
     {
         // Override to customize the document before it is indexed.
     }
@@ -303,7 +303,7 @@ class ElasticaEventSearch implements EventSearch
 
     /**
      * @param Result $result
-     * @return Event
+     * @return Indexed
      */
     protected function unmarshalResult(Result $result)
     {

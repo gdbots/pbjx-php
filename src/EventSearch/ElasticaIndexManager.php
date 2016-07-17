@@ -12,8 +12,7 @@ use Gdbots\Pbj\MessageResolver;
 use Gdbots\Pbj\Schema;
 use Gdbots\Pbjx\Exception\EventSearchOperationFailed;
 use Gdbots\Schemas\Pbjx\Enum\Code;
-use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
-use Gdbots\Schemas\Pbjx\Mixin\Event\EventV1Mixin;
+use Gdbots\Schemas\Pbjx\Mixin\Indexed\Indexed;
 use Gdbots\Schemas\Pbjx\Mixin\Indexed\IndexedV1Mixin;
 use Gdbots\Schemas\Pbjx\Mixin\SearchEventsRequest\SearchEventsRequest;
 use Psr\Log\LoggerInterface;
@@ -60,11 +59,11 @@ class ElasticaIndexManager
     /**
      * Returns the name of the index that the event should be written to.
      *
-     * @param Event $event
+     * @param Indexed $event
      *
      * @return string
      */
-    public function getIndexNameForWrite(Event $event)
+    public function getIndexNameForWrite(Indexed $event)
     {
         /** @var \DateTime $occurredAt */
         $occurredAt = $event->get('occurred_at')->toDateTime();
@@ -274,7 +273,7 @@ class ElasticaIndexManager
      */
     private function createMappings()
     {
-        $schemas = MessageResolver::findAllUsingMixin(EventV1Mixin::create());
+        $schemas = MessageResolver::findAllUsingMixin(IndexedV1Mixin::create());
         $mappingFactory = new MappingFactory();
         $mappings = [];
 
@@ -284,6 +283,7 @@ class ElasticaIndexManager
             $mapping = $mappingFactory->create($schema, 'english');
             $properties = $mapping->getProperties();
             $properties[self::OCCURRED_AT_ISO_FIELD_NAME] = ['type' => 'date', 'include_in_all' => false];
+            $properties['ctx_ua']['index'] = 'no';
             $mapping->setAllField(['enabled' => true, '_analyzer' => 'english'])->setProperties($properties);
 
             $dynamicTemplates = $mapping->getParam('dynamic_templates');

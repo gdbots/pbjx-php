@@ -5,7 +5,7 @@ namespace Gdbots\Pbjx\EventSearch;
 use Gdbots\Pbj\SchemaCurie;
 use Gdbots\Pbjx\Exception\GdbotsPbjxException;
 use Gdbots\QueryParser\ParsedQuery;
-use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
+use Gdbots\Schemas\Pbjx\Mixin\Indexed\Indexed;
 use Gdbots\Schemas\Pbjx\Mixin\SearchEventsRequest\SearchEventsRequest;
 use Gdbots\Schemas\Pbjx\Mixin\SearchEventsResponse\SearchEventsResponse;
 
@@ -14,7 +14,7 @@ interface EventSearch
     /**
      * Adds an array of events to the search index.
      *
-     * @param Event[] $events
+     * @param Indexed[] $events
      * @throws GdbotsPbjxException
      */
     public function index(array $events);
