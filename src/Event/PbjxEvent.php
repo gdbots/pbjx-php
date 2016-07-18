@@ -69,7 +69,7 @@ class PbjxEvent extends Event
     }
 
     /**
-     * @return static
+     * @return bool
      */
     public function hasParentEvent()
     {
