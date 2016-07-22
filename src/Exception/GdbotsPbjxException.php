@@ -2,4 +2,4 @@
 
 namespace Gdbots\Pbjx\Exception;
 
-interface GdbotsPbjxException extends \Throwable {}
+interface GdbotsPbjxException/* PHP7 -> extends \Throwable */{}
