@@ -126,23 +126,30 @@ class DynamoDbEventStore implements EventStore
             $since = null !== $since ? $since->toString() : Microtime::create()->toString();
         }
 
-        try {
-            $response = $this->client->query([
-                'TableName' => $tableName,
-                'ExpressionAttributeNames' => [
-                    '#HASH' => DynamoDbEventStoreTable::HASH_KEY_NAME,
-                    '#RANGE' => DynamoDbEventStoreTable::RANGE_KEY_NAME,
-                ],
-                'KeyConditionExpression' => sprintf('#HASH = :v_id AND #RANGE %s :v_date', $forward ? '>' : '<'),
-                'ExpressionAttributeValues' => [
-                    ':v_id' => ['S' => (string)$streamId],
-                    ':v_date' => ['N' => $since]
-                ],
-                'ScanIndexForward' => $forward,
-                'Limit' => $count,
-                'ConsistentRead' => $consistentRead
-            ]);
+        $params = [
+            'TableName' => $tableName,
+            'ExpressionAttributeNames' => [
+                '#HASH' => DynamoDbEventStoreTable::HASH_KEY_NAME,
+                '#RANGE' => DynamoDbEventStoreTable::RANGE_KEY_NAME,
+            ],
+            'KeyConditionExpression' => sprintf('#HASH = :v_id AND #RANGE %s :v_date', $forward ? '>' : '<'),
+            'ExpressionAttributeValues' => [
+                ':v_id' => ['S' => (string)$streamId],
+                ':v_date' => ['N' => $since]
+            ],
+            'ScanIndexForward' => $forward,
+            'Limit' => $count,
+            'ConsistentRead' => $consistentRead
+        ];
 
+        if (isset($hints['curie'])) {
+            $params['ExpressionAttributeNames']['#SCHEMA'] = '_schema';
+            $params['ExpressionAttributeValues'][':v_curie'] = ['S' => trim($hints['curie'], '*')];
+            $params['FilterExpression'] = 'contains(#SCHEMA, :v_curie)';
+        }
+
+        try {
+            $response = $this->client->query($params);
         } catch (AwsException $e) {
             if ('ProvisionedThroughputExceededException' === $e->getAwsErrorCode()) {
                 throw new EventStoreOperationFailed(
@@ -241,6 +248,12 @@ class DynamoDbEventStore implements EventStore
         if ($reindexing) {
             $params['ExpressionAttributeNames']['#INDEXED'] = DynamoDbEventStoreTable::INDEXED_KEY_NAME;
             $filterExpressions[] = 'attribute_exists(#INDEXED)';
+        }
+
+        if (isset($hints['curie'])) {
+            $params['ExpressionAttributeNames']['#SCHEMA'] = '_schema';
+            $params['ExpressionAttributeValues'][':v_curie'] = ['S' => trim($hints['curie'], '*')];
+            $filterExpressions[] = 'contains(#SCHEMA, :v_curie)';
         }
 
         if (empty($params['ExpressionAttributeNames'])) {
