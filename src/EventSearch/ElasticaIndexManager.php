@@ -284,7 +284,7 @@ class ElasticaIndexManager
             $properties = $mapping->getProperties();
             $properties[self::OCCURRED_AT_ISO_FIELD_NAME] = ['type' => 'date', 'include_in_all' => false];
             $properties['ctx_ua']['index'] = 'no';
-            $mapping->setAllField(['enabled' => true, '_analyzer' => 'english'])->setProperties($properties);
+            $mapping->setAllField(['enabled' => true, 'analyzer' => 'english'])->setProperties($properties);
 
             $dynamicTemplates = $mapping->getParam('dynamic_templates');
             if (!empty($dynamicTemplates)) {

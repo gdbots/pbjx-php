@@ -8,6 +8,7 @@ use Elastica\Query\FunctionScore;
 use Elastica\Result;
 use Elastica\ResultSet;
 use Elastica\Search;
+use Gdbots\Common\Microtime;
 use Gdbots\Common\Util\ClassUtils;
 use Gdbots\Common\Util\DateUtils;
 use Gdbots\Common\Util\NumberUtils;
@@ -18,7 +19,7 @@ use Gdbots\QueryParser\Builder\ElasticaQueryBuilder;
 use Gdbots\QueryParser\Enum\BoolOperator;
 use Gdbots\QueryParser\Enum\ComparisonOperator;
 use Gdbots\QueryParser\Node\Field;
-use Gdbots\QueryParser\Node\Number;
+use Gdbots\QueryParser\Node\Numbr;
 use Gdbots\QueryParser\ParsedQuery;
 use Gdbots\Schemas\Pbjx\Enum\Code;
 use Gdbots\Schemas\Pbjx\Enum\SearchSort;
@@ -179,7 +180,10 @@ class ElasticaEventSearch implements EventSearch
             $parsedQuery->addNode(
                 new Field(
                     'occurred_at',
-                    new Number($request->get('occurred_after')->format('U').'000000', ComparisonOperator::GT()),
+                    new Numbr(
+                        Microtime::fromDateTime($request->get('occurred_after'))->toString(),
+                        ComparisonOperator::GT()
+                    ),
                     $required
                 )
             );
@@ -189,7 +193,10 @@ class ElasticaEventSearch implements EventSearch
             $parsedQuery->addNode(
                 new Field(
                     'occurred_at',
-                    new Number($request->get('occurred_before')->format('U').'000000', ComparisonOperator::LT()),
+                    new Numbr(
+                        Microtime::fromDateTime($request->get('occurred_before'))->toString(),
+                        ComparisonOperator::LT()
+                    ),
                     $required
                 )
             );
@@ -319,7 +326,7 @@ class ElasticaEventSearch implements EventSearch
     protected function createQuery(SearchEventsRequest $request, ParsedQuery $parsedQuery)
     {
         $this->queryBuilder->setDefaultFieldName('_all');
-        $query = $this->queryBuilder->addParsedQuery($parsedQuery)->getFilteredQuery();
+        $query = $this->queryBuilder->addParsedQuery($parsedQuery)->getBoolQuery();
         return Query::create($this->createSortedQuery($query, $request));
     }
 
@@ -352,15 +359,17 @@ class ElasticaEventSearch implements EventSearch
                 $query = (new FunctionScore())
                     ->setQuery($query)
                     ->addFunction(FunctionScore::DECAY_EXPONENTIAL, [
-                        'field' => ElasticaIndexManager::OCCURRED_AT_ISO_FIELD_NAME,
-                        'origin' => $before->format('U'),
-                        'scale' => '1d',
-                        'offset' => '1w',
-                        'decay' => 0.25
+                        ElasticaIndexManager::OCCURRED_AT_ISO_FIELD_NAME => [
+                            'origin' => $before->format('U'),
+                            'scale' => '1d',
+                            'offset' => '1w',
+                            'decay' => 0.25
+                        ]
                     ]);
                 break;
                 */
                 $query = Query::create($query);
+                break;
         }
 
         return $query;

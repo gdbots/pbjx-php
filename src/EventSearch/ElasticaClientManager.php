@@ -6,7 +6,7 @@ use Elastica\Client;
 use Gdbots\Pbjx\Exception\InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 
-final class ElasticaClientManager
+class ElasticaClientManager
 {
     /**
      * An array of clusters keyed by a name.  This factory will create the elastica
@@ -89,6 +89,16 @@ final class ElasticaClientManager
             unset($config['round_robin']);
         }
 
+        $config = $this->configureCluster($cluster, $config);
+        $servers = $config['servers'];
+        $configuredServers = [];
+        unset($config['servers']);
+
+        foreach ($servers as $server) {
+            $configuredServers[] = array_merge($config, $server);
+        }
+
+        $config['servers'] = $configuredServers;
         return $this->clients[$cluster] = new Client($config, null, $config['log'] ? $this->logger : null);
     }
 
@@ -109,5 +119,16 @@ final class ElasticaClientManager
     public function getAvailableClusters()
     {
         return array_keys($this->clusters);
+    }
+
+    /**
+     * @param string $cluster
+     * @param array $config
+     *
+     * @return array
+     */
+    protected function configureCluster($cluster, array $config)
+    {
+        return $config;
     }
 }
