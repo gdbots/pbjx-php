@@ -2,7 +2,7 @@
 
 namespace Gdbots\Pbjx\EventStore;
 
-use Gdbots\Common\Microtime;
+use Gdbots\Pbj\WellKnown\Microtime;
 use Gdbots\Pbjx\Exception\GdbotsPbjxException;
 use Gdbots\Pbjx\Exception\OptimisticCheckFailed;
 use Gdbots\Schemas\Pbjx\Mixin\Event\Event;

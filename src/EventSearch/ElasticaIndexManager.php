@@ -25,9 +25,16 @@ class ElasticaIndexManager
      * In order to use elasticsearch time range queries we'll store a derived value
      * of the ISO (in UTC/ZULU) into another field.
      *
+     * Generally we use "__" to indicate a derived field but kibana won't recognize it
+     * and it's already been debated with no fix yet.
+     * @link https://github.com/elastic/kibana/issues/2551
+     * @link https://github.com/elastic/kibana/issues/4762
+     *
+     * So for now, we'll use "d__" to indicate a derived field for ES.
+     *
      * @const string
      */
-    const OCCURRED_AT_ISO_FIELD_NAME = '__occurred_at_iso';
+    const OCCURRED_AT_ISO_FIELD_NAME = 'd__occurred_at_iso';
 
     /**
      * The name of the index (without any time interval) that all events

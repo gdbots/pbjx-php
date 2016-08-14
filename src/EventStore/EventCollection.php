@@ -2,8 +2,8 @@
 
 namespace Gdbots\Pbjx\EventStore;
 
-use Gdbots\Common\Microtime;
 use Gdbots\Common\ToArray;
+use Gdbots\Pbj\WellKnown\Microtime;
 use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
 use Gdbots\Schemas\Pbjx\StreamId;
 

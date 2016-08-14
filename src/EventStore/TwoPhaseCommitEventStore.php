@@ -2,8 +2,9 @@
 
 namespace Gdbots\Pbjx\EventStore;
 
-use Gdbots\Common\Microtime;
+use Gdbots\Pbj\WellKnown\Microtime;
 use Gdbots\Pbjx\Pbjx;
+use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
 use Gdbots\Schemas\Pbjx\StreamId;
 
 /**
@@ -42,8 +43,9 @@ class TwoPhaseCommitEventStore implements EventStore
     public function putEvents(StreamId $streamId, array $events, array $hints = [], $expectedEtag = null)
     {
         $this->next->putEvents($streamId, $events, $hints, $expectedEtag);
+        /** @var Event $event */
         foreach ($events as $event) {
-            $this->pbjx->publish($event);
+            $this->pbjx->publish($event->freeze());
         }
     }
 
