@@ -152,7 +152,7 @@ class DynamoDbEventStore implements EventStore
         foreach (['s16', 's32', 's64', 's128', 's256'] as $shard) {
             if (isset($hints[$shard])) {
                 $params['ExpressionAttributeNames']["#{$shard}"] = $shard;
-                $params['ExpressionAttributeValues']["v_{$shard}"] = ['N' => (int) $hints[$shard]];
+                $params['ExpressionAttributeValues'][":v_{$shard}"] = ['N' => (string)((int) $hints[$shard])];
                 $filterExpressions[] = "#{$shard} = :v_{$shard}";
             }
         }
@@ -272,8 +272,8 @@ class DynamoDbEventStore implements EventStore
         foreach (['s16', 's32', 's64', 's128', 's256'] as $shard) {
             if (isset($hints[$shard])) {
                 $params['ExpressionAttributeNames']["#{$shard}"] = $shard;
-                $params['ExpressionAttributeValues']["v_{$shard}"] = ['N' => (int) $hints[$shard]];
-                $filterExpressions[] = "#{$shard} = :v_{$shard}";
+                $params['ExpressionAttributeValues'][":v_{$shard}"] = ['N' => (string)((int) $hints[$shard])];
+                $filterExpressions[] = "(#{$shard} = :v_{$shard})";
             }
         }
 
