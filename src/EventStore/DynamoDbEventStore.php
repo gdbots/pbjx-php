@@ -141,11 +141,24 @@ class DynamoDbEventStore implements EventStore
             'Limit' => $count,
             'ConsistentRead' => $consistentRead
         ];
+        $filterExpressions = [];
 
         if (isset($hints['curie'])) {
             $params['ExpressionAttributeNames']['#SCHEMA'] = '_schema';
             $params['ExpressionAttributeValues'][':v_curie'] = ['S' => trim($hints['curie'], '*')];
-            $params['FilterExpression'] = 'contains(#SCHEMA, :v_curie)';
+            $filterExpressions[] = 'contains(#SCHEMA, :v_curie)';
+        }
+
+        foreach (['s16', 's32', 's64', 's128', 's256'] as $shard) {
+            if (isset($hints[$shard])) {
+                $params['ExpressionAttributeNames']["#{$shard}"] = $shard;
+                $params['ExpressionAttributeValues']["v_{$shard}"] = ['N' => (int) $hints[$shard]];
+                $filterExpressions[] = "#{$shard} = :v_{$shard}";
+            }
+        }
+
+        if (!empty($filterExpressions)) {
+            $params['FilterExpression'] = implode(' AND ', $filterExpressions);
         }
 
         try {
@@ -254,6 +267,14 @@ class DynamoDbEventStore implements EventStore
             $params['ExpressionAttributeNames']['#SCHEMA'] = '_schema';
             $params['ExpressionAttributeValues'][':v_curie'] = ['S' => trim($hints['curie'], '*')];
             $filterExpressions[] = 'contains(#SCHEMA, :v_curie)';
+        }
+
+        foreach (['s16', 's32', 's64', 's128', 's256'] as $shard) {
+            if (isset($hints[$shard])) {
+                $params['ExpressionAttributeNames']["#{$shard}"] = $shard;
+                $params['ExpressionAttributeValues']["v_{$shard}"] = ['N' => (int) $hints[$shard]];
+                $filterExpressions[] = "#{$shard} = :v_{$shard}";
+            }
         }
 
         if (empty($params['ExpressionAttributeNames'])) {
