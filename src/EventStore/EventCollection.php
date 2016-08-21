@@ -118,7 +118,7 @@ final class EventCollection implements ToArray, \JsonSerializable, \IteratorAggr
     /**
      * @return Microtime|null
      */
-    public function getLastMicrotime()
+    public function getLastOccurredAt()
     {
         $event = end($this->events);
         reset($this->events);

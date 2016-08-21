@@ -2,6 +2,7 @@
 
 namespace Gdbots\Pbjx\EventStore;
 
+use Gdbots\Pbj\WellKnown\Identifier;
 use Gdbots\Pbj\WellKnown\Microtime;
 use Gdbots\Pbjx\Exception\GdbotsPbjxException;
 use Gdbots\Pbjx\Exception\OptimisticCheckFailed;
@@ -22,6 +23,31 @@ interface EventStore
      * @throws GdbotsPbjxException
      */
     public function putEvents(StreamId $streamId, array $events, array $hints = [], $expectedEtag = null);
+
+    /**
+     * Returns a single event by its identifier (the "event_id" field on the event).
+     *
+     * @param Identifier $eventId   The id of the event to retrieve from the event store.
+     * @param array $hints          Data that helps the event store provider decide where to read/write data from.
+     *
+     * @return Event
+     *
+     * throws EventNotFound
+     * @throws GdbotsPbjxException
+     */
+    //public function getEvent(Identifier $eventId, array $hints = []);
+
+    /**
+     * Returns an array of events by their identifier (the "event_id" field on the event).
+     *
+     * @param Identifier[] $eventIds    The ids of the events to retrieve from the event store.
+     * @param array $hints              Data that helps the event store provider decide where to read/write data from.
+     *
+     * @return Event[]
+     *
+     * @throws GdbotsPbjxException
+     */
+    //public function getEventBatch(array $eventIds, array $hints = []);
 
     /**
      * Returns a collection of events in the given stream that are greater than

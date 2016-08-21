@@ -222,7 +222,7 @@ class DynamoDbEventStore implements EventStore
 
         do {
             $collection = $this->getEvents($streamId, $since, 100, true, $hints);
-            $since = $collection->getLastMicrotime();
+            $since = $collection->getLastOccurredAt();
 
             foreach ($collection as $event) {
                 yield $event;
