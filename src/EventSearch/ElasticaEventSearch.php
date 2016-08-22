@@ -247,7 +247,7 @@ class ElasticaEventSearch implements EventSearch
             ->set('has_more', ($offset + $perPage) < $results->getTotalHits() && $offset < 1000)
             ->set('time_taken', (int) $results->getTotalTime())
             ->set('max_score', (float) $results->getMaxScore())
-            ->addToList('results', $events);
+            ->addToList('events', $events);
 
         $this->afterSearch($results, $response);
         return $response;
