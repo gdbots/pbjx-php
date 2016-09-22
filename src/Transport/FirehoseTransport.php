@@ -2,26 +2,26 @@
 
 namespace Gdbots\Pbjx\Transport;
 
-use Aws\Kinesis\KinesisClient;
+use Aws\Firehose\FirehoseClient;
 use Aws\Result;
 use Gdbots\Pbjx\ServiceLocator;
 use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
 use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
 
-class KinesisTransport extends AbstractTransport
+class FirehoseTransport extends AbstractTransport
 {
-    /** @var KinesisClient */
+    /** @var FirehoseClient */
     protected $client;
 
-    /** @var PartitionableRouter */
+    /** @var Router */
     protected $router;
 
     /**
      * @param ServiceLocator $locator
-     * @param KinesisClient $client
-     * @param PartitionableRouter $router
+     * @param FirehoseClient $client
+     * @param Router $router
      */
-    public function __construct(ServiceLocator $locator, KinesisClient $client, PartitionableRouter $router)
+    public function __construct(ServiceLocator $locator, FirehoseClient $client, Router $router)
     {
         parent::__construct($locator);
         $this->client = $client;
@@ -29,8 +29,7 @@ class KinesisTransport extends AbstractTransport
     }
 
     /**
-     * @see PartitionableRouter::forCommand
-     * @see KinesisClient::putRecord
+     * @see FirehoseClient::putRecord
      *
      * @param Command $command
      * @throws \Exception
@@ -39,9 +38,12 @@ class KinesisTransport extends AbstractTransport
     {
         $envelope = new TransportEnvelope($command, 'json');
         $result = $this->client->putRecord([
-            'StreamName' => $this->router->forCommand($command),
-            'PartitionKey' => $this->router->partitionForCommand($command),
-            'Data' => $envelope->toString(),
+            'DeliveryStreamName' => $this->router->forCommand($command),
+            'Record' => [
+                // line break here is VERY important - produces json line delimited records
+                // when firehose delivers to s3, es, etc.
+                'Data' => $envelope->toString() . PHP_EOL
+            ],
         ]);
 
         $this->afterSendCommand($envelope, $result);
@@ -57,8 +59,7 @@ class KinesisTransport extends AbstractTransport
     }
 
     /**
-     * @see PartitionableRouter::forEvent
-     * @see KinesisClient::putRecord
+     * @see FirehoseClient::putRecord
      *
      * @param Event $event
      * @throws \Exception
@@ -67,9 +68,12 @@ class KinesisTransport extends AbstractTransport
     {
         $envelope = new TransportEnvelope($event, 'json');
         $result = $this->client->putRecord([
-            'StreamName' => $this->router->forEvent($event),
-            'PartitionKey' => $this->router->partitionForEvent($event),
-            'Data' => $envelope->toString(),
+            'DeliveryStreamName' => $this->router->forEvent($event),
+            'Record' => [
+                // line break here is VERY important - produces json line delimited records
+                // when firehose delivers to s3, es, etc.
+                'Data' => $envelope->toString() . PHP_EOL
+            ],
         ]);
 
         $this->afterSendEvent($envelope, $result);
