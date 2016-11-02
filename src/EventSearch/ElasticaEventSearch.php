@@ -353,21 +353,19 @@ class ElasticaEventSearch implements EventSearch
                 break;
 
             default:
-                // example custom scoring (recency scores higher)
-                /*
+                // recency scores higher
+                // @link https://www.elastic.co/guide/en/elasticsearch/guide/current/decay-functions.html
                 $before = $request->get('occurred_before') ?: new \DateTime('now', new \DateTimeZone('UTC'));
                 $query = (new FunctionScore())
                     ->setQuery($query)
                     ->addFunction(FunctionScore::DECAY_EXPONENTIAL, [
                         ElasticaIndexManager::OCCURRED_AT_ISO_FIELD_NAME => [
-                            'origin' => $before->format('U'),
-                            'scale' => '1d',
-                            'offset' => '1w',
-                            'decay' => 0.25
+                            'origin' => $before->format(DateUtils::ISO8601_ZULU),
+                            'scale' => '1w',
+                            'offset' => '2m',
+                            'decay' => 0.1
                         ]
                     ]);
-                break;
-                */
                 $query = Query::create($query);
                 break;
         }
