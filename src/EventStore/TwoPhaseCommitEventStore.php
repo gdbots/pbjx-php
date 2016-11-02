@@ -28,6 +28,16 @@ class TwoPhaseCommitEventStore implements EventStore
     protected $next;
 
     /**
+     * In some cases you want to disable 2pc (imports for example).  In this scenario
+     * set "DISABLE_PBJX_2PC_EVENT_STORE" env variable before running your symfony command.
+     *
+     * DISABLE_PBJX_2PC_EVENT_STORE=1 php bin/console --env=prod some-command
+     *
+     * @var bool
+     */
+    protected $disabled = false;
+
+    /**
      * @param Pbjx $pbjx
      * @param EventStore $next
      */
@@ -35,6 +45,7 @@ class TwoPhaseCommitEventStore implements EventStore
     {
         $this->pbjx = $pbjx;
         $this->next = $next;
+        $this->disabled = getenv('DISABLE_PBJX_2PC_EVENT_STORE') ? true : false;
     }
 
     /**
@@ -43,6 +54,10 @@ class TwoPhaseCommitEventStore implements EventStore
     public function putEvents(StreamId $streamId, array $events, array $hints = [], $expectedEtag = null)
     {
         $this->next->putEvents($streamId, $events, $hints, $expectedEtag);
+        if ($this->disabled) {
+            return;
+        }
+
         /** @var Event $event */
         foreach ($events as $event) {
             $this->pbjx->publish($event->freeze());
