@@ -11,6 +11,8 @@ final class DynamoDbEventStoreTable
     const HASH_KEY_NAME = '__stream_id';
     const RANGE_KEY_NAME = 'occurred_at';
     const INDEXED_KEY_NAME = '__indexed';
+    const GSI_EVENT_ID_NAME = 'event_id_index';
+    const GSI_EVENT_ID_HASH_KEY_NAME = 'event_id';
 
     /** @var DynamoDbClient */
     private $client;
@@ -49,7 +51,7 @@ final class DynamoDbEventStoreTable
             'AttributeDefinitions' => [
                 ['AttributeName' => self::HASH_KEY_NAME, 'AttributeType' => 'S'],
                 ['AttributeName' => self::RANGE_KEY_NAME, 'AttributeType' => 'N'],
-                ['AttributeName' => 'event_id', 'AttributeType' => 'S'],
+                ['AttributeName' => self::GSI_EVENT_ID_HASH_KEY_NAME, 'AttributeType' => 'S'],
             ],
             'KeySchema' => [
                 ['AttributeName' => self::HASH_KEY_NAME, 'KeyType' => 'HASH'],
@@ -57,9 +59,9 @@ final class DynamoDbEventStoreTable
             ],
             'GlobalSecondaryIndexes' => [
                 [
-                    'IndexName' => 'event_id_index',
+                    'IndexName' => self::GSI_EVENT_ID_NAME,
                     'KeySchema' => [
-                        ['AttributeName' => 'event_id', 'KeyType' => 'HASH'],
+                        ['AttributeName' => self::GSI_EVENT_ID_HASH_KEY_NAME, 'KeyType' => 'HASH'],
                     ],
                     'Projection' => [
                         'ProjectionType' => 'KEYS_ONLY',
