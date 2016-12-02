@@ -40,12 +40,13 @@ class TwoPhaseCommitEventStore implements EventStore
     /**
      * @param Pbjx $pbjx
      * @param EventStore $next
+     * @param bool $disabled
      */
-    public function __construct(Pbjx $pbjx, EventStore $next)
+    public function __construct(Pbjx $pbjx, EventStore $next, $disabled = false)
     {
         $this->pbjx = $pbjx;
         $this->next = $next;
-        $this->disabled = getenv('DISABLE_PBJX_2PC_EVENT_STORE') ? true : false;
+        $this->disabled = filter_var($disabled, FILTER_VALIDATE_BOOLEAN);
     }
 
     /**
