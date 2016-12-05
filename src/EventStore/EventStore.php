@@ -14,10 +14,10 @@ interface EventStore
     /**
      * Appends an array of events to a stream.
      *
-     * @param StreamId $streamId    The id of the stream to read from, e.g. "article:1234"
-     * @param Event[] $events       An array of events.
-     * @param array $hints          Data that helps the event store provider decide where to read/write data from.
-     * @param string $expectedEtag  Used to perform optimistic concurrency check.
+     * @param StreamId $streamId     The id of the stream to read from, e.g. "article:1234"
+     * @param Event[]  $events       An array of events.
+     * @param array    $hints        Data that helps the event store provider decide where to read/write data from.
+     * @param string   $expectedEtag Used to perform optimistic concurrency check.
      *
      * @throws OptimisticCheckFailed
      * @throws GdbotsPbjxException
@@ -27,8 +27,8 @@ interface EventStore
     /**
      * Returns a single event by its identifier (the "event_id" field on the event).
      *
-     * @param Identifier $eventId   The id of the event to retrieve from the event store.
-     * @param array $hints          Data that helps the event store provider decide where to read/write data from.
+     * @param Identifier $eventId The id of the event to retrieve from the event store.
+     * @param array      $hints   Data that helps the event store provider decide where to read/write data from.
      *
      * @return Event
      *
@@ -40,8 +40,8 @@ interface EventStore
     /**
      * Returns an array of events by their identifier (the "event_id" field on the event).
      *
-     * @param Identifier[] $eventIds    The ids of the events to retrieve from the event store.
-     * @param array $hints              Data that helps the event store provider decide where to read/write data from.
+     * @param Identifier[] $eventIds The ids of the events to retrieve from the event store.
+     * @param array        $hints    Data that helps the event store provider decide where to read/write data from.
      *
      * @return Event[]
      *
@@ -56,11 +56,11 @@ interface EventStore
      *
      * A collection will always be returned, even when empty or when the stream doesn't exist.
      *
-     * @param StreamId $streamId    The id of the stream to read from, e.g. "article:1234"
-     * @param Microtime $since      Return events since this time (exclusive greater than if forward=true, less than if forward=false)
-     * @param int $count            The number of events to return.
-     * @param bool $forward         When true, the events are read from oldest to newest, otherwise newest to oldest.
-     * @param array $hints          Data that helps the event store provider decide where to read/write data from.
+     * @param StreamId  $streamId The id of the stream to read from, e.g. "article:1234"
+     * @param Microtime $since    Return events since this time (exclusive greater than if forward=true, less than if forward=false)
+     * @param int       $count    The number of events to return.
+     * @param bool      $forward  When true, the events are read from oldest to newest, otherwise newest to oldest.
+     * @param array     $hints    Data that helps the event store provider decide where to read/write data from.
      *
      * @return EventCollection
      *
@@ -72,9 +72,9 @@ interface EventStore
      * Returns a generator which yields all events (forward only) from the beginning
      * of the stream or the since time provided.
      *
-     * @param StreamId $streamId    The id of the stream to read from, e.g. "article:1234"
-     * @param Microtime $since      Return events greater than this time.
-     * @param array $hints          Data that helps the event store provider decide where to read/write data from.
+     * @param StreamId  $streamId The id of the stream to read from, e.g. "article:1234"
+     * @param Microtime $since    Return events greater than this time.
+     * @param array     $hints    Data that helps the event store provider decide where to read/write data from.
      *
      * @return \Generator
      *
@@ -87,10 +87,10 @@ interface EventStore
      * the provided $callback. The order of events returned will be ordered per
      * stream but not necessarily globally ordered.
      *
-     * @param \Closure $callback    The function that will receive "$callback(Event $event, StreamId $streamId);"
-     * @param Microtime $since      Return events greater than this time (exclusive).
-     * @param Microtime $until      Return events less than this time (exclusive).
-     * @param array $hints          Data that helps the event store provider decide where to read/write data from.
+     * @param \Closure  $callback The function that will receive "$callback(Event $event, StreamId $streamId);"
+     * @param Microtime $since    Return events greater than this time (exclusive).
+     * @param Microtime $until    Return events less than this time (exclusive).
+     * @param array     $hints    Data that helps the event store provider decide where to read/write data from.
      *
      * @throws GdbotsPbjxException
      */
