@@ -29,10 +29,10 @@ interface Pbjx
      * the trigger process.  The PbjxEvent object will have a reference to the parent event
      * and the depth of the recursion.
      *
-     * @param Message $message  The message that will be processed.
-     * @param string $suffix    A string indicating the lifecycle phase (bind, validate, enrich, etc.)
-     * @param PbjxEvent $event  An event object containing the message.
-     * @param bool $recursive   If true, all field values with MessageType are also triggered.
+     * @param Message   $message   The message that will be processed.
+     * @param string    $suffix    A string indicating the lifecycle phase (bind, validate, enrich, etc.)
+     * @param PbjxEvent $event     An event object containing the message.
+     * @param bool      $recursive If true, all field values with MessageType are also triggered.
      *
      * @return Pbjx
      *
@@ -51,7 +51,7 @@ interface Pbjx
      * or frozen and persisted to storage.
      *
      * @param Message $message
-     * @param bool $recursive
+     * @param bool    $recursive
      *
      * @return Pbjx
      *
@@ -93,6 +93,7 @@ interface Pbjx
      * Processes a request synchronously and returns the response.
      *
      * @param Request $request
+     *
      * @return Response
      *
      * @throws GdbotsPbjxException

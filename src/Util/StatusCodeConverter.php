@@ -13,6 +13,7 @@ final class StatusCodeConverter
 {
     /**
      * @param int $code
+     *
      * @return int
      */
     public static function vendorToHttp($code = Code::OK)
@@ -78,6 +79,7 @@ final class StatusCodeConverter
 
     /**
      * @param int $httpCode
+     *
      * @return int
      */
     public static function httpToVendor($httpCode = HttpCode::HTTP_OK)

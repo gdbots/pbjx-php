@@ -14,9 +14,9 @@ class AwsAuthV4ElasticaClientManager extends ElasticaClientManager
     protected $region;
 
     /**
-     * @param Credentials $credentials
-     * @param string $region
-     * @param array $clusters
+     * @param Credentials     $credentials
+     * @param string          $region
+     * @param array           $clusters
      * @param LoggerInterface $logger
      */
     public function __construct(Credentials $credentials, $region, array $clusters, LoggerInterface $logger = null)
@@ -28,7 +28,7 @@ class AwsAuthV4ElasticaClientManager extends ElasticaClientManager
 
     /**
      * @param string $cluster
-     * @param array $config
+     * @param array  $config
      *
      * @return array
      */
@@ -38,6 +38,7 @@ class AwsAuthV4ElasticaClientManager extends ElasticaClientManager
         $config['aws_access_key_id'] = $this->credentials->getAccessKeyId();
         $config['aws_secret_access_key'] = $this->credentials->getSecretKey();
         $config['aws_region'] = $this->region;
+
         return $config;
     }
 }

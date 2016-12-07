@@ -16,13 +16,13 @@ interface EventStore
      *
      * @param StreamId $streamId     The id of the stream to read from, e.g. "article:1234"
      * @param Event[]  $events       An array of events.
-     * @param array    $hints        Data that helps the event store provider decide where to read/write data from.
      * @param string   $expectedEtag Used to perform optimistic concurrency check.
+     * @param array    $hints        Data that helps the event store provider decide where to read/write data from.
      *
      * @throws OptimisticCheckFailed
      * @throws GdbotsPbjxException
      */
-    public function putEvents(StreamId $streamId, array $events, array $hints = [], $expectedEtag = null);
+    public function putEvents(StreamId $streamId, array $events, $expectedEtag = null, array $hints = []);
 
     /**
      * Returns a single event by its identifier (the "event_id" field on the event).
@@ -56,17 +56,25 @@ interface EventStore
      *
      * A collection will always be returned, even when empty or when the stream doesn't exist.
      *
-     * @param StreamId  $streamId The id of the stream to read from, e.g. "article:1234"
-     * @param Microtime $since    Return events since this time (exclusive greater than if forward=true, less than if forward=false)
-     * @param int       $count    The number of events to return.
-     * @param bool      $forward  When true, the events are read from oldest to newest, otherwise newest to oldest.
-     * @param array     $hints    Data that helps the event store provider decide where to read/write data from.
+     * @param StreamId  $streamId   The id of the stream to read from, e.g. "article:1234"
+     * @param Microtime $since      Return events since this time (exclusive greater than if forward=true, less than if forward=false)
+     * @param int       $count      The number of events to return.
+     * @param bool      $forward    When true, the events are read from oldest to newest, otherwise newest to oldest.
+     * @param bool      $consistent An eventually consistent read is used by default unless this is true.
+     * @param array     $hints      Data that helps the event store provider decide where to read/write data from.
      *
      * @return EventCollection
      *
      * @throws GdbotsPbjxException
      */
-    public function getEvents(StreamId $streamId, Microtime $since = null, $count = 25, $forward = true, array $hints = []);
+    public function getEvents(
+        StreamId $streamId,
+        Microtime $since = null,
+        $count = 25,
+        $forward = true,
+        $consistent = false,
+        array $hints = []
+    );
 
     /**
      * Returns a generator which yields all events (forward only) from the beginning
@@ -94,5 +102,10 @@ interface EventStore
      *
      * @throws GdbotsPbjxException
      */
-    public function streamAllEvents(\Closure $callback, Microtime $since = null, Microtime $until = null, array $hints = []);
+    public function streamAllEvents(
+        \Closure $callback,
+        Microtime $since = null,
+        Microtime $until = null,
+        array $hints = []
+    );
 }

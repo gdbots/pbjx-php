@@ -52,9 +52,9 @@ class TwoPhaseCommitEventStore implements EventStore
     /**
      * {@inheritdoc}
      */
-    public function putEvents(StreamId $streamId, array $events, array $hints = [], $expectedEtag = null)
+    public function putEvents(StreamId $streamId, array $events, $expectedEtag = null, array $hints = [])
     {
-        $this->next->putEvents($streamId, $events, $hints, $expectedEtag);
+        $this->next->putEvents($streamId, $events, $expectedEtag, $hints);
         if ($this->disabled) {
             return;
         }
@@ -68,9 +68,15 @@ class TwoPhaseCommitEventStore implements EventStore
     /**
      * {@inheritdoc}
      */
-    public function getEvents(StreamId $streamId, Microtime $since = null, $count = 25, $forward = true, array $hints = [])
-    {
-        return $this->next->getEvents($streamId, $since, $count, $forward, $hints);
+    public function getEvents(
+        StreamId $streamId,
+        Microtime $since = null,
+        $count = 25,
+        $forward = true,
+        $consistent = false,
+        array $hints = []
+    ) {
+        return $this->next->getEvents($streamId, $since, $count, $forward, $consistent, $hints);
     }
 
     /**
@@ -84,8 +90,12 @@ class TwoPhaseCommitEventStore implements EventStore
     /**
      * {@inheritdoc}
      */
-    public function streamAllEvents(\Closure $callback, Microtime $since = null, Microtime $until = null, array $hints = [])
-    {
+    public function streamAllEvents(
+        \Closure $callback,
+        Microtime $since = null,
+        Microtime $until = null,
+        array $hints = []
+    ) {
         $this->next->streamAllEvents($callback, $since, $until, $hints);
     }
 }

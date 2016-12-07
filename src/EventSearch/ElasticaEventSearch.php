@@ -5,7 +5,6 @@ namespace Gdbots\Pbjx\EventSearch;
 use Elastica\Document;
 use Elastica\Query;
 use Elastica\Query\FunctionScore;
-use Elastica\Result;
 use Elastica\ResultSet;
 use Elastica\Search;
 use Gdbots\Common\Util\ClassUtils;
@@ -48,15 +47,16 @@ class ElasticaEventSearch implements EventSearch
 
     /**
      * Used to limit the amount of time a query can take.
+     *
      * @var string
      */
     protected $timeout;
 
     /**
      * @param ElasticaClientManager $clientManager
-     * @param ElasticaIndexManager $indexManager
-     * @param LoggerInterface|null $logger
-     * @param string $timeout
+     * @param ElasticaIndexManager  $indexManager
+     * @param LoggerInterface|null  $logger
+     * @param string                $timeout
      */
     public function __construct(
         ElasticaClientManager $clientManager,
@@ -76,7 +76,7 @@ class ElasticaEventSearch implements EventSearch
      * {@inheritdoc}
      * @param Indexed[] $events
      */
-    final public function index(array $events)
+    final public function indexEvents(array $events)
     {
         if (empty($events)) {
             return;
@@ -116,11 +116,11 @@ class ElasticaEventSearch implements EventSearch
                 );
 
                 $this->logger->error($message, [
-                    'exception' => $event->getException(),
-                    'event_id' => $event->get('event_id')->toString(),
-                    'pbj' => $event->getMessage()->toArray(),
+                    'exception'  => $event->getException(),
+                    'event_id'   => $event->get('event_id')->toString(),
+                    'pbj'        => $event->getMessage()->toArray(),
                     'index_name' => $indexName,
-                    'type_name' => $typeName,
+                    'type_name'  => $typeName,
                 ]);
             }
         }
@@ -149,7 +149,7 @@ class ElasticaEventSearch implements EventSearch
     /**
      * {@inheritdoc}
      */
-    final public function search(
+    final public function searchEvents(
         SearchEventsRequest $request,
         ParsedQuery $parsedQuery,
         SearchEventsResponse $response,
@@ -167,9 +167,9 @@ class ElasticaEventSearch implements EventSearch
         $offset = ($page - 1) * $perPage;
         $offset = NumberUtils::bound($offset, 0, 1000);
         $options = [
-            Search::OPTION_TIMEOUT => $this->timeout,
-            Search::OPTION_FROM => $offset,
-            Search::OPTION_SIZE => $perPage,
+            Search::OPTION_TIMEOUT                   => $this->timeout,
+            Search::OPTION_FROM                      => $offset,
+            Search::OPTION_SIZE                      => $perPage,
             Search::OPTION_SEARCH_IGNORE_UNAVAILABLE => true,
         ];
 
@@ -210,9 +210,10 @@ class ElasticaEventSearch implements EventSearch
             $this->logger->error(
                 'ElasticSearch query [{query}] failed.',
                 [
-                    'exception' => $e,
+                    'exception'  => $e,
                     'pbj_schema' => $request->schema()->getId()->toString(),
-                    'pbj' => $request->toArray(),
+                    'pbj'        => $request->toArray(),
+                    'query'      => $request->get('q'),
                 ]
             );
 
@@ -230,13 +231,13 @@ class ElasticaEventSearch implements EventSearch
         $events = [];
         foreach ($results->getResults() as $result) {
             try {
-                $events[] = $this->unmarshalResult($result);
+                $events[] = $this->marshaler->unmarshal($result->getSource());
             } catch (\Exception $e) {
                 $this->logger->error(
                     'Source returned from ElasticSearch could not be unmarshaled.',
                     [
                         'exception' => $e,
-                        'hit' => $result->getHit(),
+                        'hit'       => $result->getHit(),
                     ]
                 );
             }
@@ -250,6 +251,7 @@ class ElasticaEventSearch implements EventSearch
             ->addToList('events', $events);
 
         $this->afterSearch($results, $response);
+
         return $response;
     }
 
@@ -259,6 +261,7 @@ class ElasticaEventSearch implements EventSearch
      * based on the message content itself.  (e.g. for multi-tenant apps)
      *
      * @param Indexed $event
+     *
      * @return \Elastica\Client
      */
     protected function getClientForWrite(Indexed $event)
@@ -273,6 +276,7 @@ class ElasticaEventSearch implements EventSearch
      * based on the message content itself.  (e.g. for multi-tenant apps)
      *
      * @param SearchEventsRequest $request
+     *
      * @return \Elastica\Client
      */
     protected function getClientForSearch(SearchEventsRequest $request)
@@ -283,7 +287,7 @@ class ElasticaEventSearch implements EventSearch
 
     /**
      * @param Document $document
-     * @param Indexed $event
+     * @param Indexed  $event
      */
     protected function beforeIndex(Document $document, Indexed $event)
     {
@@ -291,7 +295,7 @@ class ElasticaEventSearch implements EventSearch
     }
 
     /**
-     * @param Search $search
+     * @param Search              $search
      * @param SearchEventsRequest $request
      */
     protected function beforeSearch(Search $search, SearchEventsRequest $request)
@@ -300,7 +304,7 @@ class ElasticaEventSearch implements EventSearch
     }
 
     /**
-     * @param ResultSet $results
+     * @param ResultSet            $results
      * @param SearchEventsResponse $response
      */
     protected function afterSearch(ResultSet $results, SearchEventsResponse $response)
@@ -309,17 +313,8 @@ class ElasticaEventSearch implements EventSearch
     }
 
     /**
-     * @param Result $result
-     * @return Indexed
-     */
-    protected function unmarshalResult(Result $result)
-    {
-        return $this->marshaler->unmarshal($result->getSource());
-    }
-
-    /**
      * @param SearchEventsRequest $request
-     * @param ParsedQuery $parsedQuery
+     * @param ParsedQuery         $parsedQuery
      *
      * @return Query
      */
@@ -327,6 +322,7 @@ class ElasticaEventSearch implements EventSearch
     {
         $this->queryBuilder->setDefaultFieldName('_all');
         $query = $this->queryBuilder->addParsedQuery($parsedQuery)->getBoolQuery();
+
         return Query::create($this->createSortedQuery($query, $request));
     }
 
@@ -361,10 +357,10 @@ class ElasticaEventSearch implements EventSearch
                     ->addFunction(FunctionScore::DECAY_EXPONENTIAL, [
                         ElasticaIndexManager::OCCURRED_AT_ISO_FIELD_NAME => [
                             'origin' => $before->format(DateUtils::ISO8601_ZULU),
-                            'scale' => '1w',
+                            'scale'  => '1w',
                             'offset' => '2m',
-                            'decay' => 0.1
-                        ]
+                            'decay'  => 0.1,
+                        ],
                     ]);
                 $query = Query::create($query);
                 break;

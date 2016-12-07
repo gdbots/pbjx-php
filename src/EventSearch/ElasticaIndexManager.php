@@ -27,8 +27,9 @@ class ElasticaIndexManager
      *
      * Generally we use "__" to indicate a derived field but kibana won't recognize it
      * and it's already been debated with no fix yet.
-     * @link https://github.com/elastic/kibana/issues/2551
-     * @link https://github.com/elastic/kibana/issues/4762
+     *
+     * @link  https://github.com/elastic/kibana/issues/2551
+     * @link  https://github.com/elastic/kibana/issues/4762
      *
      * So for now, we'll use "d__" to indicate a derived field for ES.
      *
@@ -54,7 +55,7 @@ class ElasticaIndexManager
     protected $logger;
 
     /**
-     * @param string $indexPrefix
+     * @param string               $indexPrefix
      * @param LoggerInterface|null $logger
      */
     public function __construct($indexPrefix, LoggerInterface $logger = null)
@@ -74,6 +75,7 @@ class ElasticaIndexManager
     {
         /** @var \DateTime $occurredAt */
         $occurredAt = $event->get('occurred_at')->toDateTime();
+
         return $this->indexPrefix . $this->getIndexIntervalSuffix($occurredAt);
     }
 
@@ -130,6 +132,7 @@ class ElasticaIndexManager
 
     /**
      * Creates an index template in elastic search.
+     *
      * @link https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-templates.html
      *
      * @param Client $client
@@ -147,15 +150,15 @@ class ElasticaIndexManager
         $params = [
             'template' => '*' . $name . '*',
             'settings' => [
-                'number_of_shards' => 1,
+                'number_of_shards'   => 1,
                 'number_of_replicas' => 1,
-                'index' => [
+                'index'              => [
                     'analysis' => [
-                        'analyzer' => MappingFactory::getCustomAnalyzers()
-                    ]
-                ]
+                        'analyzer' => MappingFactory::getCustomAnalyzers(),
+                    ],
+                ],
             ],
-            'mappings' => $mappings
+            'mappings' => $mappings,
         ];
 
         $this->beforeUpdateTemplate($params);
@@ -212,6 +215,7 @@ class ElasticaIndexManager
                     implode(',', array_keys($customAnalyzers))
                 )
             );
+
             return;
         }
 
@@ -232,6 +236,7 @@ class ElasticaIndexManager
                 sprintf('Unable to close index [%s] and update settings.', $name),
                 ['exception' => $e, 'index_name' => $name]
             );
+
             return;
         }
 
@@ -259,11 +264,12 @@ class ElasticaIndexManager
     protected function getIndexIntervalSuffix(\DateTime $date)
     {
         $quarter = ceil($date->format('n') / 3);
+
         return $date->format('Y') . 'q' . $quarter;
     }
 
     /**
-     * @param Schema $schema
+     * @param Schema  $schema
      * @param Mapping $mapping
      */
     protected function filterMapping(Schema $schema, Mapping $mapping)

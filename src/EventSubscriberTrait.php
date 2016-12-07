@@ -8,7 +8,7 @@ trait EventSubscriberTrait
 {
     /**
      * @param Event $event
-     * @param Pbjx $pbjx
+     * @param Pbjx  $pbjx
      */
     public function onEvent(Event $event, Pbjx $pbjx)
     {
@@ -20,7 +20,7 @@ trait EventSubscriberTrait
 
     /**
      * @param Event[] $events
-     * @param Pbjx $pbjx
+     * @param Pbjx    $pbjx
      */
     public function onEvents(array $events, Pbjx $pbjx)
     {

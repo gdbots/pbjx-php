@@ -10,7 +10,7 @@ class EventIndexer implements EventSubscriber
 {
     /**
      * @param Indexed $event
-     * @param Pbjx $pbjx
+     * @param Pbjx    $pbjx
      */
     public function onIndexed(Indexed $event, Pbjx $pbjx)
     {
@@ -18,7 +18,7 @@ class EventIndexer implements EventSubscriber
             return;
         }
 
-        $pbjx->getEventSearch()->index([$event]);
+        $pbjx->getEventSearch()->indexEvents([$event]);
     }
 
     /**

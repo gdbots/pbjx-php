@@ -42,7 +42,7 @@ class ElasticaClientManager
     protected $clients = [];
 
     /**
-     * @param array $clusters
+     * @param array           $clusters
      * @param LoggerInterface $logger
      */
     public function __construct(array $clusters, LoggerInterface $logger = null)
@@ -57,6 +57,7 @@ class ElasticaClientManager
      * All calls with the same cluster name will return the same client instance.
      *
      * @param string $cluster
+     *
      * @return Client
      */
     public function getClient($cluster = 'default')
@@ -99,11 +100,13 @@ class ElasticaClientManager
         }
 
         $config['servers'] = $configuredServers;
+
         return $this->clients[$cluster] = new Client($config, null, $config['log'] ? $this->logger : null);
     }
 
     /**
      * @param string $cluster
+     *
      * @return bool
      */
     public function hasCluster($cluster)
@@ -123,7 +126,7 @@ class ElasticaClientManager
 
     /**
      * @param string $cluster
-     * @param array $config
+     * @param array  $config
      *
      * @return array
      */

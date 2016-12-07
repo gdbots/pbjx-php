@@ -45,9 +45,9 @@ class DynamoDbEventStore implements EventStore
     protected $marshaler;
 
     /**
-     * @param Pbjx $pbjx
-     * @param DynamoDbClient $client
-     * @param string $tableName
+     * @param Pbjx                 $pbjx
+     * @param DynamoDbClient       $client
+     * @param string               $tableName
      * @param LoggerInterface|null $logger
      */
     public function __construct(Pbjx $pbjx, DynamoDbClient $client, $tableName, LoggerInterface $logger = null)
@@ -62,7 +62,7 @@ class DynamoDbEventStore implements EventStore
     /**
      * {@inheritdoc}
      */
-    final public function putEvents(StreamId $streamId, array $events, array $hints = [], $expectedEtag = null)
+    final public function putEvents(StreamId $streamId, array $events, $expectedEtag = null, array $hints = [])
     {
         if (!count($events)) {
             // ignore empty events array
@@ -72,14 +72,14 @@ class DynamoDbEventStore implements EventStore
         $hints['stream_id'] = $streamId->toString();
 
         if (null !== $expectedEtag) {
-            $this->optimisticCheck($streamId, $hints, $expectedEtag);
+            $this->optimisticCheck($streamId, $expectedEtag, $hints);
         }
 
         $tableName = $this->getTableNameForWrite($hints);
         $batch = new WriteRequestBatch($this->client, [
-            'table' => $tableName,
+            'table'     => $tableName,
             'autoflush' => false,
-            'error' => function(AwsException $e) use ($streamId, $tableName) {
+            'error'     => function (AwsException $e) use ($streamId, $tableName) {
                 throw new EventStoreOperationFailed(
                     sprintf(
                         'Failed to put some or all events into DynamoDb table [%s] for stream [%s].',
@@ -89,7 +89,7 @@ class DynamoDbEventStore implements EventStore
                     Code::DATA_LOSS,
                     $e
                 );
-            }
+            },
         ]);
 
         /** @var Event[] $events */
@@ -99,10 +99,11 @@ class DynamoDbEventStore implements EventStore
             }
 
             $item = $this->marshaler->marshal($event);
-            $item[DynamoDbEventStoreTable::HASH_KEY_NAME] = ['S' => (string)$streamId];
+            $item[DynamoDbEventStoreTable::HASH_KEY_NAME] = ['S' => (string) $streamId];
             if ($event instanceof Indexed) {
                 $item[DynamoDbEventStoreTable::INDEXED_KEY_NAME] = ['BOOL' => true];
             }
+
             $this->beforePutItem($item, $event);
             $batch->put($item);
         }
@@ -113,11 +114,16 @@ class DynamoDbEventStore implements EventStore
     /**
      * {@inheritdoc}
      */
-    final public function getEvents(StreamId $streamId, Microtime $since = null, $count = 25, $forward = true, array $hints = [])
-    {
+    final public function getEvents(
+        StreamId $streamId,
+        Microtime $since = null,
+        $count = 25,
+        $forward = true,
+        $consistent = false,
+        array $hints = []
+    ) {
         $hints['stream_id'] = $streamId->toString();
         $tableName = $this->getTableNameForRead($hints);
-        $consistentRead = isset($hints['consistent_read']) ? filter_var($hints['consistent_read'], FILTER_VALIDATE_BOOLEAN) : false;
         $count = NumberUtils::bound($count, 1, 100);
 
         if ($forward) {
@@ -127,32 +133,32 @@ class DynamoDbEventStore implements EventStore
         }
 
         $params = [
-            'TableName' => $tableName,
-            'ExpressionAttributeNames' => [
-                '#HASH' => DynamoDbEventStoreTable::HASH_KEY_NAME,
-                '#RANGE' => DynamoDbEventStoreTable::RANGE_KEY_NAME,
+            'TableName'                 => $tableName,
+            'ExpressionAttributeNames'  => [
+                '#hash'  => DynamoDbEventStoreTable::HASH_KEY_NAME,
+                '#range' => DynamoDbEventStoreTable::RANGE_KEY_NAME,
             ],
-            'KeyConditionExpression' => sprintf('#HASH = :v_id AND #RANGE %s :v_date', $forward ? '>' : '<'),
+            'KeyConditionExpression'    => sprintf('#hash = :v_id AND #range %s :v_date', $forward ? '>' : '<'),
             'ExpressionAttributeValues' => [
-                ':v_id' => ['S' => (string)$streamId],
-                ':v_date' => ['N' => $since]
+                ':v_id'   => ['S' => (string) $streamId],
+                ':v_date' => ['N' => $since],
             ],
-            'ScanIndexForward' => $forward,
-            'Limit' => $count,
-            'ConsistentRead' => $consistentRead
+            'ScanIndexForward'          => $forward,
+            'Limit'                     => $count,
+            'ConsistentRead'            => $consistent,
         ];
         $filterExpressions = [];
 
         if (isset($hints['curie'])) {
-            $params['ExpressionAttributeNames']['#SCHEMA'] = '_schema';
+            $params['ExpressionAttributeNames']['#schema'] = '_schema';
             $params['ExpressionAttributeValues'][':v_curie'] = ['S' => trim($hints['curie'], '*')];
-            $filterExpressions[] = 'contains(#SCHEMA, :v_curie)';
+            $filterExpressions[] = 'contains(#schema, :v_curie)';
         }
 
         foreach (['s16', 's32', 's64', 's128', 's256'] as $shard) {
             if (isset($hints[$shard])) {
                 $params['ExpressionAttributeNames']["#{$shard}"] = $shard;
-                $params['ExpressionAttributeValues'][":v_{$shard}"] = ['N' => (string)((int) $hints[$shard])];
+                $params['ExpressionAttributeValues'][":v_{$shard}"] = ['N' => (string) ((int) $hints[$shard])];
                 $filterExpressions[] = "#{$shard} = :v_{$shard}";
             }
         }
@@ -164,19 +170,14 @@ class DynamoDbEventStore implements EventStore
         try {
             $response = $this->client->query($params);
         } catch (AwsException $e) {
-            if ('ProvisionedThroughputExceededException' === $e->getAwsErrorCode()) {
-                throw new EventStoreOperationFailed(
-                    sprintf(
-                        'Read provisioning exceeded on DynamoDb table [%s] for stream [%s].', $tableName, $streamId
-                    ),
-                    Code::RESOURCE_EXHAUSTED,
-                    $e
-                );
-            }
-
             throw new EventStoreOperationFailed(
-                sprintf('Failed to query events from DynamoDb table [%s] for stream [%s].', $tableName, $streamId),
-                Code::UNAVAILABLE,
+                sprintf(
+                    '%s while querying events from DynamoDb table [%s] for stream [%s].',
+                    $e->getAwsErrorCode(),
+                    $tableName,
+                    $streamId
+                ),
+                'ProvisionedThroughputExceededException' === $e->getAwsErrorCode() ? Code::RESOURCE_EXHAUSTED : Code::UNAVAILABLE,
                 $e
             );
 
@@ -189,28 +190,28 @@ class DynamoDbEventStore implements EventStore
         }
 
         if (!$response['Count']) {
-            return new EventCollection([], $streamId, $forward);
+            return new EventCollection([], $streamId, $forward, $consistent);
         }
 
         $events = [];
         foreach ($response['Items'] as $item) {
             try {
-                $events[] = $this->unmarshalItem($item);
+                $events[] = $this->marshaler->unmarshal($item);
             } catch (\Exception $e) {
                 $this->logger->error(
                     'Item returned from DynamoDb table [{table_name}] from stream [{stream_id}] could not be unmarshaled.',
                     [
-                        'exception' => $e,
-                        'item' => $item,
-                        'hints' => $hints,
+                        'exception'  => $e,
+                        'item'       => $item,
+                        'hints'      => $hints,
                         'table_name' => $tableName,
-                        'stream_id' => (string)$streamId
+                        'stream_id'  => (string) $streamId,
                     ]
                 );
             }
         }
 
-        return new EventCollection($events, $streamId, $forward, $response['Count'] >= $count);
+        return new EventCollection($events, $streamId, $forward, $consistent, $response['Count'] >= $count);
     }
 
     /**
@@ -221,7 +222,7 @@ class DynamoDbEventStore implements EventStore
         $hints['stream_id'] = $streamId->toString();
 
         do {
-            $collection = $this->getEvents($streamId, $since, 100, true, $hints);
+            $collection = $this->getEvents($streamId, $since, 100, true, false, $hints);
             $since = $collection->getLastOccurredAt();
 
             foreach ($collection as $event) {
@@ -234,8 +235,12 @@ class DynamoDbEventStore implements EventStore
     /**
      * {@inheritdoc}
      */
-    final public function streamAllEvents(\Closure $callback, Microtime $since = null, Microtime $until = null, array $hints = [])
-    {
+    final public function streamAllEvents(
+        \Closure $callback,
+        Microtime $since = null,
+        Microtime $until = null,
+        array $hints = []
+    ) {
         $tableName = $this->getTableNameForRead($hints);
         $skipErrors = isset($hints['skip_errors']) ? filter_var($hints['skip_errors'], FILTER_VALIDATE_BOOLEAN) : false;
         $reindexing = isset($hints['reindexing']) ? filter_var($hints['reindexing'], FILTER_VALIDATE_BOOLEAN) : false;
@@ -247,32 +252,32 @@ class DynamoDbEventStore implements EventStore
         $filterExpressions = [];
 
         if (null !== $since) {
-            $params['ExpressionAttributeNames']['#RANGE'] = DynamoDbEventStoreTable::RANGE_KEY_NAME;
+            $params['ExpressionAttributeNames']['#range'] = DynamoDbEventStoreTable::RANGE_KEY_NAME;
             $params['ExpressionAttributeValues'][':v_date_since'] = ['N' => $since->toString()];
-            $filterExpressions[] = '#RANGE > :v_date_since';
+            $filterExpressions[] = '#range > :v_date_since';
         }
 
         if (null !== $until) {
-            $params['ExpressionAttributeNames']['#RANGE'] = DynamoDbEventStoreTable::RANGE_KEY_NAME;
+            $params['ExpressionAttributeNames']['#range'] = DynamoDbEventStoreTable::RANGE_KEY_NAME;
             $params['ExpressionAttributeValues'][':v_date_until'] = ['N' => $until->toString()];
-            $filterExpressions[] = '#RANGE < :v_date_until';
+            $filterExpressions[] = '#range < :v_date_until';
         }
 
         if ($reindexing) {
-            $params['ExpressionAttributeNames']['#INDEXED'] = DynamoDbEventStoreTable::INDEXED_KEY_NAME;
-            $filterExpressions[] = 'attribute_exists(#INDEXED)';
+            $params['ExpressionAttributeNames']['#indexed'] = DynamoDbEventStoreTable::INDEXED_KEY_NAME;
+            $filterExpressions[] = 'attribute_exists(#indexed)';
         }
 
         if (isset($hints['curie'])) {
-            $params['ExpressionAttributeNames']['#SCHEMA'] = '_schema';
+            $params['ExpressionAttributeNames']['#schema'] = '_schema';
             $params['ExpressionAttributeValues'][':v_curie'] = ['S' => trim($hints['curie'], '*')];
-            $filterExpressions[] = 'contains(#SCHEMA, :v_curie)';
+            $filterExpressions[] = 'contains(#schema, :v_curie)';
         }
 
         foreach (['s16', 's32', 's64', 's128', 's256'] as $shard) {
             if (isset($hints[$shard])) {
                 $params['ExpressionAttributeNames']["#{$shard}"] = $shard;
-                $params['ExpressionAttributeValues'][":v_{$shard}"] = ['N' => (string)((int) $hints[$shard])];
+                $params['ExpressionAttributeValues'][":v_{$shard}"] = ['N' => (string) ((int) $hints[$shard])];
                 $filterExpressions[] = "(#{$shard} = :v_{$shard})";
             }
         }
@@ -303,9 +308,8 @@ class DynamoDbEventStore implements EventStore
             $pending[] = $this->client->getCommand('Scan', $params);
         }
 
-        $fulfilled = function(Result $result, $iterKey)
-            use ($callback, $tableName, $hints, $params, &$pending, &$iter2seg)
-        {
+        $fulfilled = function (Result $result, $iterKey)
+        use ($callback, $tableName, $hints, $params, &$pending, &$iter2seg) {
             $segment = $iter2seg['prev'][$iterKey];
 
             foreach ($result['Items'] as $item) {
@@ -313,18 +317,18 @@ class DynamoDbEventStore implements EventStore
 
                 try {
                     $streamId = StreamId::fromString($item[DynamoDbEventStoreTable::HASH_KEY_NAME]['S']);
-                    $event = $this->unmarshalItem($item);
+                    $event = $this->marshaler->unmarshal($item);
                 } catch (\Exception $e) {
                     $this->logger->error(
                         'Item returned from DynamoDb table [{table_name}] segment [{segment}] ' .
                         'from stream [{stream_id}] could not be unmarshaled.',
                         [
-                            'exception' => $e,
-                            'item' => $item,
-                            'hints' => $hints,
+                            'exception'  => $e,
+                            'item'       => $item,
+                            'hints'      => $hints,
                             'table_name' => $tableName,
-                            'segment' => $segment,
-                            'stream_id' => (string)$streamId
+                            'segment'    => $segment,
+                            'stream_id'  => (string) $streamId,
                         ]
                     );
 
@@ -343,27 +347,26 @@ class DynamoDbEventStore implements EventStore
                 $this->logger->info(
                     'Scan of DynamoDb table [{table_name}] segment [{segment}] is complete.',
                     [
-                        'hints' => $hints,
+                        'hints'      => $hints,
                         'table_name' => $tableName,
-                        'segment' => $segment,
+                        'segment'    => $segment,
                     ]
                 );
             }
         };
 
         $rejected = function (AwsException $exception, $iterKey, PromiseInterface $aggregatePromise)
-            use ($tableName, $hints, $skipErrors, &$iter2seg)
-        {
+        use ($tableName, $hints, $skipErrors, &$iter2seg) {
             $segment = $iter2seg['prev'][$iterKey];
 
             if ($skipErrors) {
                 $this->logger->error(
                     'Scan failed on DynamoDb table [{table_name}] segment [{segment}].',
                     [
-                        'exception' => $exception,
-                        'hints' => $hints,
+                        'exception'  => $exception,
+                        'hints'      => $hints,
                         'table_name' => $tableName,
-                        'segment' => $segment,
+                        'segment'    => $segment,
                     ]
                 );
 
@@ -432,23 +435,18 @@ class DynamoDbEventStore implements EventStore
     }
 
     /**
-     * @param array $params
-     * @param array $hints
+     * @param array     $params
+     * @param array     $hints
      * @param Microtime $since
      * @param Microtime $until
      */
-    protected function beforeStreamAllEvents(array &$params, array $hints, Microtime $since = null, Microtime $until = null)
-    {
+    protected function beforeStreamAllEvents(
+        array &$params,
+        array $hints,
+        Microtime $since = null,
+        Microtime $until = null
+    ) {
         // allows for customization of the DynamoDb parallel scan parameters before the scan runs.
-    }
-
-    /**
-     * @param array $item
-     * @return Event
-     */
-    protected function unmarshalItem(array $item)
-    {
-        return $this->marshaler->unmarshal($item);
     }
 
     /**
@@ -456,16 +454,15 @@ class DynamoDbEventStore implements EventStore
      * at the expected state before appending events.
      *
      * @param StreamId $streamId
-     * @param array $hints
-     * @param string $expectedEtag
+     * @param string   $expectedEtag
+     * @param array    $hints
      *
      * @throws OptimisticCheckFailed
      * @throws GdbotsPbjxException
      */
-    private function optimisticCheck(StreamId $streamId, array $hints, $expectedEtag)
+    private function optimisticCheck(StreamId $streamId, $expectedEtag, array $hints)
     {
-        $hints['consistent_read'] = true;
-        $collection = $this->getEvents($streamId, null, 1, false, $hints);
+        $collection = $this->getEvents($streamId, null, 1, false, true, $hints);
 
         if (!$collection->count()) {
             throw new OptimisticCheckFailed(
@@ -480,7 +477,7 @@ class DynamoDbEventStore implements EventStore
         $event = $collection->getIterator()->current();
 
         // todo: review this etag strategy (might need to make this more explicit/obvious)
-        if ((string)$event->get('event_id') === $expectedEtag || md5($event->get('event_id')) === $expectedEtag) {
+        if ((string) $event->get('event_id') === $expectedEtag || md5($event->get('event_id')) === $expectedEtag) {
             return;
         }
 

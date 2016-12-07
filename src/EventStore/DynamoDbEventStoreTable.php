@@ -26,7 +26,7 @@ final class DynamoDbEventStoreTable
 
     /**
      * @param DynamoDbClient $client
-     * @param string $name
+     * @param string         $name
      */
     public function __construct(DynamoDbClient $client, $name)
     {
@@ -41,45 +41,46 @@ final class DynamoDbEventStoreTable
     {
         try {
             $this->client->describeTable(['TableName' => $this->name]);
+
             return;
-        } catch (DynamoDbException $e)  {
+        } catch (DynamoDbException $e) {
             // table doesn't exist, create it below
         }
 
         $this->client->createTable([
-            'TableName' => $this->name,
-            'AttributeDefinitions' => [
+            'TableName'              => $this->name,
+            'AttributeDefinitions'   => [
                 ['AttributeName' => self::HASH_KEY_NAME, 'AttributeType' => 'S'],
                 ['AttributeName' => self::RANGE_KEY_NAME, 'AttributeType' => 'N'],
                 ['AttributeName' => self::GSI_EVENT_ID_HASH_KEY_NAME, 'AttributeType' => 'S'],
             ],
-            'KeySchema' => [
+            'KeySchema'              => [
                 ['AttributeName' => self::HASH_KEY_NAME, 'KeyType' => 'HASH'],
                 ['AttributeName' => self::RANGE_KEY_NAME, 'KeyType' => 'RANGE'],
             ],
             'GlobalSecondaryIndexes' => [
                 [
-                    'IndexName' => self::GSI_EVENT_ID_NAME,
-                    'KeySchema' => [
+                    'IndexName'             => self::GSI_EVENT_ID_NAME,
+                    'KeySchema'             => [
                         ['AttributeName' => self::GSI_EVENT_ID_HASH_KEY_NAME, 'KeyType' => 'HASH'],
                     ],
-                    'Projection' => [
+                    'Projection'            => [
                         'ProjectionType' => 'KEYS_ONLY',
                     ],
                     'ProvisionedThroughput' => [
                         'ReadCapacityUnits'  => 2,
-                        'WriteCapacityUnits' => 2
-                    ]
+                        'WriteCapacityUnits' => 2,
+                    ],
                 ],
             ],
-            'StreamSpecification' => [
-                'StreamEnabled' => true,
+            'StreamSpecification'    => [
+                'StreamEnabled'  => true,
                 'StreamViewType' => 'NEW_IMAGE',
             ],
-            'ProvisionedThroughput' => [
+            'ProvisionedThroughput'  => [
                 'ReadCapacityUnits'  => 2,
-                'WriteCapacityUnits' => 2
-            ]
+                'WriteCapacityUnits' => 2,
+            ],
         ]);
 
         $this->client->waitUntil('TableExists', ['TableName' => $this->name]);
@@ -91,6 +92,7 @@ final class DynamoDbEventStoreTable
     public function describe()
     {
         $result = $this->client->describeTable(['TableName' => $this->name]);
+
         return json_encode($result->toArray(), JSON_PRETTY_PRINT);
     }
 }
