@@ -119,7 +119,12 @@ class DefaultRequestBus implements RequestBus
             ->set('ctx_request', $request)
             ->set('error_code', $code)
             ->set('error_name', ClassUtils::getShortName($exception))
-            ->set('error_message', $exception->getMessage());
+            ->set('error_message', substr($exception->getMessage(), 0, 2048))
+            ->set('stack_trace', $exception->getTraceAsString());
+
+        if ($exception->getPrevious()) {
+            $response->set('prev_error_message', substr($exception->getPrevious()->getMessage(), 0, 2048));
+        }
 
         if ($request->has('ctx_correlator_ref')) {
             $response->set('ctx_correlator_ref', $request->get('ctx_correlator_ref'));

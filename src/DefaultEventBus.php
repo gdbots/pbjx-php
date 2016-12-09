@@ -113,7 +113,12 @@ class DefaultEventBus implements EventBus
                     ->set('event', $event)
                     ->set('error_code', $code)
                     ->set('error_name', ClassUtils::getShortName($e))
-                    ->set('error_message', $e->getMessage());
+                    ->set('error_message', substr($e->getMessage(), 0, 2048))
+                    ->set('stack_trace', $e->getTraceAsString());
+
+                if ($e->getPrevious()) {
+                    $failedEvent->set('prev_error_message', substr($e->getPrevious()->getMessage(), 0, 2048));
+                }
 
                 $this->pbjx->copyContext($event, $failedEvent);
 
