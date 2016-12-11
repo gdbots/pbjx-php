@@ -6,7 +6,7 @@ use Gdbots\Schemas\Pbjx\Enum\Code;
 use Gdbots\Schemas\Pbjx\Mixin\Request\Request;
 use Gdbots\Schemas\Pbjx\Request\RequestFailedResponse;
 
-class RequestHandlingFailed extends \RuntimeException implements GdbotsPbjxException
+class RequestHandlingFailed extends \RuntimeException implements GdbotsPbjxException, \JsonSerializable
 {
     /** @var RequestFailedResponse */
     protected $response;
@@ -44,5 +44,21 @@ class RequestHandlingFailed extends \RuntimeException implements GdbotsPbjxExcep
     public function getRequest()
     {
         return $this->response->get('ctx_request');
+    }
+
+    /**
+     * @return array
+     */
+    public function jsonSerialize()
+    {
+        return $this->response->toArray();
+    }
+
+    /**
+     * @return string
+     */
+    public function __toString()
+    {
+        return json_encode($this->response, JSON_PRETTY_PRINT);
     }
 }
