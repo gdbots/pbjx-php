@@ -278,7 +278,7 @@ class DynamoDbEventStore implements EventStore
             if (isset($hints[$shard])) {
                 $params['ExpressionAttributeNames']["#{$shard}"] = $shard;
                 $params['ExpressionAttributeValues'][":v_{$shard}"] = ['N' => (string) ((int) $hints[$shard])];
-                $filterExpressions[] = "(#{$shard} = :v_{$shard})";
+                $filterExpressions[] = "#{$shard} = :v_{$shard}";
             }
         }
 

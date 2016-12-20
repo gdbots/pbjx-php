@@ -8,7 +8,7 @@ use Gdbots\Pbj\Schema;
 use Gdbots\Pbjx\Event\BusExceptionEvent;
 use Gdbots\Pbjx\Event\GetResponseEvent;
 use Gdbots\Pbjx\Event\PbjxEvent;
-use Gdbots\Pbjx\Event\PostResponseEvent;
+use Gdbots\Pbjx\Event\ResponseCreatedEvent;
 use Gdbots\Pbjx\Exception\InvalidArgumentException;
 use Gdbots\Pbjx\Exception\RequestHandlingFailed;
 use Gdbots\Pbjx\Exception\TooMuchRecursion;
@@ -173,7 +173,7 @@ class DefaultPbjx implements Pbjx
         }
 
         try {
-            $event = new PostResponseEvent($request, $response);
+            $event = new ResponseCreatedEvent($request, $response);
             $this->trigger($request, PbjxEvents::SUFFIX_AFTER_HANDLE, $event, false);
             $this->trigger($response, PbjxEvents::SUFFIX_CREATED, $event, false);
         } catch (\Exception $e) {
