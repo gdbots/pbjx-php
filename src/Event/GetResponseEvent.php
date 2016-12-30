@@ -56,6 +56,10 @@ class GetResponseEvent extends PbjxEvent
             throw new LogicException('Response can only be set one time.');
         }
 
+        if (!$response->has('ctx_request')) {
+            $response->set('ctx_request', $this->message);
+        }
+
         if (!$response->has('ctx_request_ref')) {
             $response->set('ctx_request_ref', $this->message->generateMessageRef());
         }

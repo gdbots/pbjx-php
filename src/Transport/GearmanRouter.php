@@ -53,4 +53,3 @@ class GearmanRouter implements Router
         return $this->prefix . static::DEFAULT_REQUEST_CHANNEL;
     }
 }
-
