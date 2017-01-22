@@ -1,9 +1,11 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Tests\Pbjx\Fixtures;
 
 use Gdbots\Pbjx\CommandHandler;
 use Gdbots\Pbjx\CommandHandlerTrait;
+use Gdbots\Pbjx\Pbjx;
 
 class SayHelloHandler implements CommandHandler
 {
@@ -14,8 +16,9 @@ class SayHelloHandler implements CommandHandler
 
     /**
      * @param SayHello $command
+     * @param Pbjx     $pbjx
      */
-    protected function handle(SayHello $command)
+    protected function handle(SayHello $command, Pbjx $pbjx): void
     {
         $this->handled = $command;
     }
@@ -25,7 +28,7 @@ class SayHelloHandler implements CommandHandler
      *
      * @return bool
      */
-    public function hasHandled(SayHello $command)
+    public function hasHandled(SayHello $command): bool
     {
         return $this->handled === $command;
     }

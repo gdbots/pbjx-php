@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Pbjx;
 
@@ -22,7 +23,7 @@ final class RegisteringServiceLocator extends AbstractServiceLocator
     /**
      * {@inheritdoc}
      */
-    public function getCommandHandler(SchemaCurie $curie)
+    public function getCommandHandler(SchemaCurie $curie): CommandHandler
     {
         if (isset($this->handlers[$curie->toString()])) {
             return $this->handlers[$curie->toString()];
@@ -34,7 +35,7 @@ final class RegisteringServiceLocator extends AbstractServiceLocator
     /**
      * {@inheritdoc}
      */
-    public function getRequestHandler(SchemaCurie $curie)
+    public function getRequestHandler(SchemaCurie $curie): RequestHandler
     {
         if (isset($this->handlers[$curie->toString()])) {
             return $this->handlers[$curie->toString()];
@@ -44,19 +45,19 @@ final class RegisteringServiceLocator extends AbstractServiceLocator
     }
 
     /**
-     * @param SchemaCurie $curie
+     * @param SchemaCurie    $curie
      * @param CommandHandler $handler
      */
-    public function registerCommandHandler(SchemaCurie $curie, CommandHandler $handler)
+    public function registerCommandHandler(SchemaCurie $curie, CommandHandler $handler): void
     {
         $this->handlers[$curie->toString()] = $handler;
     }
 
     /**
-     * @param SchemaCurie $curie
+     * @param SchemaCurie    $curie
      * @param RequestHandler $handler
      */
-    public function registerRequestHandler(SchemaCurie $curie, RequestHandler $handler)
+    public function registerRequestHandler(SchemaCurie $curie, RequestHandler $handler): void
     {
         $this->handlers[$curie->toString()] = $handler;
     }
@@ -64,7 +65,7 @@ final class RegisteringServiceLocator extends AbstractServiceLocator
     /**
      * @param Transport $transport
      */
-    public function setDefaultTransport(Transport $transport)
+    public function setDefaultTransport(Transport $transport): void
     {
         $this->defaultTransport = $transport;
     }
@@ -72,7 +73,7 @@ final class RegisteringServiceLocator extends AbstractServiceLocator
     /**
      * @param EventStore $eventStore
      */
-    public function setEventStore(EventStore $eventStore)
+    public function setEventStore(EventStore $eventStore): void
     {
         $this->eventStore = $eventStore;
     }
@@ -80,7 +81,7 @@ final class RegisteringServiceLocator extends AbstractServiceLocator
     /**
      * @param EventSearch $eventSearch
      */
-    public function setEventSearch(EventSearch $eventSearch)
+    public function setEventSearch(EventSearch $eventSearch): void
     {
         $this->eventSearch = $eventSearch;
     }

@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Pbjx\Exception;
 
@@ -11,12 +12,13 @@ use Gdbots\Schemas\Pbjx\Mixin\Request\Request;
 final class InvalidHandler extends \UnexpectedValueException implements GdbotsPbjxException
 {
     /**
-     * @param Command $command
+     * @param Command        $command
      * @param CommandHandler $handler
-     * @param string $message
-     * @return static
+     * @param string         $message
+     *
+     * @return self
      */
-    public static function forCommand(Command $command, CommandHandler $handler, $message = '')
+    public static function forCommand(Command $command, CommandHandler $handler, string $message = ''): self
     {
         return new static(
             sprintf(
@@ -30,12 +32,13 @@ final class InvalidHandler extends \UnexpectedValueException implements GdbotsPb
     }
 
     /**
-     * @param Request $request
+     * @param Request        $request
      * @param RequestHandler $handler
-     * @param string $message
-     * @return static
+     * @param string         $message
+     *
+     * @return self
      */
-    public static function forRequest(Request $request, RequestHandler $handler, $message = '')
+    public static function forRequest(Request $request, RequestHandler $handler, string $message = ''): self
     {
         return new static(
             sprintf(

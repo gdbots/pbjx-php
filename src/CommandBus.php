@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Pbjx;
 
@@ -15,17 +16,19 @@ interface CommandBus
      * @throws GdbotsPbjxException
      * @throws \Exception
      */
-    public function send(Command $command);
+    public function send(Command $command): void;
 
     /**
      * Processes a command directly.  DO NOT use this method in the
      * application as this is intended for the transports, consumers
      * and workers of the Pbjx system.
      *
+     * @internal
+     *
      * @param Command $command
      *
      * @throws GdbotsPbjxException
      * @throws \Exception
      */
-    public function receiveCommand(Command $command);
+    public function receiveCommand(Command $command): void;
 }

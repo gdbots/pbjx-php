@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Pbjx;
 
@@ -10,7 +11,7 @@ trait EventSubscriberTrait
      * @param Event $event
      * @param Pbjx  $pbjx
      */
-    public function onEvent(Event $event, Pbjx $pbjx)
+    public function onEvent(Event $event, Pbjx $pbjx): void
     {
         $method = 'on' . ucfirst($event::schema()->getHandlerMethodName(false));
         if (is_callable([$this, $method])) {
@@ -22,7 +23,7 @@ trait EventSubscriberTrait
      * @param Event[] $events
      * @param Pbjx    $pbjx
      */
-    public function onEvents(array $events, Pbjx $pbjx)
+    public function onEvents(array $events, Pbjx $pbjx): void
     {
         foreach ($events as $event) {
             $this->onEvent($event, $pbjx);

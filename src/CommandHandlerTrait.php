@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Pbjx;
 
@@ -10,12 +11,12 @@ trait CommandHandlerTrait
 {
     /**
      * @param Command $command
-     * @param Pbjx $pbjx
+     * @param Pbjx    $pbjx
      *
      * @throws GdbotsPbjxException
      * @throws \Exception
      */
-    public function handleCommand(Command $command, Pbjx $pbjx)
+    public function handleCommand(Command $command, Pbjx $pbjx): void
     {
         /** @var CommandHandlerTrait|CommandHandler $this */
         $method = $this->getMethodForCommand($command);
@@ -30,11 +31,11 @@ The CommandHandler needs the following code to operate:
 
     /**
      * @param Command \$command
-     * @param Pbjx \$pbjx
+     * @param Pbjx    \$pbjx
      *
      * @throws \Exception
      */
-    protected function $method(Command \$command, Pbjx \$pbjx)
+    protected function $method(Command \$command, Pbjx \$pbjx): void
     {
     }
 
@@ -49,9 +50,10 @@ MSG;
      * Returns the method that should be called for the given command.
      *
      * @param Command $command
+     *
      * @return string
      */
-    protected function getMethodForCommand(Command $command)
+    protected function getMethodForCommand(Command $command): string
     {
         return 'handle';
     }

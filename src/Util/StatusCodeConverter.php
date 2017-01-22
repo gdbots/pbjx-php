@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Pbjx\Util;
 
@@ -16,7 +17,7 @@ final class StatusCodeConverter
      *
      * @return int
      */
-    public static function vendorToHttp($code = Code::OK)
+    public static function vendorToHttp($code = Code::OK): int
     {
         if (Code::OK === $code) {
             return HttpCode::HTTP_OK;
@@ -82,7 +83,7 @@ final class StatusCodeConverter
      *
      * @return int
      */
-    public static function httpToVendor($httpCode = HttpCode::HTTP_OK)
+    public static function httpToVendor($httpCode = HttpCode::HTTP_OK): int
     {
         if ($httpCode < 400) {
             return Code::OK;

@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Pbjx\Event;
 
@@ -10,11 +11,11 @@ class TransportExceptionEvent extends TransportEvent
     protected $exception;
 
     /**
-     * @param string $transportName
-     * @param Message $message
+     * @param string     $transportName
+     * @param Message    $message
      * @param \Exception $exception
      */
-    public function __construct($transportName, Message $message, \Exception $exception)
+    public function __construct(string $transportName, Message $message, \Exception $exception)
     {
         parent::__construct($transportName, $message);
         $this->exception = $exception;
@@ -23,7 +24,7 @@ class TransportExceptionEvent extends TransportEvent
     /**
      * @return \Exception
      */
-    public function getException()
+    public function getException(): \Exception
     {
         return $this->exception;
     }
@@ -31,7 +32,7 @@ class TransportExceptionEvent extends TransportEvent
     /**
      * @return bool
      */
-    public function supportsRecursion()
+    public function supportsRecursion(): bool
     {
         return false;
     }

@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Pbjx\Exception;
 
@@ -12,7 +13,7 @@ final class HandlerNotFound extends \LogicException implements GdbotsPbjxExcepti
 
     /**
      * @param SchemaCurie $curie
-     * @param \Exception|null $previous
+     * @param \Exception  $previous
      */
     public function __construct(SchemaCurie $curie, \Exception $previous = null)
     {
@@ -27,7 +28,7 @@ final class HandlerNotFound extends \LogicException implements GdbotsPbjxExcepti
     /**
      * @return SchemaCurie
      */
-    public function getSchemaCurie()
+    public function getSchemaCurie(): SchemaCurie
     {
         return $this->curie;
     }

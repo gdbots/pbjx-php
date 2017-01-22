@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Pbjx;
 
@@ -7,7 +8,9 @@ final class PbjxEvents
     /**
      * Private constructor. This class is not meant to be instantiated.
      */
-    private function __construct() {}
+    private function __construct()
+    {
+    }
 
     /**
      * Suffixes are typically used by @see Pbjx::trigger

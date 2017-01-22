@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Pbjx;
 
@@ -11,13 +12,14 @@ trait RequestHandlerTrait
 {
     /**
      * @param Request $request
-     * @param Pbjx $pbjx
+     * @param Pbjx    $pbjx
+     *
      * @return Response
      *
      * @throws GdbotsPbjxException
      * @throws \Exception
      */
-    public function handleRequest(Request $request, Pbjx $pbjx)
+    public function handleRequest(Request $request, Pbjx $pbjx): Response
     {
         /** @var RequestHandlerTrait|RequestHandler $this */
         $method = $this->getMethodForRequest($request);
@@ -32,12 +34,13 @@ The RequestHandler needs the following code to operate:
 
     /**
      * @param Request \$request
-     * @param Pbjx \$pbjx
+     * @param Pbjx    \$pbjx
+     *
      * @return Response
      *
      * @throws \Exception
      */
-    protected function $method(Request \$request, Pbjx \$pbjx)
+    protected function $method(Request \$request, Pbjx \$pbjx): Response
     {
     }
 
@@ -52,9 +55,10 @@ MSG;
      * Returns the method that should be called for the given request.
      *
      * @param Request $request
+     *
      * @return string
      */
-    protected function getMethodForRequest(Request $request)
+    protected function getMethodForRequest(Request $request): string
     {
         return 'handle';
     }

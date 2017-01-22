@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Tests\Pbjx;
 
@@ -8,7 +9,7 @@ use Gdbots\Schemas\Pbjx\Event\EventExecutionFailedV1;
 use Gdbots\Tests\Pbjx\Fixtures\FailingEvent;
 use Gdbots\Tests\Pbjx\Fixtures\SimpleEvent;
 
-class DefaultEventBusTest extends AbstractBusTestCase
+class SimpleEventBusTest extends AbstractBusTestCase
 {
     public function testPublish()
     {

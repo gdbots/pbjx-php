@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Pbjx;
 
@@ -12,58 +13,60 @@ interface ServiceLocator
     /**
      * @return Pbjx
      */
-    public function getPbjx();
+    public function getPbjx(): Pbjx;
 
     /**
      * @return EventDispatcherInterface
      */
-    public function getDispatcher();
+    public function getDispatcher(): EventDispatcherInterface;
 
     /**
      * @return CommandBus
      */
-    public function getCommandBus();
+    public function getCommandBus(): CommandBus;
 
     /**
      * @return EventBus
      */
-    public function getEventBus();
+    public function getEventBus(): EventBus;
 
     /**
      * @return RequestBus
      */
-    public function getRequestBus();
+    public function getRequestBus(): RequestBus;
 
     /**
      * @return ExceptionHandler
      */
-    public function getExceptionHandler();
+    public function getExceptionHandler(): ExceptionHandler;
 
     /**
      * Returns the handler for the provided command.
      *
      * @param SchemaCurie $curie
+     *
      * @return CommandHandler
      * @throws Exception\HandlerNotFound
      */
-    public function getCommandHandler(SchemaCurie $curie);
+    public function getCommandHandler(SchemaCurie $curie): CommandHandler;
 
     /**
      * Returns the handler for the provided request.
      *
      * @param SchemaCurie $curie
+     *
      * @return RequestHandler
      * @throws Exception\HandlerNotFound
      */
-    public function getRequestHandler(SchemaCurie $curie);
+    public function getRequestHandler(SchemaCurie $curie): RequestHandler;
 
     /**
      * @return EventStore
      */
-    public function getEventStore();
+    public function getEventStore(): EventStore;
 
     /**
      * @return EventSearch
      */
-    public function getEventSearch();
+    public function getEventSearch(): EventSearch;
 }

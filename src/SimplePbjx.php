@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Pbjx;
 
@@ -9,31 +10,34 @@ use Gdbots\Pbjx\Event\BusExceptionEvent;
 use Gdbots\Pbjx\Event\GetResponseEvent;
 use Gdbots\Pbjx\Event\PbjxEvent;
 use Gdbots\Pbjx\Event\ResponseCreatedEvent;
+use Gdbots\Pbjx\EventSearch\EventSearch;
+use Gdbots\Pbjx\EventStore\EventStore;
 use Gdbots\Pbjx\Exception\InvalidArgumentException;
 use Gdbots\Pbjx\Exception\RequestHandlingFailed;
 use Gdbots\Pbjx\Exception\TooMuchRecursion;
 use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
 use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
 use Gdbots\Schemas\Pbjx\Mixin\Request\Request;
+use Gdbots\Schemas\Pbjx\Mixin\Response\Response;
 use Gdbots\Schemas\Pbjx\Request\RequestFailedResponse;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
-class DefaultPbjx implements Pbjx
+final class SimplePbjx implements Pbjx
 {
     /** @var EventDispatcherInterface */
-    protected $dispatcher;
+    private $dispatcher;
 
     /** @var ServiceLocator */
-    protected $locator;
+    private $locator;
 
     /** @var int */
-    protected $maxRecursion = 10;
+    private $maxRecursion = 10;
 
     /**
      * @param ServiceLocator $locator
-     * @param int $maxRecursion
+     * @param int            $maxRecursion
      */
-    public function __construct(ServiceLocator $locator, $maxRecursion = 10)
+    public function __construct(ServiceLocator $locator, int $maxRecursion = 10)
     {
         $this->locator = $locator;
         $this->dispatcher = $this->locator->getDispatcher();
@@ -44,8 +48,12 @@ class DefaultPbjx implements Pbjx
     /**
      * {@inheritdoc}
      */
-    public function trigger(Message $message, $suffix, PbjxEvent $event = null, $recursive = true)
+    public function trigger(Message $message, string $suffix, ?PbjxEvent $event = null, bool $recursive = true): Pbjx
     {
+        if ($message->isFrozen()) {
+            return $this;
+        }
+
         $suffix = '.' . trim($suffix, '.');
         if ('.' === $suffix) {
             throw new InvalidArgumentException('Trigger requires a non-empty suffix.');
@@ -93,8 +101,12 @@ class DefaultPbjx implements Pbjx
     /**
      * {@inheritdoc}
      */
-    public function triggerLifecycle(Message $message, $recursive = true)
+    public function triggerLifecycle(Message $message, bool $recursive = true): Pbjx
     {
+        if ($message->isFrozen()) {
+            return $this;
+        }
+
         $event = new PbjxEvent($message);
         $this->trigger($message, PbjxEvents::SUFFIX_BIND, $event, $recursive);
         $this->trigger($message, PbjxEvents::SUFFIX_VALIDATE, $event, $recursive);
@@ -105,8 +117,12 @@ class DefaultPbjx implements Pbjx
     /**
      * {@inheritdoc}
      */
-    public function copyContext(Message $from, Message $to)
+    public function copyContext(Message $from, Message $to): Pbjx
     {
+        if ($to->isFrozen()) {
+            return $this;
+        }
+
         if (!$to->has('ctx_causator_ref')) {
             $to->set('ctx_causator_ref', $from->generateMessageRef());
         }
@@ -131,31 +147,25 @@ class DefaultPbjx implements Pbjx
     /**
      * {@inheritdoc}
      */
-    public function send(Command $command)
+    public function send(Command $command): void
     {
-        if (!$command->isFrozen()) {
-            $this->triggerLifecycle($command);
-        }
-
+        $this->triggerLifecycle($command);
         $this->locator->getCommandBus()->send($command);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function publish(Event $event)
+    public function publish(Event $event): void
     {
-        if (!$event->isFrozen()) {
-            $this->triggerLifecycle($event);
-        }
-
+        $this->triggerLifecycle($event);
         $this->locator->getEventBus()->publish($event);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function request(Request $request)
+    public function request(Request $request): Response
     {
         $this->triggerLifecycle($request);
         $event = new GetResponseEvent($request);
@@ -186,7 +196,7 @@ class DefaultPbjx implements Pbjx
     /**
      * {@inheritdoc}
      */
-    public function getEventStore()
+    public function getEventStore(): EventStore
     {
         return $this->locator->getEventStore();
     }
@@ -194,18 +204,18 @@ class DefaultPbjx implements Pbjx
     /**
      * {@inheritdoc}
      */
-    public function getEventSearch()
+    public function getEventSearch(): EventSearch
     {
         return $this->locator->getEventSearch();
     }
 
     /**
      * @param Message $message
-     * @param Schema $schema
+     * @param Schema  $schema
      *
      * @return Message[]
      */
-    protected function getNestedMessages(Message $message, Schema $schema)
+    private function getNestedMessages(Message $message, Schema $schema): array
     {
         $messages = [];
 

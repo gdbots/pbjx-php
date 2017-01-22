@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Pbjx\Event;
 
@@ -10,10 +11,10 @@ class TransportEvent extends PbjxEvent
     protected $transportName;
 
     /**
-     * @param string $transportName
+     * @param string  $transportName
      * @param Message $message
      */
-    public function __construct($transportName, Message $message)
+    public function __construct(string $transportName, Message $message)
     {
         parent::__construct($message);
         $this->transportName = $transportName;
@@ -22,7 +23,7 @@ class TransportEvent extends PbjxEvent
     /**
      * @return string
      */
-    public function getTransportName()
+    public function getTransportName(): string
     {
         return $this->transportName;
     }
@@ -30,7 +31,7 @@ class TransportEvent extends PbjxEvent
     /**
      * @return bool
      */
-    public function supportsRecursion()
+    public function supportsRecursion(): bool
     {
         return false;
     }
