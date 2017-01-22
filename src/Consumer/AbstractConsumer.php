@@ -18,9 +18,6 @@ use Psr\Log\NullLogger;
 
 abstract class AbstractConsumer
 {
-    /* @var bool */
-    private $isRunning = false;
-
     /** @var ServiceLocator */
     protected $locator;
 
@@ -29,6 +26,9 @@ abstract class AbstractConsumer
 
     /* @var string */
     protected $consumerName;
+
+    /* @var bool */
+    private $isRunning = false;
 
     /**
      * @param ServiceLocator  $locator
@@ -155,7 +155,7 @@ abstract class AbstractConsumer
     /**
      * @param Message $message
      *
-     * @return Response|null
+     * @return Response
      */
     final protected function handleMessage(Message $message): ?Response
     {

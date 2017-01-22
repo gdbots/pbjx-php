@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Pbjx\Transport;
 
@@ -21,9 +22,9 @@ final class TransportEnvelope
 
     /**
      * @param Message $message
-     * @param string $serializer
+     * @param string  $serializer
      */
-    public function __construct(Message $message, $serializer)
+    public function __construct(Message $message, string $serializer)
     {
         $this->message = $message;
         $this->serializer = $serializer;
@@ -31,9 +32,10 @@ final class TransportEnvelope
 
     /**
      * @param string $serializer
+     *
      * @return Serializer
      */
-    public static function getSerializer($serializer)
+    public static function getSerializer(string $serializer): Serializer
     {
         if (!isset(self::$serializers[$serializer])) {
             switch ($serializer) {
@@ -61,9 +63,10 @@ final class TransportEnvelope
      * Recreates the envelope from a json string.
      *
      * @param string $envelope
+     *
      * @return self
      */
-    public static function fromString($envelope)
+    public static function fromString(string $envelope): self
     {
         $envelope = json_decode($envelope, true);
         if (!is_array($envelope)) {
@@ -94,19 +97,19 @@ final class TransportEnvelope
      *
      * @return string
      */
-    public function toString()
+    public function toString(): string
     {
         return json_encode([
             'serializer' => $this->serializer,
-            'is_replay' => $this->message->isReplay(),
-            'message' => self::getSerializer($this->serializer)->serialize($this->message)
+            'is_replay'  => $this->message->isReplay(),
+            'message'    => self::getSerializer($this->serializer)->serialize($this->message),
         ]);
     }
 
     /**
      * @return Message
      */
-    public function getMessage()
+    public function getMessage(): Message
     {
         return $this->message;
     }
@@ -114,7 +117,7 @@ final class TransportEnvelope
     /**
      * @return bool
      */
-    public function isReplay()
+    public function isReplay(): bool
     {
         return $this->message->isReplay();
     }
@@ -122,7 +125,7 @@ final class TransportEnvelope
     /**
      * @return string
      */
-    public function getSerializerUsed()
+    public function getSerializerUsed(): string
     {
         return $this->serializer;
     }

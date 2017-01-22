@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Pbjx\Transport;
 
@@ -42,7 +43,7 @@ abstract class AbstractTransport implements Transport
     /**
      * {@inheritdoc}
      */
-    public function sendCommand(Command $command)
+    public function sendCommand(Command $command): void
     {
         $transportEvent = new TransportEvent($this->transportName, $command);
         $this->dispatcher->dispatch(PbjxEvents::TRANSPORT_BEFORE_SEND, $transportEvent);
@@ -63,9 +64,10 @@ abstract class AbstractTransport implements Transport
      * Override in the transport to handle the actual send.
      *
      * @param Command $command
+     *
      * @throws \Exception
      */
-    protected function doSendCommand(Command $command)
+    protected function doSendCommand(Command $command): void
     {
         $this->locator->getCommandBus()->receiveCommand($command);
     }
@@ -73,7 +75,7 @@ abstract class AbstractTransport implements Transport
     /**
      * {@inheritdoc}
      */
-    public function sendEvent(Event $event)
+    public function sendEvent(Event $event): void
     {
         $transportEvent = new TransportEvent($this->transportName, $event);
         $this->dispatcher->dispatch(PbjxEvents::TRANSPORT_BEFORE_SEND, $transportEvent);
@@ -94,9 +96,10 @@ abstract class AbstractTransport implements Transport
      * Override in the transport to handle the actual send.
      *
      * @param Event $event
+     *
      * @throws \Exception
      */
-    protected function doSendEvent(Event $event)
+    protected function doSendEvent(Event $event): void
     {
         $this->locator->getEventBus()->receiveEvent($event);
     }
@@ -104,7 +107,7 @@ abstract class AbstractTransport implements Transport
     /**
      * {@inheritdoc}
      */
-    public function sendRequest(Request $request)
+    public function sendRequest(Request $request): Response
     {
         $transportEvent = new TransportEvent($this->transportName, $request);
         $this->dispatcher->dispatch(PbjxEvents::TRANSPORT_BEFORE_SEND, $transportEvent);
@@ -137,20 +140,22 @@ abstract class AbstractTransport implements Transport
      * Override in the transport to handle the actual send.
      *
      * @param Request $request
+     *
      * @return Response
      * @throws \Exception
      */
-    protected function doSendRequest(Request $request)
+    protected function doSendRequest(Request $request): Response
     {
         return $this->locator->getRequestBus()->receiveRequest($request);
     }
 
     /**
-     * @param Request $request
+     * @param Request    $request
      * @param \Exception $exception
+     *
      * @return Response
      */
-    protected function createResponseForFailedRequest(Request $request, \Exception $exception)
+    protected function createResponseForFailedRequest(Request $request, \Exception $exception): Response
     {
         $code = $exception->getCode() > 0 ? $exception->getCode() : Code::UNKNOWN;
 

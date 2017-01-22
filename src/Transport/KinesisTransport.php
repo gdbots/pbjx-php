@@ -1,24 +1,24 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Pbjx\Transport;
 
 use Aws\Kinesis\KinesisClient;
-use Aws\Result;
 use Gdbots\Pbjx\ServiceLocator;
 use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
 use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
 
-class KinesisTransport extends AbstractTransport
+final class KinesisTransport extends AbstractTransport
 {
     /** @var KinesisClient */
-    protected $client;
+    private $client;
 
     /** @var PartitionableRouter */
-    protected $router;
+    private $router;
 
     /**
-     * @param ServiceLocator $locator
-     * @param KinesisClient $client
+     * @param ServiceLocator      $locator
+     * @param KinesisClient       $client
      * @param PartitionableRouter $router
      */
     public function __construct(ServiceLocator $locator, KinesisClient $client, PartitionableRouter $router)
@@ -33,27 +33,17 @@ class KinesisTransport extends AbstractTransport
      * @see KinesisClient::putRecord
      *
      * @param Command $command
+     *
      * @throws \Exception
      */
-    protected function doSendCommand(Command $command)
+    protected function doSendCommand(Command $command): void
     {
         $envelope = new TransportEnvelope($command, 'json');
-        $result = $this->client->putRecord([
-            'StreamName' => $this->router->forCommand($command),
+        $this->client->putRecord([
+            'StreamName'   => $this->router->forCommand($command),
             'PartitionKey' => $this->router->partitionForCommand($command),
-            'Data' => $envelope->toString(),
+            'Data'         => $envelope->toString(),
         ]);
-
-        $this->afterSendCommand($envelope, $result);
-    }
-
-    /**
-     * @param TransportEnvelope $envelope
-     * @param Result $result
-     */
-    protected function afterSendCommand(TransportEnvelope $envelope, Result $result)
-    {
-        // override to log or process aws result
     }
 
     /**
@@ -61,26 +51,16 @@ class KinesisTransport extends AbstractTransport
      * @see KinesisClient::putRecord
      *
      * @param Event $event
+     *
      * @throws \Exception
      */
-    protected function doSendEvent(Event $event)
+    protected function doSendEvent(Event $event): void
     {
         $envelope = new TransportEnvelope($event, 'json');
-        $result = $this->client->putRecord([
-            'StreamName' => $this->router->forEvent($event),
+        $this->client->putRecord([
+            'StreamName'   => $this->router->forEvent($event),
             'PartitionKey' => $this->router->partitionForEvent($event),
-            'Data' => $envelope->toString(),
+            'Data'         => $envelope->toString(),
         ]);
-
-        $this->afterSendEvent($envelope, $result);
-    }
-
-    /**
-     * @param TransportEnvelope $envelope
-     * @param Result $result
-     */
-    protected function afterSendEvent(TransportEnvelope $envelope, Result $result)
-    {
-        // override to log or process aws result
     }
 }

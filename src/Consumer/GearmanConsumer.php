@@ -158,7 +158,7 @@ final class GearmanConsumer extends AbstractConsumer
     /**
      * @param \GearmanJob $job
      *
-     * @return null|string
+     * @return string
      *
      * @throws \Exception
      */

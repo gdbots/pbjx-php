@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Pbjx\Transport;
 
@@ -22,9 +23,9 @@ class GearmanRouter implements Router
     protected $prefix;
 
     /**
-     * @param string|null $prefix
+     * @param string $prefix
      */
-    public function __construct($prefix = null)
+    public function __construct(?string $prefix = null)
     {
         $this->prefix = $prefix;
     }
@@ -32,7 +33,7 @@ class GearmanRouter implements Router
     /**
      * {@inheritdoc}
      */
-    public function forCommand(Command $command)
+    public function forCommand(Command $command): string
     {
         return $this->prefix . static::DEFAULT_COMMAND_CHANNEL;
     }
@@ -40,7 +41,7 @@ class GearmanRouter implements Router
     /**
      * {@inheritdoc}
      */
-    public function forEvent(Event $event)
+    public function forEvent(Event $event): string
     {
         return $this->prefix . static::DEFAULT_EVENT_CHANNEL;
     }
@@ -48,7 +49,7 @@ class GearmanRouter implements Router
     /**
      * {@inheritdoc}
      */
-    public function forRequest(Request $request)
+    public function forRequest(Request $request): string
     {
         return $this->prefix . static::DEFAULT_REQUEST_CHANNEL;
     }

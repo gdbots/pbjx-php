@@ -122,6 +122,9 @@ interface EventStore
      * Reads events (forward only) from ALL streams and executes the $receiver for
      * every event returned, e.g. "$receiver($event, $streamId);".
      *
+     * IMPORANT! The order of events returned will be ordered per stream
+     * but not necessarily globally ordered.
+     *
      * @param callable  $receiver The callable that will receive the event. "function f(Event $event, StreamId $streamId)".
      * @param Microtime $since    Return events greater than this time (exclusive).
      * @param Microtime $until    Return events less than this time (exclusive).

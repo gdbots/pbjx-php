@@ -1,5 +1,8 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Pbjx\Transport;
 
-class InMemoryTransport extends AbstractTransport {}
+final class InMemoryTransport extends AbstractTransport
+{
+}
