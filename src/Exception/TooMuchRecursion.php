@@ -8,12 +8,10 @@ use Gdbots\Schemas\Pbjx\Enum\Code;
 final class TooMuchRecursion extends LogicException implements GdbotsPbjxException
 {
     /**
-     * @param string     $message
-     * @param int        $code
-     * @param \Exception $previous
+     * @param string $message
      */
-    public function __construct(string $message = '', int $code = Code::INVALID_ARGUMENT, \Exception $previous = null)
+    public function __construct(string $message = '')
     {
-        parent::__construct($message, $code, $previous);
+        parent::__construct($message, Code::INVALID_ARGUMENT);
     }
 }

@@ -15,7 +15,7 @@ final class HandlerNotFound extends \LogicException implements GdbotsPbjxExcepti
      * @param SchemaCurie $curie
      * @param \Exception  $previous
      */
-    public function __construct(SchemaCurie $curie, \Exception $previous = null)
+    public function __construct(SchemaCurie $curie, ?\Exception $previous = null)
     {
         $this->curie = $curie;
         parent::__construct(

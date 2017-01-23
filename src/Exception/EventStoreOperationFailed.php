@@ -12,7 +12,7 @@ final class EventStoreOperationFailed extends \RuntimeException implements Gdbot
      * @param int        $code
      * @param \Exception $previous
      */
-    public function __construct(string $message = '', int $code = Code::INTERNAL, \Exception $previous = null)
+    public function __construct(string $message = '', int $code = Code::INTERNAL, ?\Exception $previous = null)
     {
         parent::__construct($message, $code, $previous);
     }

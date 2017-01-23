@@ -1,6 +1,7 @@
 <?php
+declare(strict_types = 1);
 
-namespace Gdbots\Pbjx\EventSearch;
+namespace Gdbots\Pbjx\EventSearch\Elastica;
 
 use Elastica\Client;
 use Elastica\Index;
@@ -18,7 +19,7 @@ use Gdbots\Schemas\Pbjx\Mixin\SearchEventsRequest\SearchEventsRequest;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
-class ElasticaIndexManager
+class IndexManager
 {
     /**
      * Our "occurred_at" field is a 16 digit integer (seconds + 6 digits microtime)
@@ -55,13 +56,24 @@ class ElasticaIndexManager
     protected $logger;
 
     /**
-     * @param string               $indexPrefix
-     * @param LoggerInterface|null $logger
+     * @param string          $indexPrefix
+     * @param LoggerInterface $logger
      */
-    public function __construct($indexPrefix, LoggerInterface $logger = null)
+    public function __construct(string $indexPrefix, ?LoggerInterface $logger = null)
     {
         $this->indexPrefix = rtrim($indexPrefix, '-') . '-';
         $this->logger = $logger ?: new NullLogger();
+    }
+
+    /**
+     * Returns the index prefix which can be used in template
+     * creation or finding/updating indexes.
+     *
+     * @return string
+     */
+    public function getIndexPrefix(): string
+    {
+        return rtrim($this->indexPrefix, '-');
     }
 
     /**
@@ -71,11 +83,10 @@ class ElasticaIndexManager
      *
      * @return string
      */
-    public function getIndexNameForWrite(Indexed $event)
+    public function getIndexNameForWrite(Indexed $event): string
     {
         /** @var \DateTime $occurredAt */
         $occurredAt = $event->get('occurred_at')->toDateTime();
-
         return $this->indexPrefix . $this->getIndexIntervalSuffix($occurredAt);
     }
 
@@ -87,7 +98,7 @@ class ElasticaIndexManager
      *
      * @return string[]
      */
-    public function getIndexNamesForSearch(SearchEventsRequest $request)
+    public function getIndexNamesForSearch(SearchEventsRequest $request): array
     {
         /** @var \DateTime $after */
         /** @var \DateTime $before */
@@ -131,6 +142,22 @@ class ElasticaIndexManager
     }
 
     /**
+     * Returns the suffix that should be used for routing writes
+     * and search requests for a given date.
+     *
+     * todo: make this configureable, right now we're using quarterly by default
+     *
+     * @param \DateTime $date
+     *
+     * @return string
+     */
+    public function getIndexIntervalSuffix(\DateTime $date): string
+    {
+        $quarter = ceil($date->format('n') / 3);
+        return $date->format('Y') . 'q' . $quarter;
+    }
+
+    /**
      * Creates an index template in elastic search.
      *
      * @link https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-templates.html
@@ -138,7 +165,7 @@ class ElasticaIndexManager
      * @param Client $client
      * @param string $name
      */
-    final public function updateTemplate(Client $client, $name)
+    final public function updateTemplate(Client $client, string $name): void
     {
         $fakeIndex = new Index($client, $name);
         $mappings = [];
@@ -175,10 +202,12 @@ class ElasticaIndexManager
      * writing data to.  If this fails you'll need to delete the index and
      * re-index all data for that time frame.
      *
+     * The name can contain wildcards.
+     *
      * @param Client $client
      * @param string $name
      */
-    final public function updateIndex(Client $client, $name)
+    final public function updateIndex(Client $client, string $name): void
     {
         $index = new Index($client, $name);
 
@@ -246,33 +275,16 @@ class ElasticaIndexManager
     /**
      * @param array $params
      */
-    protected function beforeUpdateTemplate(array &$params)
+    protected function beforeUpdateTemplate(array &$params): void
     {
         // Override to customize the template params before it's pushed to elastic search.
     }
 
     /**
-     * Returns the suffix that should be used for routing writes
-     * and search requests for a given date.
-     *
-     * todo: make this configureable, right now we're using quarterly by default
-     *
-     * @param \DateTime $date
-     *
-     * @return string
-     */
-    protected function getIndexIntervalSuffix(\DateTime $date)
-    {
-        $quarter = ceil($date->format('n') / 3);
-
-        return $date->format('Y') . 'q' . $quarter;
-    }
-
-    /**
-     * @param Schema  $schema
      * @param Mapping $mapping
+     * @param Schema  $schema
      */
-    protected function filterMapping(Schema $schema, Mapping $mapping)
+    protected function filterMapping(Mapping $mapping, Schema $schema): void
     {
         /*
          * Override to customize the mapping before it's pushed to elastic search.
@@ -286,7 +298,7 @@ class ElasticaIndexManager
     /**
      * @return Mapping[]
      */
-    private function createMappings()
+    private function createMappings(): array
     {
         $schemas = MessageResolver::findAllUsingMixin(IndexedV1Mixin::create());
         $mappingFactory = new MappingFactory();
@@ -306,10 +318,10 @@ class ElasticaIndexManager
                 $mapping->setParam('dynamic_templates', $dynamicTemplates);
             }
 
-            $this->filterMapping($schema, $mapping);
+            $this->filterMapping($mapping, $schema);
             $method = 'filterMappingFor' . ucfirst($schema->getHandlerMethodName(false));
             if (is_callable([$this, $method])) {
-                $this->$method($schema, $mapping);
+                $this->$method($mapping, $schema);
             }
 
             $mappings[$schema->getCurie()->getMessage()] = $mapping;

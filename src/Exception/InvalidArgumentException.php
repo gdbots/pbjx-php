@@ -12,7 +12,7 @@ final class InvalidArgumentException extends \InvalidArgumentException implement
      * @param int        $code
      * @param \Exception $previous
      */
-    public function __construct(string $message = '', int $code = Code::INVALID_ARGUMENT, \Exception $previous = null)
+    public function __construct(string $message = '', int $code = Code::INVALID_ARGUMENT, ?\Exception $previous = null)
     {
         parent::__construct($message, $code, $previous);
     }
