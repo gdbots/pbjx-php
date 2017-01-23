@@ -2,13 +2,6 @@
 This changelog references the relevant changes done in 1.x versions.
 
 
-## v1.1.0
-* Adds `EventStore` and `EventSearch` with DynamoDb and Elastica implementations.
-* Transports now use a `TransportEnvelope` so the consumers can handle multiple serializers and properly set replay
-  flag on messages that are handled in a separate process or separate machine entirely (e.g. gearman)
-* `Transport` and `Router` interfaces moved to `Gdbots\Pbjx\Transport\*`.
-
-
 ## v1.0.1
 * Remove all references to `stream_id` as it's removed from the `gdbots/schemas` library.
 

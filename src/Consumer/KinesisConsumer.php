@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Pbjx\Consumer;
 
@@ -11,13 +12,13 @@ use Psr\Log\LoggerInterface;
  * @link https://github.com/awslabs/amazon-kinesis-client
  * @link https://github.com/awslabs/amazon-kinesis-client/blob/master/src/main/java/com/amazonaws/services/kinesis/multilang/MultiLangDaemon.java
  */
-class KinesisConsumer extends AbstractConsumer
+final class KinesisConsumer extends AbstractConsumer
 {
     /**
-     * @param ServiceLocator $locator
+     * @param ServiceLocator  $locator
      * @param LoggerInterface $logger
      */
-    public function __construct(ServiceLocator $locator, LoggerInterface $logger = null)
+    public function __construct(ServiceLocator $locator, ?LoggerInterface $logger = null)
     {
         parent::__construct($locator, $logger);
     }
@@ -26,7 +27,7 @@ class KinesisConsumer extends AbstractConsumer
      * Reads from STDIN and processes records.
      * todo: write the multilangdaemon handlers
      */
-    protected function work()
+    protected function work(): void
     {
         throw new LogicException(__CLASS__ . '::' . __FUNCTION__ . ' is not implemented yet.');
         /*

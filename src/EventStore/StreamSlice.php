@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Pbjx\EventStore;
 
@@ -7,7 +8,7 @@ use Gdbots\Pbj\WellKnown\Microtime;
 use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
 use Gdbots\Schemas\Pbjx\StreamId;
 
-final class EventCollection implements ToArray, \JsonSerializable, \IteratorAggregate, \Countable
+final class StreamSlice implements ToArray, \JsonSerializable, \IteratorAggregate, \Countable
 {
     /** @var Event[] */
     private $events = [];
@@ -43,9 +44,9 @@ final class EventCollection implements ToArray, \JsonSerializable, \IteratorAggr
 
     /**
      * @param Event[]  $events     An array of events.
-     * @param StreamId $streamId   The id of the stream to read from, e.g. "article:1234"
+     * @param StreamId $streamId   The id of the stream the events are from, e.g. "article:1234"
      * @param bool     $forward    When true, the events are read from oldest to newest, otherwise newest to oldest.
-     * @param bool     $consistent An eventually consistent read was used to get this collection.
+     * @param bool     $consistent An eventually consistent read was used to get this slice.
      * @param bool     $hasMore    True if there are more events in the stream.
      */
     public function __construct(
@@ -54,8 +55,7 @@ final class EventCollection implements ToArray, \JsonSerializable, \IteratorAggr
         $forward = true,
         $consistent = false,
         $hasMore = false
-    )
-    {
+    ) {
         $this->events = $events;
         $this->streamId = $streamId;
         $this->forward = $forward;
@@ -70,7 +70,7 @@ final class EventCollection implements ToArray, \JsonSerializable, \IteratorAggr
     {
         return [
             'events'     => $this->events,
-            'stream_id'  => (string) $this->streamId ?: null,
+            'stream_id'  => (string)$this->streamId ?: null,
             'forward'    => $this->forward,
             'consistent' => $this->consistent,
             'has_more'   => $this->hasMore,
@@ -96,7 +96,7 @@ final class EventCollection implements ToArray, \JsonSerializable, \IteratorAggr
     /**
      * @return bool
      */
-    public function hasStreamId()
+    public function hasStreamId(): bool
     {
         return null !== $this->streamId;
     }
@@ -104,7 +104,7 @@ final class EventCollection implements ToArray, \JsonSerializable, \IteratorAggr
     /**
      * @return StreamId
      */
-    public function getStreamId()
+    public function getStreamId(): ?StreamId
     {
         return $this->streamId;
     }
@@ -112,7 +112,7 @@ final class EventCollection implements ToArray, \JsonSerializable, \IteratorAggr
     /**
      * @return bool
      */
-    public function isForward()
+    public function isForward(): bool
     {
         return $this->forward;
     }
@@ -120,7 +120,7 @@ final class EventCollection implements ToArray, \JsonSerializable, \IteratorAggr
     /**
      * @return bool
      */
-    public function isConsistent()
+    public function isConsistent(): bool
     {
         return $this->consistent;
     }
@@ -128,7 +128,7 @@ final class EventCollection implements ToArray, \JsonSerializable, \IteratorAggr
     /**
      * @return bool
      */
-    public function hasMore()
+    public function hasMore(): bool
     {
         return $this->hasMore;
     }
@@ -144,7 +144,7 @@ final class EventCollection implements ToArray, \JsonSerializable, \IteratorAggr
     /**
      * @return Microtime|null
      */
-    public function getLastOccurredAt()
+    public function getLastOccurredAt(): ?Microtime
     {
         $event = end($this->events);
         reset($this->events);

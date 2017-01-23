@@ -1,12 +1,13 @@
 <?php
+declare(strict_types = 1);
 
-namespace Gdbots\Pbjx\EventSearch;
+namespace Gdbots\Pbjx\EventSearch\Elastica;
 
 use Elastica\Client;
 use Gdbots\Pbjx\Exception\InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 
-class ElasticaClientManager
+class ClientManager
 {
     /**
      * An array of clusters keyed by a name.  This factory will create the elastica
@@ -33,19 +34,19 @@ class ElasticaClientManager
      *
      * @var array
      */
-    protected $clusters;
+    private $clusters;
 
     /** @var LoggerInterface */
-    protected $logger;
+    private $logger;
 
     /** @var Client[] */
-    protected $clients = [];
+    private $clients = [];
 
     /**
      * @param array           $clusters
      * @param LoggerInterface $logger
      */
-    public function __construct(array $clusters, LoggerInterface $logger = null)
+    public function __construct(array $clusters, ?LoggerInterface $logger = null)
     {
         $this->clusters = $clusters;
         $this->logger = $logger;
@@ -60,7 +61,7 @@ class ElasticaClientManager
      *
      * @return Client
      */
-    public function getClient($cluster = 'default')
+    final public function getClient(string $cluster = 'default'): Client
     {
         if (isset($this->clients[$cluster])) {
             return $this->clients[$cluster];
@@ -109,7 +110,7 @@ class ElasticaClientManager
      *
      * @return bool
      */
-    public function hasCluster($cluster)
+    final public function hasCluster(string $cluster): bool
     {
         return isset($this->clusters[$cluster]);
     }
@@ -119,7 +120,7 @@ class ElasticaClientManager
      *
      * @return string[]
      */
-    public function getAvailableClusters()
+    final public function getAvailableClusters(): array
     {
         return array_keys($this->clusters);
     }
@@ -130,7 +131,7 @@ class ElasticaClientManager
      *
      * @return array
      */
-    protected function configureCluster($cluster, array $config)
+    protected function configureCluster(string $cluster, array $config): array
     {
         return $config;
     }

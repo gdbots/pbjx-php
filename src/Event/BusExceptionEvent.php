@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Pbjx\Event;
 
@@ -10,7 +11,7 @@ class BusExceptionEvent extends PbjxEvent
     protected $exception;
 
     /**
-     * @param Message $message
+     * @param Message    $message
      * @param \Exception $exception
      */
     public function __construct(Message $message, \Exception $exception)
@@ -22,7 +23,7 @@ class BusExceptionEvent extends PbjxEvent
     /**
      * @return \Exception
      */
-    public function getException()
+    public function getException(): \Exception
     {
         return $this->exception;
     }
@@ -30,7 +31,7 @@ class BusExceptionEvent extends PbjxEvent
     /**
      * @return bool
      */
-    public function supportsRecursion()
+    public function supportsRecursion(): bool
     {
         return false;
     }

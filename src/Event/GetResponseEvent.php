@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Pbjx\Event;
 
@@ -25,7 +26,7 @@ class GetResponseEvent extends PbjxEvent
     /**
      * @return Request
      */
-    public function getRequest()
+    public function getRequest(): Request
     {
         return $this->message;
     }
@@ -33,7 +34,7 @@ class GetResponseEvent extends PbjxEvent
     /**
      * @return bool
      */
-    public function hasResponse()
+    public function hasResponse(): bool
     {
         return null !== $this->response;
     }
@@ -41,16 +42,17 @@ class GetResponseEvent extends PbjxEvent
     /**
      * @return Response
      */
-    public function getResponse()
+    public function getResponse(): Response
     {
         return $this->response;
     }
 
     /**
      * @param Response $response
+     *
      * @throws LogicException
      */
-    public function setResponse(Response $response)
+    public function setResponse(Response $response): void
     {
         if ($this->hasResponse()) {
             throw new LogicException('Response can only be set one time.');
@@ -75,7 +77,7 @@ class GetResponseEvent extends PbjxEvent
     /**
      * @return bool
      */
-    public function supportsRecursion()
+    public function supportsRecursion(): bool
     {
         return false;
     }

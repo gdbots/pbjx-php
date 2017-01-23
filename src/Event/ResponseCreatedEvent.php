@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Pbjx\Event;
 
@@ -14,7 +15,7 @@ class ResponseCreatedEvent extends PbjxEvent
     protected $response;
 
     /**
-     * @param Request $request
+     * @param Request  $request
      * @param Response $response
      */
     public function __construct(Request $request, Response $response)
@@ -26,7 +27,7 @@ class ResponseCreatedEvent extends PbjxEvent
     /**
      * @return Request
      */
-    public function getRequest()
+    public function getRequest(): Request
     {
         return $this->message;
     }
@@ -34,7 +35,7 @@ class ResponseCreatedEvent extends PbjxEvent
     /**
      * @return Response
      */
-    public function getResponse()
+    public function getResponse(): Response
     {
         return $this->response;
     }
@@ -42,7 +43,7 @@ class ResponseCreatedEvent extends PbjxEvent
     /**
      * @return bool
      */
-    public function supportsRecursion()
+    public function supportsRecursion(): bool
     {
         return false;
     }

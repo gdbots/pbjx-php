@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Pbjx\EventStore;
 
@@ -9,38 +10,32 @@ use Gdbots\Schemas\Pbjx\StreamId;
 
 /**
  * If you want events to be published after being stored you can use this
- * class as a decorator to the your event store.
+ * class as a decorator to the EventStore.
  * @link http://symfony.com/doc/current/components/dependency_injection/advanced.html#decorating-services
  *
  * It is recommended that you have a service reading events from the event
  * store in a separate process (e.g. kinesis stream on dynamodb table).
  * @link http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Streams.html
- *
- * Useful for debugging, NOT recommended for production as dispatching/publishing
- * might fail even after successful storage of the event.
  */
-class TwoPhaseCommitEventStore implements EventStore
+final class TwoPhaseCommitEventStore implements EventStore
 {
     /** @var Pbjx */
-    protected $pbjx;
+    private $pbjx;
 
     /** @var EventStore */
-    protected $next;
+    private $next;
 
     /**
-     * In some cases you want to disable 2pc (imports for example).  In this scenario
-     * set "DISABLE_PBJX_2PC_EVENT_STORE" env variable before running your symfony command.
-     *
-     * DISABLE_PBJX_2PC_EVENT_STORE=1 php bin/console --env=prod some-command
+     * In some cases you want to disable 2pc (imports/replays for example).
      *
      * @var bool
      */
-    protected $disabled = false;
+    private $disabled = false;
 
     /**
-     * @param Pbjx $pbjx
+     * @param Pbjx       $pbjx
      * @param EventStore $next
-     * @param bool $disabled
+     * @param bool       $disabled
      */
     public function __construct(Pbjx $pbjx, EventStore $next, $disabled = false)
     {
@@ -52,9 +47,29 @@ class TwoPhaseCommitEventStore implements EventStore
     /**
      * {@inheritdoc}
      */
-    public function putEvents(StreamId $streamId, array $events, $expectedEtag = null, array $hints = [])
+    public function createStorage(array $context = []): void
     {
-        $this->next->putEvents($streamId, $events, $expectedEtag, $hints);
+        $this->next->createStorage($context);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function describeStorage(array $context = []): string
+    {
+        return $this->next->describeStorage($context);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function putEvents(
+        StreamId $streamId,
+        array $events,
+        ?string $expectedEtag = null,
+        array $context = []
+    ): void {
+        $this->next->putEvents($streamId, $events, $expectedEtag, $context);
         if ($this->disabled) {
             return;
         }
@@ -68,34 +83,39 @@ class TwoPhaseCommitEventStore implements EventStore
     /**
      * {@inheritdoc}
      */
-    public function getEvents(
+    public function getStreamSlice(
         StreamId $streamId,
-        Microtime $since = null,
-        $count = 25,
-        $forward = true,
-        $consistent = false,
-        array $hints = []
-    ) {
-        return $this->next->getEvents($streamId, $since, $count, $forward, $consistent, $hints);
+        ?Microtime $since = null,
+        int $count = 25,
+        bool $forward = true,
+        bool $consistent = false,
+        array $context = []
+    ): StreamSlice {
+        return $this->next->getStreamSlice($streamId, $since, $count, $forward, $consistent, $context);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function streamEvents(StreamId $streamId, Microtime $since = null, array $hints = [])
-    {
-        return $this->next->streamEvents($streamId, $since, $hints);
+    public function pipeEvents(
+        StreamId $streamId,
+        callable $receiver,
+        ?Microtime $since = null,
+        ?Microtime $until = null,
+        array $context = []
+    ): void {
+        $this->next->pipeEvents($streamId, $receiver, $since, $until, $context);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function streamAllEvents(
-        \Closure $callback,
-        Microtime $since = null,
-        Microtime $until = null,
-        array $hints = []
-    ) {
-        $this->next->streamAllEvents($callback, $since, $until, $hints);
+    public function pipeAllEvents(
+        callable $receiver,
+        ?Microtime $since = null,
+        ?Microtime $until = null,
+        array $context = []
+    ): void {
+        $this->next->pipeAllEvents($receiver, $since, $until, $context);
     }
 }

@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Pbjx\Consumer;
 
@@ -17,9 +18,6 @@ use Psr\Log\NullLogger;
 
 abstract class AbstractConsumer
 {
-    /* @var bool */
-    private $isRunning = false;
-
     /** @var ServiceLocator */
     protected $locator;
 
@@ -29,11 +27,14 @@ abstract class AbstractConsumer
     /* @var string */
     protected $consumerName;
 
+    /* @var bool */
+    private $isRunning = false;
+
     /**
-     * @param ServiceLocator $locator
+     * @param ServiceLocator  $locator
      * @param LoggerInterface $logger
      */
-    public function __construct(ServiceLocator $locator, LoggerInterface $logger = null)
+    public function __construct(ServiceLocator $locator, ?LoggerInterface $logger = null)
     {
         $this->locator = $locator;
         $this->logger = $logger ?: new NullLogger();
@@ -44,9 +45,10 @@ abstract class AbstractConsumer
 
     /**
      * Runs the consumer until a signal is caught or the max runtime is reached.
+     *
      * @param int $maxRuntime
      */
-    final public function run($maxRuntime = 300)
+    final public function run(int $maxRuntime = 300): void
     {
         if ($this->isRunning) {
             $this->logger->notice(sprintf('Consumer [%s] is already running.', $this->consumerName));
@@ -72,7 +74,7 @@ abstract class AbstractConsumer
         do {
             try {
                 $this->work();
-            } catch(\Exception $e) {
+            } catch (\Exception $e) {
                 $this->stop();
                 $this->logger->critical(
                     sprintf(
@@ -82,7 +84,7 @@ abstract class AbstractConsumer
                     ),
                     [
                         'exception' => $e,
-                        'consumer' => $this->consumerName,
+                        'consumer'  => $this->consumerName,
                     ]
                 );
 
@@ -112,7 +114,7 @@ abstract class AbstractConsumer
      * Stops the consumer.  This allows it to finish its current work
      * and perform a clean shutdown if possible.
      */
-    final public function stop()
+    final public function stop(): void
     {
         $this->isRunning = false;
     }
@@ -120,7 +122,7 @@ abstract class AbstractConsumer
     /**
      * @return bool
      */
-    final public function isRunning()
+    final public function isRunning(): bool
     {
         return $this->isRunning;
     }
@@ -128,7 +130,7 @@ abstract class AbstractConsumer
     /**
      * This runs prior to the run loop starting.
      */
-    protected function setup()
+    protected function setup(): void
     {
         // override for custom setup.
     }
@@ -137,7 +139,7 @@ abstract class AbstractConsumer
      * Override in the concrete consumer to perform the actual work.
      * This is called repeatly in a while loop when the consumer is running.
      */
-    protected function work()
+    protected function work(): void
     {
         // concrete consumer should do something.
     }
@@ -145,16 +147,17 @@ abstract class AbstractConsumer
     /**
      * This runs after to the run loop stops.
      */
-    protected function teardown()
+    protected function teardown(): void
     {
         // override for custom teardown.
     }
 
     /**
      * @param Message $message
-     * @return Message|null
+     *
+     * @return Response
      */
-    final protected function handleMessage(Message $message)
+    final protected function handleMessage(Message $message): ?Response
     {
         if ($message instanceof Command) {
             $this->handleCommand($message);
@@ -174,7 +177,7 @@ abstract class AbstractConsumer
     /**
      * @param Command $command
      */
-    private function handleCommand(Command $command)
+    private function handleCommand(Command $command): void
     {
         $this->locator->getCommandBus()->receiveCommand($command);
     }
@@ -182,24 +185,26 @@ abstract class AbstractConsumer
     /**
      * @param Event $event
      */
-    private function handleEvent(Event $event)
+    private function handleEvent(Event $event): void
     {
         $this->locator->getEventBus()->receiveEvent($event);
     }
 
     /**
      * @param Request $request
+     *
      * @return Response
      */
-    private function handleRequest(Request $request)
+    private function handleRequest(Request $request): Response
     {
         return $this->locator->getRequestBus()->receiveRequest($request);
     }
 
     /**
-     * @param int $signo
+     * @param int   $signo
+     * @param mixed $signinfo
      */
-    final public function handleSignals($signo)
+    final public function handleSignals(int $signo, $signinfo = null)
     {
         switch ($signo) {
             case SIGINT:

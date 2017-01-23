@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Pbjx;
 
@@ -41,7 +42,7 @@ interface Pbjx
      * @throws TooMuchRecursion
      * @throws \Exception
      */
-    public function trigger(Message $message, $suffix, PbjxEvent $event = null, $recursive = true);
+    public function trigger(Message $message, string $suffix, ?PbjxEvent $event = null, bool $recursive = true): Pbjx;
 
     /**
      * Runs the "standard" lifecycle for a message prior to send, publish or request.
@@ -57,7 +58,7 @@ interface Pbjx
      *
      * @throws \Exception
      */
-    public function triggerLifecycle(Message $message, $recursive = true);
+    public function triggerLifecycle(Message $message, bool $recursive = true): Pbjx;
 
     /**
      * Copies context fields (ip, user agent, correlator, etc.) from one message to another.
@@ -67,7 +68,7 @@ interface Pbjx
      *
      * @return Pbjx
      */
-    public function copyContext(Message $from, Message $to);
+    public function copyContext(Message $from, Message $to): Pbjx;
 
     /**
      * Processes a command asynchronously.
@@ -77,7 +78,7 @@ interface Pbjx
      * @throws GdbotsPbjxException
      * @throws \Exception
      */
-    public function send(Command $command);
+    public function send(Command $command): void;
 
     /**
      * Publishes events to all subscribers.
@@ -87,7 +88,7 @@ interface Pbjx
      * @throws GdbotsPbjxException
      * @throws \Exception
      */
-    public function publish(Event $event);
+    public function publish(Event $event): void;
 
     /**
      * Processes a request synchronously and returns the response.
@@ -99,15 +100,15 @@ interface Pbjx
      * @throws GdbotsPbjxException
      * @throws \Exception
      */
-    public function request(Request $request);
+    public function request(Request $request): Response;
 
     /**
      * @return EventStore
      */
-    public function getEventStore();
+    public function getEventStore(): EventStore;
 
     /**
      * @return EventSearch
      */
-    public function getEventSearch();
+    public function getEventSearch(): EventSearch;
 }

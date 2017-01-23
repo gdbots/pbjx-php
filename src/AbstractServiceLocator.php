@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Pbjx;
 
@@ -13,6 +14,15 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 abstract class AbstractServiceLocator implements ServiceLocator
 {
+    /** @var EventStore */
+    protected $eventStore;
+
+    /** @var EventSearch */
+    protected $eventSearch;
+
+    /** @var Transport */
+    protected $defaultTransport;
+
     /** @var Pbjx */
     private $pbjx;
 
@@ -31,49 +41,42 @@ abstract class AbstractServiceLocator implements ServiceLocator
     /** @var ExceptionHandler */
     private $exceptionHandler;
 
-    /** @var EventStore */
-    protected $eventStore;
-
-    /** @var EventSearch */
-    protected $eventSearch;
-
-    /** @var Transport */
-    protected $defaultTransport;
-
     /**
      * {@inheritdoc}
      */
-    final public function getPbjx()
+    final public function getPbjx(): Pbjx
     {
         if (null === $this->pbjx) {
             $this->pbjx = $this->doGetPbjx();
         }
+
         return $this->pbjx;
     }
 
     /**
      * @return Pbjx
      */
-    protected function doGetPbjx()
+    protected function doGetPbjx(): Pbjx
     {
-        return new DefaultPbjx($this);
+        return new SimplePbjx($this);
     }
 
     /**
      * {@inheritdoc}
      */
-    final public function getDispatcher()
+    final public function getDispatcher(): EventDispatcherInterface
     {
         if (null === $this->dispatcher) {
             $this->dispatcher = $this->doGetDispatcher();
         }
+
         return $this->dispatcher;
     }
 
     /**
      * @return EventDispatcherInterface
      */
-    protected function doGetDispatcher()
+    protected function doGetDispatcher(): EventDispatcherInterface
     {
         return new EventDispatcher();
     }
@@ -81,94 +84,99 @@ abstract class AbstractServiceLocator implements ServiceLocator
     /**
      * {@inheritdoc}
      */
-    final public function getCommandBus()
+    final public function getCommandBus(): CommandBus
     {
         if (null === $this->commandBus) {
             $this->commandBus = $this->doGetCommandBus();
         }
+
         return $this->commandBus;
     }
 
     /**
      * @return CommandBus
      */
-    protected function doGetCommandBus()
+    protected function doGetCommandBus(): CommandBus
     {
-        return new DefaultCommandBus($this, $this->getDefaultTransport());
+        return new SimpleCommandBus($this, $this->getDefaultTransport());
     }
 
     /**
      * {@inheritdoc}
      */
-    final public function getEventBus()
+    final public function getEventBus(): EventBus
     {
         if (null === $this->eventBus) {
             $this->eventBus = $this->doGetEventBus();
         }
+
         return $this->eventBus;
     }
 
     /**
      * @return EventBus
      */
-    protected function doGetEventBus()
+    protected function doGetEventBus(): EventBus
     {
-        return new DefaultEventBus($this, $this->getDefaultTransport());
+        return new SimpleEventBus($this, $this->getDefaultTransport());
     }
 
     /**
      * {@inheritdoc}
      */
-    final public function getRequestBus()
+    final public function getRequestBus(): RequestBus
     {
         if (null === $this->requestBus) {
             $this->requestBus = $this->doGetRequestBus();
         }
+
         return $this->requestBus;
     }
 
     /**
      * @return RequestBus
      */
-    protected function doGetRequestBus()
+    protected function doGetRequestBus(): RequestBus
     {
-        return new DefaultRequestBus($this, $this->getDefaultTransport());
+        return new SimpleRequestBus($this, $this->getDefaultTransport());
     }
 
     /**
      * {@inheritdoc}
      */
-    final public function getExceptionHandler()
+    final public function getExceptionHandler(): ExceptionHandler
     {
         if (null === $this->exceptionHandler) {
             $this->exceptionHandler = $this->doGetExceptionHandler();
         }
+
         return $this->exceptionHandler;
     }
 
     /**
      * @return ExceptionHandler
      */
-    protected function doGetExceptionHandler()
+    protected function doGetExceptionHandler(): ExceptionHandler
     {
-        return new DefaultExceptionHandler($this);
+        return new LogAndDispatchExceptionHandler($this);
     }
 
     /**
      * @return EventStore
      */
-    final public function getEventStore()
+    final public function getEventStore(): EventStore
     {
         if (null === $this->eventStore) {
             $this->eventStore = $this->doGetEventStore();
         }
+
         return $this->eventStore;
     }
 
     /**
      * @return EventStore
      */
-    protected function doGetEventStore()
+    protected function doGetEventStore(): EventStore
     {
         throw new LogicException('No EventStore has been configured.', Code::UNIMPLEMENTED);
     }
@@ -176,18 +184,19 @@ abstract class AbstractServiceLocator implements ServiceLocator
     /**
      * @return EventSearch
      */
-    final public function getEventSearch()
+    final public function getEventSearch(): EventSearch
     {
         if (null === $this->eventSearch) {
             $this->eventSearch = $this->doGetEventSearch();
         }
+
         return $this->eventSearch;
     }
 
     /**
      * @return EventSearch
      */
-    protected function doGetEventSearch()
+    protected function doGetEventSearch(): EventSearch
     {
         throw new LogicException('No EventSearch has been configured.', Code::UNIMPLEMENTED);
     }
@@ -195,18 +204,19 @@ abstract class AbstractServiceLocator implements ServiceLocator
     /**
      * @return Transport
      */
-    final protected function getDefaultTransport()
+    final protected function getDefaultTransport(): Transport
     {
         if (null === $this->defaultTransport) {
             $this->defaultTransport = $this->doGetDefaultTransport();
         }
+
         return $this->defaultTransport;
     }
 
     /**
      * @return Transport
      */
-    protected function doGetDefaultTransport()
+    protected function doGetDefaultTransport(): Transport
     {
         return new InMemoryTransport($this);
     }

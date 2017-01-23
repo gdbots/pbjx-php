@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Pbjx\Transport;
 
@@ -18,7 +19,7 @@ interface Transport
      * @throws GdbotsPbjxException
      * @throws \Exception
      */
-    public function sendCommand(Command $command);
+    public function sendCommand(Command $command): void;
 
     /**
      * Sends an event via the transport.
@@ -28,16 +29,17 @@ interface Transport
      * @throws GdbotsPbjxException
      * @throws \Exception
      */
-    public function sendEvent(Event $event);
+    public function sendEvent(Event $event): void;
 
     /**
      * Sends a request via the transport.
      *
      * @param Request $request
+     *
      * @return Response
      *
      * @throws GdbotsPbjxException
      * @throws \Exception
      */
-    public function sendRequest(Request $request);
+    public function sendRequest(Request $request): Response;
 }
