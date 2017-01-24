@@ -49,13 +49,8 @@ final class StreamSlice implements ToArray, \JsonSerializable, \IteratorAggregat
      * @param bool     $consistent An eventually consistent read was used to get this slice.
      * @param bool     $hasMore    True if there are more events in the stream.
      */
-    public function __construct(
-        array $events = [],
-        StreamId $streamId = null,
-        $forward = true,
-        $consistent = false,
-        $hasMore = false
-    ) {
+    public function __construct(array $events = [], ?StreamId $streamId = null, bool $forward = true, bool $consistent = false, bool $hasMore = false)
+    {
         $this->events = $events;
         $this->streamId = $streamId;
         $this->forward = $forward;

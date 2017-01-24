@@ -206,13 +206,8 @@ TEXT;
     /**
      * {@inheritdoc}
      */
-    final public function searchEvents(
-        SearchEventsRequest $request,
-        ParsedQuery $parsedQuery,
-        SearchEventsResponse $response,
-        array $curies = [],
-        array $context = []
-    ): void {
+    final public function searchEvents(SearchEventsRequest $request, ParsedQuery $parsedQuery, SearchEventsResponse $response, array $curies = [], array $context = []): void
+    {
         $search = new Search($this->getClientForRead($context));
         $search->addIndices($this->indexManager->getIndexNamesForSearch($request));
         /** @var SchemaCurie $curie */

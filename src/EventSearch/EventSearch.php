@@ -51,11 +51,5 @@ interface EventSearch
      *
      * @throws GdbotsPbjxException
      */
-    public function searchEvents(
-        SearchEventsRequest $request,
-        ParsedQuery $parsedQuery,
-        SearchEventsResponse $response,
-        array $curies = [],
-        array $context = []
-    ): void;
+    public function searchEvents(SearchEventsRequest $request, ParsedQuery $parsedQuery, SearchEventsResponse $response, array $curies = [], array $context = []): void;
 }

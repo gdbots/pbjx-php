@@ -71,14 +71,7 @@ interface EventStore
      *
      * @throws GdbotsPbjxException
      */
-    public function getStreamSlice(
-        StreamId $streamId,
-        ?Microtime $since = null,
-        int $count = 25,
-        bool $forward = true,
-        bool $consistent = false,
-        array $context = []
-    ): StreamSlice;
+    public function getStreamSlice(StreamId $streamId, ?Microtime $since = null, int $count = 25, bool $forward = true, bool $consistent = false, array $context = []): StreamSlice;
 
     /**
      * Appends an array of events to a stream.
@@ -91,32 +84,21 @@ interface EventStore
      * @throws OptimisticCheckFailed
      * @throws GdbotsPbjxException
      */
-    public function putEvents(
-        StreamId $streamId,
-        array $events,
-        ?string $expectedEtag = null,
-        array $context = []
-    ): void;
+    public function putEvents(StreamId $streamId, array $events, ?string $expectedEtag = null, array $context = []): void;
 
     /**
      * Reads events (forward only) from a stream and executes the $receiver for
      * every event returned, e.g. "$receiver($event);".
      *
      * @param StreamId  $streamId The id of the stream to read from, e.g. "article:1234"
-     * @param callable  $receiver The callable that will receive the event. "function f(Event $event)".
+     * @param callable  $receiver The callable that will receive the event. "function f(Event $event, StreamId $streamId)".
      * @param Microtime $since    Return events greater than this time (exclusive).
      * @param Microtime $until    Return events less than this time (exclusive).
      * @param array     $context  Data that helps the EventStore decide where to read/write data from.
      *
      * @throws GdbotsPbjxException
      */
-    public function pipeEvents(
-        StreamId $streamId,
-        callable $receiver,
-        ?Microtime $since = null,
-        ?Microtime $until = null,
-        array $context = []
-    ): void;
+    public function pipeEvents(StreamId $streamId, callable $receiver, ?Microtime $since = null, ?Microtime $until = null, array $context = []): void;
 
     /**
      * Reads events (forward only) from ALL streams and executes the $receiver for
@@ -132,10 +114,5 @@ interface EventStore
      *
      * @throws GdbotsPbjxException
      */
-    public function pipeAllEvents(
-        callable $receiver,
-        ?Microtime $since = null,
-        ?Microtime $until = null,
-        array $context = []
-    ): void;
+    public function pipeAllEvents(callable $receiver, ?Microtime $since = null, ?Microtime $until = null, array $context = []): void;
 }

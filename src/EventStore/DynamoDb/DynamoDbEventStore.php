@@ -84,12 +84,8 @@ class DynamoDbEventStore implements EventStore
     /**
      * {@inheritdoc}
      */
-    final public function putEvents(
-        StreamId $streamId,
-        array $events,
-        ?string $expectedEtag = null,
-        array $context = []
-    ): void {
+    final public function putEvents(StreamId $streamId, array $events, ?string $expectedEtag = null, array $context = []): void
+    {
         if (!count($events)) {
             // ignore empty events array
             return;
@@ -136,14 +132,8 @@ class DynamoDbEventStore implements EventStore
     /**
      * {@inheritdoc}
      */
-    final public function getStreamSlice(
-        StreamId $streamId,
-        ?Microtime $since = null,
-        int $count = 25,
-        bool $forward = true,
-        bool $consistent = false,
-        array $context = []
-    ): StreamSlice {
+    final public function getStreamSlice(StreamId $streamId, ?Microtime $since = null, int $count = 25, bool $forward = true, bool $consistent = false, array $context = []): StreamSlice
+    {
         $context['stream_id'] = $streamId->toString();
         $tableName = $this->getTableNameForRead($context);
         $count = NumberUtils::bound($count, 1, 100);
@@ -244,13 +234,8 @@ class DynamoDbEventStore implements EventStore
     /**
      * {@inheritdoc}
      */
-    final public function pipeEvents(
-        StreamId $streamId,
-        callable $receiver,
-        ?Microtime $since = null,
-        ?Microtime $until = null,
-        array $context = []
-    ): void {
+    final public function pipeEvents(StreamId $streamId, callable $receiver, ?Microtime $since = null, ?Microtime $until = null, array $context = []): void
+    {
         do {
             $slice = $this->getStreamSlice($streamId, $since, 100, true, false, $context);
             $since = $slice->getLastOccurredAt();
@@ -260,7 +245,7 @@ class DynamoDbEventStore implements EventStore
                     return;
                 }
 
-                $receiver($event);
+                $receiver($event, $streamId);
             }
         } while ($slice->hasMore());
     }
@@ -268,12 +253,8 @@ class DynamoDbEventStore implements EventStore
     /**
      * {@inheritdoc}
      */
-    final public function pipeAllEvents(
-        callable $receiver,
-        ?Microtime $since = null,
-        ?Microtime $until = null,
-        array $context = []
-    ): void {
+    final public function pipeAllEvents(callable $receiver, ?Microtime $since = null, ?Microtime $until = null, array $context = []): void
+    {
         $tableName = $this->getTableNameForRead($context);
         $skipErrors = filter_var($context['skip_errors'] ?? false, FILTER_VALIDATE_BOOLEAN);
         $reindexing = filter_var($context['reindexing'] ?? false, FILTER_VALIDATE_BOOLEAN);
