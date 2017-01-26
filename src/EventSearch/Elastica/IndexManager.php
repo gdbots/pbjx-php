@@ -191,6 +191,7 @@ class IndexManager
         $this->beforeUpdateTemplate($params);
         $template = new IndexTemplate($client, $name);
         $template->create($params);
+        $this->logger->info(sprintf('Successfully created index template [%s].', $params['template']));
     }
 
     /**
