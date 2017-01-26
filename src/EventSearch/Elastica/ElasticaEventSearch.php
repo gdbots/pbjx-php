@@ -111,7 +111,15 @@ class ElasticaEventSearch implements EventSearch
             $connection = $client->getConnection();
             $url = "http://{$connection->getHost()}:{$connection->getPort()}";
 
-            foreach ($client->getCluster()->getIndexNames() as $indexName) {
+            // cluster state not allowed on AWS, use cat instead
+            $indexes = $client->request('/_cat/indices?h=index')->getData();
+            if (is_array($indexes)) {
+                $indexes = current($indexes);
+            }
+            $indexes = explode(PHP_EOL, $indexes);
+            $indexes = array_filter(array_map('trim', $indexes));
+
+            foreach ($indexes as $indexName) {
                 if (!stristr($indexName, $indexPrefix)) {
                     continue;
                 }
