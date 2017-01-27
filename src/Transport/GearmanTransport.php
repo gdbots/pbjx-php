@@ -36,12 +36,8 @@ final class GearmanTransport extends AbstractTransport
      * @param int            $timeout milliseconds
      * @param Router         $router
      */
-    public function __construct(
-        ServiceLocator $locator,
-        array $servers = [],
-        int $timeout = 5000,
-        ?Router $router = null
-    ) {
+    public function __construct(ServiceLocator $locator, array $servers = [], int $timeout = 5000, ?Router $router = null)
+    {
         parent::__construct($locator);
         $this->servers = $servers;
         $this->timeout = NumberUtils::bound($timeout, 200, 10000);
@@ -62,7 +58,7 @@ final class GearmanTransport extends AbstractTransport
         $channel = $this->router->forCommand($command);
         $client = $this->getClient();
 
-        @$client->doBackground($channel, $envelope->toString(), $command->get('command_id'));
+        @$client->doBackground($channel, $envelope->toString(), (string)$command->get('command_id'));
         $this->validateReturnCode($client, $channel);
     }
 
@@ -80,7 +76,7 @@ final class GearmanTransport extends AbstractTransport
         $channel = $this->router->forEvent($event);
         $client = $this->getClient();
 
-        @$client->doBackground($channel, $envelope->toString(), $event->get('event_id'));
+        @$client->doBackground($channel, $envelope->toString(), (string)$event->get('event_id'));
         $this->validateReturnCode($client, $channel);
     }
 
@@ -98,7 +94,7 @@ final class GearmanTransport extends AbstractTransport
         $channel = $this->router->forRequest($request);
         $client = $this->getClient();
 
-        $result = @$client->doNormal($channel, $envelope->toString(), $request->get('request_id'));
+        $result = @$client->doNormal($channel, $envelope->toString(), (string)$request->get('request_id'));
         $this->validateReturnCode($client, $channel);
         return TransportEnvelope::fromString($result)->getMessage();
     }
