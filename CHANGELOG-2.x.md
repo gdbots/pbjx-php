@@ -1,4 +1,4 @@
-# CHANGELOG for 1.x
+# CHANGELOG for 2.x
 This changelog references the relevant changes done in 1.x versions.
 
 
