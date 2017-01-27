@@ -86,7 +86,7 @@ class ElasticaEventSearch implements EventSearch
         $templateName = $context['template_name'] ?? $this->indexManager->getIndexPrefix();
 
         foreach ($clusters as $cluster) {
-            $client = $this->clientManager->getClient($cluster);
+            $client = $this->clientManager->getClient((string)$cluster);
             $this->indexManager->updateTemplate($client, $templateName);
             $this->indexManager->updateIndex($client, $indexName);
         }
