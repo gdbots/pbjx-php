@@ -107,7 +107,7 @@ class ElasticaEventSearch implements EventSearch
         $result = '';
 
         foreach ($clusters as $cluster) {
-            $client = $this->clientManager->getClient($cluster);
+            $client = $this->clientManager->getClient((string)$cluster);
             $connection = $client->getConnection();
             $url = "http://{$connection->getHost()}:{$connection->getPort()}";
 
