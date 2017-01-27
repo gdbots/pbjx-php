@@ -50,10 +50,6 @@ final class SimplePbjx implements Pbjx
      */
     public function trigger(Message $message, string $suffix, ?PbjxEvent $event = null, bool $recursive = true): Pbjx
     {
-        if ($message->isFrozen()) {
-            return $this;
-        }
-
         $suffix = '.' . trim($suffix, '.');
         if ('.' === $suffix) {
             throw new InvalidArgumentException('Trigger requires a non-empty suffix.');
