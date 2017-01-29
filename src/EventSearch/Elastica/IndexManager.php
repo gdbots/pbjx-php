@@ -217,6 +217,13 @@ class IndexManager
                 $mapping->setType(new Type($index, $typeName));
                 $mapping->send();
             } catch (\Exception $e) {
+                if (false !== strpos($e->getMessage(), 'no such index')) {
+                    $this->logger->info(
+                        sprintf('No index exists yet [%s/%s] in ElasticSearch.  Ignoring.', $name, $typeName)
+                    );
+                    return;
+                }
+
                 throw new EventSearchOperationFailed(
                     sprintf('Failed to put mapping for type [%s/%s] into ElasticSearch.', $name, $typeName),
                     Code::INTERNAL,
