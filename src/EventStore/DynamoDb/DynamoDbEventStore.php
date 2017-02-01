@@ -136,6 +136,7 @@ class DynamoDbEventStore implements EventStore
     {
         $context['stream_id'] = $streamId->toString();
         $tableName = $this->getTableNameForRead($context);
+        $reindexing = filter_var($context['reindexing'] ?? false, FILTER_VALIDATE_BOOLEAN);
         $count = NumberUtils::bound($count, 1, 100);
 
         if ($forward) {
@@ -160,6 +161,11 @@ class DynamoDbEventStore implements EventStore
             'ConsistentRead'            => $consistent,
         ];
         $filterExpressions = [];
+
+        if ($reindexing) {
+            $params['ExpressionAttributeNames']['#indexed'] = EventStoreTable::INDEXED_KEY_NAME;
+            $filterExpressions[] = 'attribute_exists(#indexed)';
+        }
 
         if (isset($context['curie'])) {
             $params['ExpressionAttributeNames']['#schema'] = '_schema';
@@ -236,6 +242,8 @@ class DynamoDbEventStore implements EventStore
      */
     final public function pipeEvents(StreamId $streamId, callable $receiver, ?Microtime $since = null, ?Microtime $until = null, array $context = []): void
     {
+        $reindexing = filter_var($context['reindexing'] ?? false, FILTER_VALIDATE_BOOLEAN);
+
         do {
             $slice = $this->getStreamSlice($streamId, $since, 100, true, false, $context);
             $since = $slice->getLastOccurredAt();
@@ -243,6 +251,10 @@ class DynamoDbEventStore implements EventStore
             foreach ($slice as $event) {
                 if (null !== $until && $event->get('occurred_at')->toFloat() >= $until->toFloat()) {
                     return;
+                }
+
+                if ($reindexing && !$event instanceof Indexed) {
+                    continue;
                 }
 
                 $receiver($event, $streamId);
