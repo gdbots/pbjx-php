@@ -77,6 +77,7 @@ final class SimpleEventBus implements EventBus
         $this->dispatch(sprintf('%s:%s:%s:*', $vendor, $package, $category), $event);
         $this->dispatch(sprintf('%s:%s:*', $vendor, $package), $event);
         $this->dispatch(sprintf('%s:*', $vendor), $event);
+        $this->dispatch('*', $event);
     }
 
     /**
