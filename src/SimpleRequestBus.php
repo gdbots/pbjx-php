@@ -18,6 +18,9 @@ final class SimpleRequestBus implements RequestBus
     /** @var Transport */
     private $transport;
 
+    /** @var RequestHandler[] */
+    private $handlers = [];
+
     /**
      * @param ServiceLocator $locator
      * @param Transport      $transport
@@ -44,9 +47,23 @@ final class SimpleRequestBus implements RequestBus
      */
     public function receiveRequest(Request $request): Response
     {
+        $curie = $request::schema()->getCurie();
+        $curieStr = $curie->toString();
+
+        if (isset($this->handlers[$curieStr])) {
+            $handler = $this->handlers[$curieStr];
+        } else {
+            try {
+                $handler = $this->locator->getRequestHandler($curie);
+            } catch (\Exception $e) {
+                return $this->createResponseForFailedRequest($request, $e);
+            }
+
+            $this->handlers[$curieStr] = $handler;
+        }
+
         try {
             $request->freeze();
-            $handler = $this->locator->getRequestHandler($request::schema()->getCurie());
             $response = $handler->handleRequest($request, $this->locator->getPbjx());
             $response->set('ctx_request_ref', $request->generateMessageRef());
             if ($request->has('ctx_correlator_ref')) {

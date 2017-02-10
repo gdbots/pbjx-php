@@ -16,6 +16,9 @@ final class SimpleCommandBus implements CommandBus
     /** @var Transport */
     private $transport;
 
+    /** @var CommandHandler[] */
+    private $handlers = [];
+
     /**
      * @param ServiceLocator $locator
      * @param Transport      $transport
@@ -48,10 +51,25 @@ final class SimpleCommandBus implements CommandBus
      */
     public function receiveCommand(Command $command): void
     {
+        $curie = $command::schema()->getCurie();
+        $curieStr = $curie->toString();
+
+        if (isset($this->handlers[$curieStr])) {
+            $handler = $this->handlers[$curieStr];
+        } else {
+            try {
+                $handler = $this->locator->getCommandHandler($curie);
+            } catch (\Exception $e) {
+                $this->locator->getExceptionHandler()->onCommandBusException(new BusExceptionEvent($command, $e));
+                return;
+            }
+
+            $this->handlers[$curieStr] = $handler;
+        }
+
         try {
             $command->freeze();
             $pbjx = $this->locator->getPbjx();
-            $handler = $this->locator->getCommandHandler($command::schema()->getCurie());
             $event = new PbjxEvent($command);
             $pbjx->trigger($command, PbjxEvents::SUFFIX_BEFORE_HANDLE, $event, false);
             $handler->handleCommand($command, $pbjx);
