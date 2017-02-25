@@ -391,7 +391,6 @@ protected function handle(SearchCommentsRequest $request, Pbjx $pbjx): SearchCom
     $parsedQuery = ParsedQuery::fromArray(json_decode($request->get('parsed_query_json', '{}'), true));
 
     $response = SearchCommentsResponseV1::create();
-    /** @var SearchCommentsRequest $request */
     $pbjx->getEventSearch()->searchEvents(
         $request,
         $parsedQuery,
