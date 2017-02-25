@@ -88,7 +88,7 @@ interface EventStore
 
     /**
      * Reads events (forward only) from a stream and executes the $receiver for
-     * every event returned, e.g. "$receiver($event);".
+     * every event returned, e.g. "$receiver($event, $streamId);".
      *
      * @param StreamId  $streamId The id of the stream to read from, e.g. "article:1234"
      * @param callable  $receiver The callable that will receive the event. "function f(Event $event, StreamId $streamId)".
@@ -104,7 +104,7 @@ interface EventStore
      * Reads events (forward only) from ALL streams and executes the $receiver for
      * every event returned, e.g. "$receiver($event, $streamId);".
      *
-     * IMPORANT! The order of events returned will be ordered per stream
+     * IMPORTANT! The order of events returned will be ordered per stream
      * but not necessarily globally ordered.
      *
      * @param callable  $receiver The callable that will receive the event. "function f(Event $event, StreamId $streamId)".

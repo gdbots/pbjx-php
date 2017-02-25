@@ -82,7 +82,6 @@ final class PublishArticleHandler implements CommandHandler
         // handle the command here
     }
 }
-
 ```
 Invoking the command handler is never done directly (except in unit tests).  In this made up example, you might have a controller that creates and sends the command.
 
@@ -283,6 +282,147 @@ Once you've decided that a message is going to be processed you can perform addi
 
 
 # EventStore
+Publishing events and storing/retrieving them is such a common need that we added the `Pbjx::getEventStore` method to make the service available without any extra wiring of services to handlers, subscribers, etc.
+
+The service will not be instantiated until you call the method so there's no performance penalty for having this capability built into Pbjx.  At this time the only available implementation is DynamoDb.
+
+## Key concepts of the EventStore
+
+### Streams
+Events are appended to a stream which is identified by a `StreamId` (see below) and are ordered by the `occurred_at` field of the event within that stream.  This is not (forgive the ten dollar word) a "monotonically increasing gapless sequence number" (v1, v2, ..., v10).  You could certainly achieve that design with your own implementation but for the original design/implemenation, it was more important to be able to collect data from many different servers (including different regions) without having to coordinate with a centralized id/sequence service.
+
+> The `occurred_at` field is 10 digits (unix timestamp) concatenated with 6 microsecond digits.
+
+In order to mitigate collision possibilities we use more granular stream ids when the volume of data is expected to be high.  Users editing articles in a cms vs users voting on polls for example, you know the write volume of poll votes would be MUCH higher.
+
+__EventStores can have billions of streams and have no performance issues so long as:__
+
++ The StreamIds you append events to are distributed enough to avoid hot keys.
++ The total volume of events on a single stream doesn't exceed 10GB (This limit comes from DynamoDb).
+  _You can use date based storage to deal with long-lived streams, e.g. events-YYYYMM._
++ The underlying storage is setup to handle the data size and write/read rates of your application.
+
+> __IMPORTANT:__ An event may exist in one or more streams.  The StreamId is NOT a property of the event itself.
+
+### StreamId
+A stream id represents a stream of events.  The parts of the id are delimited by a colon for our purposes but can easily be converted to acceptable formats for SNS, Kafka, etc.
+
+It may also be desirable to only use parts of the stream id (e.g. topic) for broadcast.
+
+Using a partition and optionally a sub-partition makes it possible to group all of those records together in storage and also guarantee their sequence is exactly in the order that they were added to the stream.
+
+> StreamId Format: topic:partition:sub-partition
+
+__Examples:__
+
+"twitter.timeline" _(topic)_, "homer-simpson" _(partition)_, "yyyymm" _(sub-partition)_
+
+> twitter.timeline:homer-simpson:201501  
+> twitter.timeline:homer-simpson:201502  
+> twitter.timeline:homer-simpson:201503
+
+"bank-account" _(topic)_, "homer-simpson" _(partition)_
+
+> bank-account:homer-simpson
+
+"poll.votes" _(topic)_, "batman-vs-superman" _(partition)_, "yyyymm.[0-9a-f][0-9a-f]" _(sub-partition)_
+
+Note the sub-partition here is two hexidecimal digits allowing for 256 separate stream ids.  Useful when you need to avoid hot keys and ordering in the overall partition isn't important.
+
+> poll.votes:batman-vs-superman:20160301.0a  
+> poll.votes:batman-vs-superman:20160301.1b  
+> poll.votes:batman-vs-superman:20160301.c2
+
+### StreamSlice
+Getting data out of the EventStore is done via piping from a single stream or ALL streams or by getting a slice of a stream.  Think of the StreamSlice as the php function [array_slice](http://php.net/manual/en/function.array-slice.php).  You can get slices forward and backward from a stream and the events are ordered by the `occurred_at` field.
+
+## EventStore::putEvents
+In most cases, you'd be writing to the EventStore in a command handler.  Continuing the publish article example above, let's actually make the event.
+
+```php
+<?php
+declare(strict_types = 1);
+
+final class PublishArticleHandler implements CommandHandler
+{
+    use CommandHandlerTrait;
+
+    /**
+     * @param PublishArticle $command
+     * @param Pbjx           $pbjx
+     */
+    protected function handle(PublishArticle $command, Pbjx $pbjx): void
+    {
+        // in this example it's ultra basic, create the event and push it to a stream
+        $event = ArticlePublishedV1::create()->set('article_id', $command->get('article_id'));
+        // copies contextual data from the previous message (ctx_* fields)
+        $pbjx->copyContext($command, $event);
+
+        $streamId = StreamId::fromString(sprintf('article.history:%s', $command->get('article_id')));
+        $pbjx->getEventStore()->putEvents($streamId, [$event]);
+
+        // after the event is persisted it will be published either via a
+        // two phase commit or a publisher reading the EventStore streams
+        // (DynamoDb streams for example)
+    }
+}
+```
+One thing to note is that the state of the article was not modified here, we just put an event on a stream.  An event subscriber would listen for those events and then update the article.  That is just one way to handle state updates.
+
+> This design implies [eventual consistency](https://en.wikipedia.org/wiki/Eventual_consistency).
 
 
 # EventSearch
+Storing and retrieving events are all handled by the EventStore but often times you need to be able to search events too.  Comments, product reviews, post reactions, survey responses, etc.  Lots of use cases can benefit from indexing.
+
+Similar to the EventStore the EventSearch service is only instantiated if requested.  The only implementation we have right now is ElasticSearch.  To use this feature, the events you want to index must be using the __"gdbots:pbjx:mixin:indexed"__ mixin.  When using the __gdbots/pbjx-bundle-php__ you can enable the indexing with a simple configuration option.
+
+Searching events is generally done in a request handler.  Here is an example of searching events:
+
+```php
+/**
+ * @param SearchCommentsRequest $request
+ * @param Pbjx                  $pbjx
+ *
+ * @return SearchCommentsResponse
+ */
+protected function handle(SearchCommentsRequest $request, Pbjx $pbjx): SearchCommentsResponse
+{
+    $parsedQuery = ParsedQuery::fromArray(json_decode($request->get('parsed_query_json', '{}'), true));
+
+    $response = SearchCommentsResponseV1::create();
+    /** @var SearchCommentsRequest $request */
+    $pbjx->getEventSearch()->searchEvents(
+        $request,
+        $parsedQuery,
+        $response,
+        [SchemaCurie::fromString('acme:blog:event:comment-posted')]
+    );
+
+    return $response;
+}
+```
+
+
+# PbjxDebugger
+When developing applications using Pbjx you need to be able to see what's being exchanged.  The `PbjxDebugger` will push "debug" messages with all of the pbj data that is being handled.  A `Psr\Log\LoggerInterface` logger must be provided when using this service.
+
+If you're using [monolog](https://github.com/Seldaek/monolog) you can route all of these entries to their own file in json line delimited format.  This is the recommended use because it makes it possible to use other great tools like [jq](https://stedolan.github.io/jq/).
+
+__Example yaml config for use in Symfony3.__
+
+```yaml
+services:
+  monolog_json_formatter:
+    class: Monolog\Formatter\JsonFormatter
+    arguments: [!php/const:Monolog\Formatter\JsonFormatter::BATCH_MODE_NEWLINES]
+
+monolog:
+  handlers:
+    pbjx_debugger:
+      type: stream
+      path: '%kernel.logs_dir%/pbjx-debugger.log'
+      level: debug
+      formatter: monolog_json_formatter
+      channels: ['pbjx.debugger']
+```
