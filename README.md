@@ -160,6 +160,39 @@ In your subscriber you could listen to any of:
 > And any of its mixins:
 - vendor:package:mixin:some-event
 
+__The method signature of all pbjx event subscribers should be the interface of the event and then the Pbjx service itself.__
+
+```php
+<?php
+declare(strict_types = 1);
+
+namespace Acme\Blog;
+
+use Gdbots\Pbjx\EventSubscriber;
+
+final class MyEventSubscriber implements EventSubscriber
+{
+    /**
+     * @param ArticlePublished $event
+     * @param Pbjx             $pbjx
+     */
+    public function onArticlePublished(ArticlePublished $event, Pbjx $pbjx): void
+    {
+        // do something with this event.
+    }
+
+    /**
+     * @return array
+     */
+    public static function getSubscribedEvents()
+    {
+        return [
+            'acme:blog:event:article-published' => 'onArticlePublished',
+        ];
+    }
+}
+```
+When subscribing to multiple events you can use the convenient `EventSubscriberTrait` which will automatically call methods matching any events it receives, e.g. "onUserRegistered", "onUserUpdated", "onUserDeleted".
 
 
 # Pbjx::request
@@ -216,3 +249,40 @@ final class ArticleController extends Controller
     }
 }
 ```
+
+
+# Pbjx Lifecycle Events
+When a message is processed (send, publish, request) it goes through a lifecycle which allows for "in process"
+modification and validation.  The method of subscribing to these events is similar to how a Symfony3 event
+subscriber/listener works and can stop propagation.
+
+The lifecycle event names (what your subscriber/listener must be bound to) all have a standard format, _e.g: "gdbots:pbjx:mixin:command.bind"_.  These are named in the same way that the `SimpleEventBus` names them.  See `SimplePbjx::trigger` method for insight into how this is done.
+
+__The lifecycle events, in order of occurrence are:__
+
+### bind
+Data that must be bound to the message by the environment its running in is done in the "bind" event.  This is data that generally comes from the environment variables, http request itself, request context, etc.  It's a cheap operation (in most cases).
+
+> Binding user agent, ip address, input from a form are good examples of things to do in the "bind" event.
+
+### validate
+Before a message is allowed to be processed it should be validated.  This is where business rules are generally implemented.  This is more than just schema validation (which is done for you by pbj).
+
+> Checking permissions is generally done in this event.  In a Symfony3 app this would be where you run the `AuthorizationChecker` and/or security voters.
+> Additional examples:
+  - Checking inventory level on "AddProductToCart"
+  - Optimistic concurrency control on "UpdateArticle"
+  - Check for available username on "RegisterUser"
+  - Validate catchpa on "SubmitContactForm"
+  - Limit uploaded file size on "UploadVideo"
+
+### enrich
+Once you've decided that a message is going to be processed you can perform additional enrichment that would have been expensive or not worth doing up until now.  The enrichment is the final phase so once this is done the message will be frozen and then transported.
+
+> Geo2Ip enrichment, sentiment analysis, adding related data to events, etc. is a good use of the "enrich" event.
+
+
+# EventStore
+
+
+# EventSearch
