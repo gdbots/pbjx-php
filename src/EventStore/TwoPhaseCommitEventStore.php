@@ -64,6 +64,14 @@ final class TwoPhaseCommitEventStore implements EventStore
     /**
      * {@inheritdoc}
      */
+    public function getStreamSlice(StreamId $streamId, ?Microtime $since = null, int $count = 25, bool $forward = true, bool $consistent = false, array $context = []): StreamSlice
+    {
+        return $this->next->getStreamSlice($streamId, $since, $count, $forward, $consistent, $context);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function putEvents(StreamId $streamId, array $events, ?string $expectedEtag = null, array $context = []): void
     {
         $this->next->putEvents($streamId, $events, $expectedEtag, $context);
@@ -75,14 +83,6 @@ final class TwoPhaseCommitEventStore implements EventStore
         foreach ($events as $event) {
             $this->pbjx->publish($event->freeze());
         }
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getStreamSlice(StreamId $streamId, ?Microtime $since = null, int $count = 25, bool $forward = true, bool $consistent = false, array $context = []): StreamSlice
-    {
-        return $this->next->getStreamSlice($streamId, $since, $count, $forward, $consistent, $context);
     }
 
     /**

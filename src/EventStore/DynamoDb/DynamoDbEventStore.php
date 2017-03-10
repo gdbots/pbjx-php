@@ -84,54 +84,6 @@ class DynamoDbEventStore implements EventStore
     /**
      * {@inheritdoc}
      */
-    final public function putEvents(StreamId $streamId, array $events, ?string $expectedEtag = null, array $context = []): void
-    {
-        if (!count($events)) {
-            // ignore empty events array
-            return;
-        }
-
-        $context['stream_id'] = $streamId->toString();
-
-        if (null !== $expectedEtag) {
-            $this->optimisticCheck($streamId, $expectedEtag, $context);
-        }
-
-        $tableName = $this->getTableNameForWrite($context);
-        $batch = new WriteRequestBatch($this->client, [
-            'table'     => $tableName,
-            'autoflush' => false,
-            'error'     => function (AwsException $e) use ($streamId, $tableName) {
-                throw new EventStoreOperationFailed(
-                    sprintf(
-                        '%s while putting events into DynamoDb table [%s] for stream [%s].',
-                        $e->getAwsErrorCode() ?: ClassUtils::getShortName($e),
-                        $tableName,
-                        $streamId
-                    ),
-                    Code::DATA_LOSS,
-                    $e
-                );
-            },
-        ]);
-
-        /** @var Event[] $events */
-        foreach ($events as $event) {
-            $this->pbjx->triggerLifecycle($event);
-            $item = $this->marshaler->marshal($event);
-            $item[EventStoreTable::HASH_KEY_NAME] = ['S' => (string)$streamId];
-            if ($event instanceof Indexed) {
-                $item[EventStoreTable::INDEXED_KEY_NAME] = ['BOOL' => true];
-            }
-            $batch->put($item);
-        }
-
-        $batch->flush();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     final public function getStreamSlice(StreamId $streamId, ?Microtime $since = null, int $count = 25, bool $forward = true, bool $consistent = false, array $context = []): StreamSlice
     {
         $context['stream_id'] = $streamId->toString();
@@ -235,6 +187,54 @@ class DynamoDbEventStore implements EventStore
         }
 
         return new StreamSlice($events, $streamId, $forward, $consistent, $response['Count'] >= $count);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    final public function putEvents(StreamId $streamId, array $events, ?string $expectedEtag = null, array $context = []): void
+    {
+        if (!count($events)) {
+            // ignore empty events array
+            return;
+        }
+
+        $context['stream_id'] = $streamId->toString();
+
+        if (null !== $expectedEtag) {
+            $this->optimisticCheck($streamId, $expectedEtag, $context);
+        }
+
+        $tableName = $this->getTableNameForWrite($context);
+        $batch = new WriteRequestBatch($this->client, [
+            'table'     => $tableName,
+            'autoflush' => false,
+            'error'     => function (AwsException $e) use ($streamId, $tableName) {
+                throw new EventStoreOperationFailed(
+                    sprintf(
+                        '%s while putting events into DynamoDb table [%s] for stream [%s].',
+                        $e->getAwsErrorCode() ?: ClassUtils::getShortName($e),
+                        $tableName,
+                        $streamId
+                    ),
+                    Code::DATA_LOSS,
+                    $e
+                );
+            },
+        ]);
+
+        /** @var Event[] $events */
+        foreach ($events as $event) {
+            $this->pbjx->triggerLifecycle($event);
+            $item = $this->marshaler->marshal($event);
+            $item[EventStoreTable::HASH_KEY_NAME] = ['S' => (string)$streamId];
+            if ($event instanceof Indexed) {
+                $item[EventStoreTable::INDEXED_KEY_NAME] = ['BOOL' => true];
+            }
+            $batch->put($item);
+        }
+
+        $batch->flush();
     }
 
     /**
