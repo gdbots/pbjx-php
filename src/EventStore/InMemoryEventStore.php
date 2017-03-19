@@ -16,7 +16,7 @@ use Gdbots\Schemas\Pbjx\StreamId;
 final class InMemoryEventStore implements EventStore
 {
     /** @var PhpArraySerializer */
-    private static $serializer;
+    private $serializer;
 
     /** @var Pbjx */
     private $pbjx;
@@ -201,12 +201,12 @@ TEXT;
      */
     private function createEventFromArray(array $data = []): Event
     {
-        if (null === self::$serializer) {
-            self::$serializer = new PhpArraySerializer();
+        if (null === $this->serializer) {
+            $this->serializer = new PhpArraySerializer();
         }
 
         /** @var Event $event */
-        $event = self::$serializer->deserialize($data);
+        $event = $this->serializer->deserialize($data);
         return $event;
     }
 }
