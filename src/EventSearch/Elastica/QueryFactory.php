@@ -14,7 +14,7 @@ use Gdbots\QueryParser\Enum\ComparisonOperator;
 use Gdbots\QueryParser\Node\Field;
 use Gdbots\QueryParser\Node\Numbr;
 use Gdbots\QueryParser\ParsedQuery;
-use Gdbots\Schemas\Pbjx\Enum\SearchSort;
+use Gdbots\Schemas\Pbjx\Enum\SearchEventsSort;
 use Gdbots\Schemas\Pbjx\Mixin\SearchEventsRequest\SearchEventsRequest;
 
 class QueryFactory
@@ -77,12 +77,12 @@ class QueryFactory
     protected function createSortedQuery(AbstractQuery $query, SearchEventsRequest $request): Query
     {
         switch ($request->get('sort')->getValue()) {
-            case SearchSort::DATE_DESC:
+            case SearchEventsSort::DATE_DESC:
                 $query = Query::create($query);
                 $query->setSort(['occurred_at' => 'desc']);
                 break;
 
-            case SearchSort::DATE_ASC:
+            case SearchEventsSort::DATE_ASC:
                 $query = Query::create($query);
                 $query->setSort(['occurred_at' => 'asc']);
                 break;
