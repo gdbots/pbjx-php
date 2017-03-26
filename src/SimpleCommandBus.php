@@ -1,51 +1,40 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Pbjx;
 
 use Gdbots\Pbjx\Event\BusExceptionEvent;
 use Gdbots\Pbjx\Event\PbjxEvent;
-use Gdbots\Pbjx\Exception\InvalidHandler;
+use Gdbots\Pbjx\Transport\Transport;
 use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
 
-class DefaultCommandBus implements CommandBus
+final class SimpleCommandBus implements CommandBus
 {
     /** @var ServiceLocator */
-    protected $locator;
+    private $locator;
 
     /** @var Transport */
-    protected $transport;
-
-    /** @var Pbjx */
-    protected $pbjx;
+    private $transport;
 
     /** @var CommandHandler[] */
     private $handlers = [];
 
     /**
      * @param ServiceLocator $locator
-     * @param Transport $transport
+     * @param Transport      $transport
      */
     public function __construct(ServiceLocator $locator, Transport $transport)
     {
         $this->locator = $locator;
         $this->transport = $transport;
-        $this->pbjx = $this->locator->getPbjx();
     }
 
     /**
      * {@inheritdoc}
      */
-    public function send(Command $command)
+    public function send(Command $command): void
     {
         $this->transport->sendCommand($command->freeze());
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function receiveCommand(Command $command)
-    {
-        $this->handleCommand($command->freeze());
     }
 
     /**
@@ -58,9 +47,9 @@ class DefaultCommandBus implements CommandBus
      * allowing an exception to just bubble up and break the service handling commands
      * will not be seen by anyone except an error log.
      *
-     * @param Command $command
+     * {@inheritdoc}
      */
-    final protected function handleCommand(Command $command)
+    public function receiveCommand(Command $command): void
     {
         $curie = $command::schema()->getCurie();
         $curieStr = $curie->toString();
@@ -70,11 +59,6 @@ class DefaultCommandBus implements CommandBus
         } else {
             try {
                 $handler = $this->locator->getCommandHandler($curie);
-                if (!$handler instanceof CommandHandler) {
-                    throw new InvalidHandler(
-                        sprintf('The class "%s" must implement CommandHandler.', get_class($handler))
-                    );
-                }
             } catch (\Exception $e) {
                 $this->locator->getExceptionHandler()->onCommandBusException(new BusExceptionEvent($command, $e));
                 return;
@@ -84,10 +68,12 @@ class DefaultCommandBus implements CommandBus
         }
 
         try {
+            $command->freeze();
+            $pbjx = $this->locator->getPbjx();
             $event = new PbjxEvent($command);
-            $this->pbjx->trigger($command, PbjxEvents::SUFFIX_BEFORE_HANDLE, $event, false);
-            $handler->handleCommand($command, $this->pbjx);
-            $this->pbjx->trigger($command, PbjxEvents::SUFFIX_AFTER_HANDLE, $event, false);
+            $pbjx->trigger($command, PbjxEvents::SUFFIX_BEFORE_HANDLE, $event, false);
+            $handler->handleCommand($command, $pbjx);
+            $pbjx->trigger($command, PbjxEvents::SUFFIX_AFTER_HANDLE, $event, false);
         } catch (\Exception $e) {
             $this->locator->getExceptionHandler()->onCommandBusException(new BusExceptionEvent($command, $e));
         }

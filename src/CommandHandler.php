@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Pbjx;
 
@@ -9,10 +10,10 @@ interface CommandHandler
 {
     /**
      * @param Command $command
-     * @param Pbjx $pbjx
+     * @param Pbjx    $pbjx
      *
      * @throws GdbotsPbjxException
      * @throws \Exception
      */
-    public function handleCommand(Command $command, Pbjx $pbjx);
+    public function handleCommand(Command $command, Pbjx $pbjx): void;
 }

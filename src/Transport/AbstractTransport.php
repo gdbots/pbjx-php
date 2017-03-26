@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Pbjx\Transport;
 
@@ -8,7 +9,6 @@ use Gdbots\Pbjx\Event\TransportEvent;
 use Gdbots\Pbjx\Event\TransportExceptionEvent;
 use Gdbots\Pbjx\PbjxEvents;
 use Gdbots\Pbjx\ServiceLocator;
-use Gdbots\Pbjx\Transport;
 use Gdbots\Schemas\Pbjx\Enum\Code;
 use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
 use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
@@ -43,7 +43,7 @@ abstract class AbstractTransport implements Transport
     /**
      * {@inheritdoc}
      */
-    public function sendCommand(Command $command)
+    public function sendCommand(Command $command): void
     {
         $transportEvent = new TransportEvent($this->transportName, $command);
         $this->dispatcher->dispatch(PbjxEvents::TRANSPORT_BEFORE_SEND, $transportEvent);
@@ -64,9 +64,10 @@ abstract class AbstractTransport implements Transport
      * Override in the transport to handle the actual send.
      *
      * @param Command $command
+     *
      * @throws \Exception
      */
-    protected function doSendCommand(Command $command)
+    protected function doSendCommand(Command $command): void
     {
         $this->locator->getCommandBus()->receiveCommand($command);
     }
@@ -74,7 +75,7 @@ abstract class AbstractTransport implements Transport
     /**
      * {@inheritdoc}
      */
-    public function sendEvent(Event $event)
+    public function sendEvent(Event $event): void
     {
         $transportEvent = new TransportEvent($this->transportName, $event);
         $this->dispatcher->dispatch(PbjxEvents::TRANSPORT_BEFORE_SEND, $transportEvent);
@@ -95,9 +96,10 @@ abstract class AbstractTransport implements Transport
      * Override in the transport to handle the actual send.
      *
      * @param Event $event
+     *
      * @throws \Exception
      */
-    protected function doSendEvent(Event $event)
+    protected function doSendEvent(Event $event): void
     {
         $this->locator->getEventBus()->receiveEvent($event);
     }
@@ -105,7 +107,7 @@ abstract class AbstractTransport implements Transport
     /**
      * {@inheritdoc}
      */
-    public function sendRequest(Request $request)
+    public function sendRequest(Request $request): Response
     {
         $transportEvent = new TransportEvent($this->transportName, $request);
         $this->dispatcher->dispatch(PbjxEvents::TRANSPORT_BEFORE_SEND, $transportEvent);
@@ -138,29 +140,36 @@ abstract class AbstractTransport implements Transport
      * Override in the transport to handle the actual send.
      *
      * @param Request $request
+     *
      * @return Response
      * @throws \Exception
      */
-    protected function doSendRequest(Request $request)
+    protected function doSendRequest(Request $request): Response
     {
         return $this->locator->getRequestBus()->receiveRequest($request);
     }
 
     /**
-     * @param Request $request
+     * @param Request    $request
      * @param \Exception $exception
+     *
      * @return Response
      */
-    protected function createResponseForFailedRequest(Request $request, \Exception $exception)
+    protected function createResponseForFailedRequest(Request $request, \Exception $exception): Response
     {
         $code = $exception->getCode() > 0 ? $exception->getCode() : Code::UNKNOWN;
 
         $response = RequestFailedResponseV1::create()
             ->set('ctx_request_ref', $request->generateMessageRef())
-            ->set('request', $request)
+            ->set('ctx_request', $request)
             ->set('error_code', $code)
             ->set('error_name', ClassUtils::getShortName($exception))
-            ->set('error_message', $exception->getMessage());
+            ->set('error_message', substr($exception->getMessage(), 0, 2048))
+            ->set('stack_trace', $exception->getTraceAsString());
+
+        if ($exception->getPrevious()) {
+            $response->set('prev_error_message', substr($exception->getPrevious()->getMessage(), 0, 2048));
+        }
 
         if ($request->has('ctx_correlator_ref')) {
             $response->set('ctx_correlator_ref', $request->get('ctx_correlator_ref'));

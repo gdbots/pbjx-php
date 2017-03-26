@@ -1,6 +1,7 @@
 <?php
+declare(strict_types = 1);
 
-namespace Gdbots\Pbjx;
+namespace Gdbots\Pbjx\Transport;
 
 use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
 use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
@@ -16,19 +17,22 @@ interface Router
 {
     /**
      * @param Command $command
+     *
      * @return string
      */
-    public function forCommand(Command $command);
+    public function forCommand(Command $command): string;
 
     /**
      * @param Event $event
+     *
      * @return string
      */
-    public function forEvent(Event $event);
+    public function forEvent(Event $event): string;
 
     /**
      * @param Request $request
+     *
      * @return string
      */
-    public function forRequest(Request $request);
+    public function forRequest(Request $request): string;
 }

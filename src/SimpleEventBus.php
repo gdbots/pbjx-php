@@ -1,32 +1,34 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Pbjx;
 
 use Gdbots\Common\Util\ClassUtils;
 use Gdbots\Pbjx\Event\BusExceptionEvent;
+use Gdbots\Pbjx\Transport\Transport;
 use Gdbots\Schemas\Pbjx\Enum\Code;
 use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
 use Gdbots\Schemas\Pbjx\Event\EventExecutionFailed;
 use Gdbots\Schemas\Pbjx\Event\EventExecutionFailedV1;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
-class DefaultEventBus implements EventBus
+final class SimpleEventBus implements EventBus
 {
     /** @var EventDispatcherInterface */
-    protected $dispatcher;
+    private $dispatcher;
 
     /** @var ServiceLocator */
-    protected $locator;
+    private $locator;
 
     /** @var Transport */
-    protected $transport;
+    private $transport;
 
     /** @var Pbjx */
-    protected $pbjx;
+    private $pbjx;
 
     /**
      * @param ServiceLocator $locator
-     * @param Transport $transport
+     * @param Transport      $transport
      */
     public function __construct(ServiceLocator $locator, Transport $transport)
     {
@@ -39,17 +41,9 @@ class DefaultEventBus implements EventBus
     /**
      * {@inheritdoc}
      */
-    public function publish(Event $event)
+    public function publish(Event $event): void
     {
         $this->transport->sendEvent($event->freeze());
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function receiveEvent(Event $event)
-    {
-        $this->doPublish($event->freeze());
     }
 
     /**
@@ -57,10 +51,11 @@ class DefaultEventBus implements EventBus
      * events in memory.  If any events throw an exception an EventExecutionFailed
      * event will be published.
      *
-     * @param Event $event
+     * {@inheritdoc}
      */
-    protected function doPublish(Event $event)
+    public function receiveEvent(Event $event): void
     {
+        $event->freeze();
         $schema = $event::schema();
         $curie = $schema->getCurie();
 
@@ -69,19 +64,20 @@ class DefaultEventBus implements EventBus
         $category = $curie->getCategory();
 
         foreach ($schema->getMixinIds() as $mixinId) {
-            $this->doDispatch($mixinId, $event);
+            $this->dispatch($mixinId, $event);
         }
 
         foreach ($schema->getMixinCuries() as $mixinCurie) {
-            $this->doDispatch($mixinCurie, $event);
+            $this->dispatch($mixinCurie, $event);
         }
 
-        $this->doDispatch($schema->getCurieMajor(), $event);
-        $this->doDispatch($curie->toString(), $event);
+        $this->dispatch($schema->getCurieMajor(), $event);
+        $this->dispatch($curie->toString(), $event);
 
-        $this->doDispatch(sprintf('%s:%s:%s:*', $vendor, $package, $category), $event);
-        $this->doDispatch(sprintf('%s:%s:*', $vendor, $package), $event);
-        $this->doDispatch(sprintf('%s:*', $vendor), $event);
+        $this->dispatch(sprintf('%s:%s:%s:*', $vendor, $package, $category), $event);
+        $this->dispatch(sprintf('%s:%s:*', $vendor, $package), $event);
+        $this->dispatch(sprintf('%s:*', $vendor), $event);
+        $this->dispatch('*', $event);
     }
 
     /**
@@ -92,9 +88,9 @@ class DefaultEventBus implements EventBus
      * expect to be called like a symfony event listener.
      *
      * @param string $eventName
-     * @param Event $event
+     * @param Event  $event
      */
-    final protected function doDispatch($eventName, Event $event)
+    private function dispatch(string $eventName, Event $event): void
     {
         $listeners = $this->dispatcher->getListeners($eventName);
         foreach ($listeners as $listener) {
@@ -112,7 +108,12 @@ class DefaultEventBus implements EventBus
                     ->set('event', $event)
                     ->set('error_code', $code)
                     ->set('error_name', ClassUtils::getShortName($e))
-                    ->set('error_message', $e->getMessage());
+                    ->set('error_message', substr($e->getMessage(), 0, 2048))
+                    ->set('stack_trace', $e->getTraceAsString());
+
+                if ($e->getPrevious()) {
+                    $failedEvent->set('prev_error_message', substr($e->getPrevious()->getMessage(), 0, 2048));
+                }
 
                 $this->pbjx->copyContext($event, $failedEvent);
 

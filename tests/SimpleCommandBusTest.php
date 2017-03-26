@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Tests\Pbjx;
 
@@ -8,7 +9,7 @@ use Gdbots\Tests\Pbjx\Fixtures\FakeCommand;
 use Gdbots\Tests\Pbjx\Fixtures\SayHello;
 use Gdbots\Tests\Pbjx\Fixtures\SayHelloHandler;
 
-class DefaultCommandBusTest extends AbstractBusTestCase
+class SimpleCommandBusTest extends AbstractBusTestCase
 {
     public function testSend()
     {
@@ -27,7 +28,7 @@ class DefaultCommandBusTest extends AbstractBusTestCase
         $command = FakeCommand::create();
         $this->locator->getDispatcher()->addListener(
             PbjxEvents::COMMAND_BUS_EXCEPTION,
-            function(BusExceptionEvent $event) {
+            function (BusExceptionEvent $event) {
                 throw $event->getException();
             }
         );

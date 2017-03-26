@@ -1,24 +1,21 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Pbjx\Consumer;
 
 use Gdbots\Common\Util\ClassUtils;
 use Gdbots\Common\Util\NumberUtils;
 use Gdbots\Pbj\Message;
-use Gdbots\Pbj\Serializer\PhpSerializer;
-use Gdbots\Pbj\Serializer\Serializer;
 use Gdbots\Pbjx\PbjxEvents;
 use Gdbots\Pbjx\ServiceLocator;
 use Gdbots\Pbjx\Transport\GearmanRouter;
+use Gdbots\Pbjx\Transport\TransportEnvelope;
 use Psr\Log\LoggerInterface;
 
-class GearmanConsumer extends AbstractConsumer
+final class GearmanConsumer extends AbstractConsumer
 {
     /** @var \GearmanWorker */
-    protected $worker;
-
-    /** @var Serializer */
-    protected $serializer;
+    private $worker;
 
     /**
      * The channels this consumer is listening to.  In gearman, this is the function name.
@@ -28,41 +25,41 @@ class GearmanConsumer extends AbstractConsumer
      * @see \GearmanWorker::addFunction
      * @var array
      */
-    protected $channels = [];
+    private $channels = [];
 
     /**
      * @link http://php.net/manual/en/gearmanclient.addserver.php
      * @var array
      */
-    protected $servers = [];
+    private $servers = [];
 
     /**
      * @link http://php.net/manual/en/gearmanworker.settimeout.php
      * @var int
      */
-    protected $timeout = 5000;
+    private $timeout = 5000;
 
     /**
      * @link http://php.net/manual/en/gearmanworker.setid.php
      * @var string
      */
-    protected $workerId;
+    private $workerId;
 
     /**
-     * @param ServiceLocator $locator
-     * @param string|null $workerId
-     * @param array $channels
-     * @param array $servers format [['host' => '127.0.0.1', 'port' => 4730]]
-     * @param int $timeout milliseconds
+     * @param ServiceLocator  $locator
+     * @param string|null     $workerId
+     * @param array           $channels
+     * @param array           $servers format [['host' => '127.0.0.1', 'port' => 4730]]
+     * @param int             $timeout milliseconds
      * @param LoggerInterface $logger
      */
     public function __construct(
         ServiceLocator $locator,
-        $workerId = null,
-        array $channels = null,
-        array $servers = null,
-        $timeout = 5000,
-        LoggerInterface $logger = null
+        ?string $workerId = null,
+        ?array $channels = null,
+        ?array $servers = null,
+        int $timeout = 5000,
+        ?LoggerInterface $logger = null
     ) {
         parent::__construct($locator, $logger);
         $this->workerId = $workerId;
@@ -70,12 +67,10 @@ class GearmanConsumer extends AbstractConsumer
             ?: [
                 GearmanRouter::DEFAULT_COMMAND_CHANNEL,
                 GearmanRouter::DEFAULT_EVENT_CHANNEL,
-                GearmanRouter::DEFAULT_REQUEST_CHANNEL
-            ]
-        ;
+                GearmanRouter::DEFAULT_REQUEST_CHANNEL,
+            ];
         $this->servers = $servers;
         $this->timeout = NumberUtils::bound($timeout, 200, 10000);
-        $this->serializer = new PhpSerializer();
     }
 
     /**
@@ -84,7 +79,7 @@ class GearmanConsumer extends AbstractConsumer
      *
      * @throws \GearmanException
      */
-    protected function setup()
+    protected function setup(): void
     {
         if (null === $this->worker) {
             $worker = new \GearmanWorker();
@@ -104,7 +99,7 @@ class GearmanConsumer extends AbstractConsumer
                 $added = 0;
                 foreach ($this->servers as $server) {
                     $host = isset($server['host']) ? $server['host'] : '127.0.0.1';
-                    $port = (int) isset($server['port']) ? $server['port'] : 4730;
+                    $port = (int)isset($server['port']) ? $server['port'] : 4730;
                     try {
                         if ($worker->addServer($host, $port)) {
                             $added++;
@@ -139,7 +134,7 @@ class GearmanConsumer extends AbstractConsumer
      * Runs the gearman worker process.
      * @link http://php.net/manual/en/gearmanworker.work.php
      */
-    protected function work()
+    protected function work(): void
     {
         if (@$this->worker->work()
             || $this->worker->returnCode() == GEARMAN_IO_WAIT
@@ -162,10 +157,12 @@ class GearmanConsumer extends AbstractConsumer
 
     /**
      * @param \GearmanJob $job
-     * @return null|string
+     *
+     * @return string
+     *
      * @throws \Exception
      */
-    public function handleJob(\GearmanJob $job)
+    public function handleJob(\GearmanJob $job): ?string
     {
         $this->logger->debug(
             sprintf(
@@ -180,15 +177,15 @@ class GearmanConsumer extends AbstractConsumer
         $dispatcher = $this->locator->getDispatcher();
 
         try {
-            $message = $this->serializer->deserialize($job->workload());
+            $envelope = TransportEnvelope::fromString($job->workload());
             $dispatcher->dispatch(PbjxEvents::CONSUMER_BEFORE_HANDLE);
-            $result = $this->handleMessage($message);
+            $result = $this->handleMessage($envelope->getMessage());
             $dispatcher->dispatch(PbjxEvents::CONSUMER_AFTER_HANDLE);
 
             if ($result instanceof Message) {
-                return $this->serializer->serialize($result);
+                // if the request is a replay, does that imply the response is too?
+                return (new TransportEnvelope($result, $envelope->getSerializerUsed()))->toString();
             }
-
         } catch (\Exception $e) {
             $job->sendFail();
             $this->logger->error(
@@ -198,13 +195,13 @@ class GearmanConsumer extends AbstractConsumer
                     $this->consumerName
                 ),
                 [
-                    'exception' => $e,
-                    'consumer' => $this->consumerName,
+                    'exception'             => $e,
+                    'consumer'              => $this->consumerName,
                     'gearman_function_name' => $job->functionName(),
-                    'gearman_worker_id' => $this->workerId,
-                    'job_handle' => $job->handle(),
-                    'job_id' => $job->unique(),
-                    'job_workload' => $job->workload(),
+                    'gearman_worker_id'     => $this->workerId,
+                    'job_handle'            => $job->handle(),
+                    'job_id'                => $job->unique(),
+                    'job_workload'          => $job->workload(),
                 ]
             );
 
@@ -217,7 +214,7 @@ class GearmanConsumer extends AbstractConsumer
     /**
      * Unregisters all functions from the gearman worker and then nullifies the worker.
      */
-    protected function teardown()
+    protected function teardown(): void
     {
         if ($this->worker) {
             @$this->worker->unregisterAll();

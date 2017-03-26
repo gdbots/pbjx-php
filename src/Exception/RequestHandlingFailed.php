@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Pbjx\Exception;
 
@@ -6,10 +7,10 @@ use Gdbots\Schemas\Pbjx\Enum\Code;
 use Gdbots\Schemas\Pbjx\Mixin\Request\Request;
 use Gdbots\Schemas\Pbjx\Request\RequestFailedResponse;
 
-class RequestHandlingFailed extends \RuntimeException implements GdbotsPbjxException
+final class RequestHandlingFailed extends \RuntimeException implements GdbotsPbjxException, \JsonSerializable
 {
     /** @var RequestFailedResponse */
-    protected $response;
+    private $response;
 
     /**
      * @param RequestFailedResponse $response
@@ -17,7 +18,7 @@ class RequestHandlingFailed extends \RuntimeException implements GdbotsPbjxExcep
     public function __construct(RequestFailedResponse $response)
     {
         $this->response = $response;
-        $ref = $response->get('ctx_request_ref') ?: $response->get('request')->get('request_id');
+        $ref = $response->get('ctx_request_ref') ?: $response->get('ctx_request')->get('request_id');
         parent::__construct(
             sprintf(
                 'Request [%s] could not be handled.  %s::%s::%s',
@@ -33,7 +34,7 @@ class RequestHandlingFailed extends \RuntimeException implements GdbotsPbjxExcep
     /**
      * @return RequestFailedResponse
      */
-    public function getResponse()
+    public function getResponse(): RequestFailedResponse
     {
         return $this->response;
     }
@@ -41,8 +42,24 @@ class RequestHandlingFailed extends \RuntimeException implements GdbotsPbjxExcep
     /**
      * @return Request
      */
-    public function getRequest()
+    public function getRequest(): Request
     {
-        return $this->response->get('request');
+        return $this->response->get('ctx_request');
+    }
+
+    /**
+     * @return array
+     */
+    public function jsonSerialize()
+    {
+        return $this->response->toArray();
+    }
+
+    /**
+     * @return string
+     */
+    public function __toString()
+    {
+        return json_encode($this->response, JSON_PRETTY_PRINT);
     }
 }

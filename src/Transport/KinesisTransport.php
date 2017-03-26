@@ -1,28 +1,24 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Pbjx\Transport;
 
 use Aws\Kinesis\KinesisClient;
-use Gdbots\Pbj\Serializer\JsonSerializer;
-use Gdbots\Pbjx\PartitionableRouter;
 use Gdbots\Pbjx\ServiceLocator;
 use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
 use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
 
-class KinesisTransport extends AbstractTransport
+final class KinesisTransport extends AbstractTransport
 {
     /** @var KinesisClient */
-    protected $client;
-
-    /** @var JsonSerializer */
-    protected $serializer;
+    private $client;
 
     /** @var PartitionableRouter */
-    protected $router;
+    private $router;
 
     /**
-     * @param ServiceLocator $locator
-     * @param KinesisClient $client
+     * @param ServiceLocator      $locator
+     * @param KinesisClient       $client
      * @param PartitionableRouter $router
      */
     public function __construct(ServiceLocator $locator, KinesisClient $client, PartitionableRouter $router)
@@ -30,7 +26,6 @@ class KinesisTransport extends AbstractTransport
         parent::__construct($locator);
         $this->client = $client;
         $this->router = $router;
-        $this->serializer = new JsonSerializer();
     }
 
     /**
@@ -38,14 +33,16 @@ class KinesisTransport extends AbstractTransport
      * @see KinesisClient::putRecord
      *
      * @param Command $command
+     *
      * @throws \Exception
      */
-    protected function doSendCommand(Command $command)
+    protected function doSendCommand(Command $command): void
     {
+        $envelope = new TransportEnvelope($command, 'json');
         $this->client->putRecord([
-            'StreamName' => $this->router->forCommand($command),
+            'StreamName'   => $this->router->forCommand($command),
             'PartitionKey' => $this->router->partitionForCommand($command),
-            'Data' => $this->serializer->serialize($command),
+            'Data'         => $envelope->toString(),
         ]);
     }
 
@@ -54,14 +51,16 @@ class KinesisTransport extends AbstractTransport
      * @see KinesisClient::putRecord
      *
      * @param Event $event
+     *
      * @throws \Exception
      */
-    protected function doSendEvent(Event $event)
+    protected function doSendEvent(Event $event): void
     {
+        $envelope = new TransportEnvelope($event, 'json');
         $this->client->putRecord([
-            'StreamName' => $this->router->forEvent($event),
+            'StreamName'   => $this->router->forEvent($event),
             'PartitionKey' => $this->router->partitionForEvent($event),
-            'Data' => $this->serializer->serialize($event),
+            'Data'         => $envelope->toString(),
         ]);
     }
 }

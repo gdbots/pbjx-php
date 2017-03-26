@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Pbjx;
 
@@ -7,7 +8,9 @@ final class PbjxEvents
     /**
      * Private constructor. This class is not meant to be instantiated.
      */
-    private function __construct() {}
+    private function __construct()
+    {
+    }
 
     /**
      * Suffixes are typically used by @see Pbjx::trigger
@@ -15,7 +18,7 @@ final class PbjxEvents
      * message plus a suffix.  The event payload will be a PbjxEvent or a
      * subclass of that.
      *
-     * @see Gdbots\Pbjx\Event\PbjxEvent
+     * @see \Gdbots\Pbjx\Event\PbjxEvent
      * @var string
      */
     const SUFFIX_BIND = 'bind';
@@ -31,7 +34,7 @@ final class PbjxEvents
      * Occurs prior to an expection being thrown during the handling phase of a command.
      * This is not announced during validate, enrich or the transport send.
      *
-     * @see Gdbots\Pbjx\Event\BusExceptionEvent
+     * @see \Gdbots\Pbjx\Event\BusExceptionEvent
      * @var string
      */
     const COMMAND_BUS_EXCEPTION = 'gdbots_pbjx.command_bus.exception';
@@ -41,7 +44,7 @@ final class PbjxEvents
      * subscriber throws an exception and the EventExecutionFailed also fails
      * to be handled, then this event is announced.  This should be very rare.
      *
-     * @see Gdbots\Pbjx\Event\BusExceptionEvent
+     * @see \Gdbots\Pbjx\Event\BusExceptionEvent
      * @var string
      */
     const EVENT_BUS_EXCEPTION = 'gdbots_pbjx.event_bus.exception';
@@ -50,7 +53,7 @@ final class PbjxEvents
      * Occurs during request handling when an exception is not properly
      * handled and converted to a RequestFailedResponse response.
      *
-     * @see Gdbots\Pbjx\Event\BusExceptionEvent
+     * @see \Gdbots\Pbjx\Event\BusExceptionEvent
      * @var string
      */
     const REQUEST_BUS_EXCEPTION = 'gdbots_pbjx.request_bus.exception';
@@ -58,7 +61,7 @@ final class PbjxEvents
     /**
      * Occurs prior to the message being sent by the transport.
      *
-     * @see Gdbots\Pbjx\Event\TransportEvent
+     * @see \Gdbots\Pbjx\Event\TransportEvent
      * @var string
      */
     const TRANSPORT_BEFORE_SEND = 'gdbots_pbjx.transport.before_send';
@@ -66,7 +69,7 @@ final class PbjxEvents
     /**
      * Occurs after the message has been successfully sent by the transport.
      *
-     * @see Gdbots\Pbjx\Event\TransportEvent
+     * @see \Gdbots\Pbjx\Event\TransportEvent
      * @var string
      */
     const TRANSPORT_AFTER_SEND = 'gdbots_pbjx.transport.after_send';
@@ -74,7 +77,7 @@ final class PbjxEvents
     /**
      * Occurs if the transport throws an exception during the send.
      *
-     * @see Gdbots\Pbjx\Event\TransportExceptionEvent
+     * @see \Gdbots\Pbjx\Event\TransportExceptionEvent
      * @var string
      */
     const TRANSPORT_SEND_EXCEPTION = 'gdbots_pbjx.transport.send_exception';
@@ -82,7 +85,7 @@ final class PbjxEvents
     /**
      * Occurs before a job/task/message has been handled by a consumer.
      *
-     * @see Symfony\Component\EventDispatcher\Event
+     * @see \Symfony\Component\EventDispatcher\Event
      * @var string
      */
     const CONSUMER_BEFORE_HANDLE = 'gdbots_pbjx.consumer.before_handle';
@@ -90,7 +93,7 @@ final class PbjxEvents
     /**
      * Occurs after a job/task/message has been handled by a consumer.
      *
-     * @see Symfony\Component\EventDispatcher\Event
+     * @see \Symfony\Component\EventDispatcher\Event
      * @var string
      */
     const CONSUMER_AFTER_HANDLE = 'gdbots_pbjx.consumer.after_handle';
@@ -98,7 +101,7 @@ final class PbjxEvents
     /**
      * Occurs if an exception is thrown during message handling.
      *
-     * @see Symfony\Component\EventDispatcher\Event
+     * @see \Symfony\Component\EventDispatcher\Event
      * @var string
      */
     const CONSUMER_HANDLING_EXCEPTION = 'gdbots_pbjx.consumer.handling_exception';
@@ -106,7 +109,7 @@ final class PbjxEvents
     /**
      * Occurs after the consumer has stopped and finished its teardown.
      *
-     * @see Symfony\Component\EventDispatcher\Event
+     * @see \Symfony\Component\EventDispatcher\Event
      * @var string
      */
     const CONSUMER_AFTER_TEARDOWN = 'gdbots_pbjx.consumer.after_teardown';

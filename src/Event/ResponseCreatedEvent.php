@@ -1,11 +1,12 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Pbjx\Event;
 
 use Gdbots\Schemas\Pbjx\Mixin\Request\Request;
 use Gdbots\Schemas\Pbjx\Mixin\Response\Response;
 
-class PostResponseEvent extends PbjxEvent
+class ResponseCreatedEvent extends PbjxEvent
 {
     /** @var Request */
     protected $message;
@@ -14,18 +15,19 @@ class PostResponseEvent extends PbjxEvent
     protected $response;
 
     /**
-     * @param Request $request
+     * @param Request  $request
      * @param Response $response
      */
     public function __construct(Request $request, Response $response)
     {
         parent::__construct($request);
+        $this->response = $response;
     }
 
     /**
      * @return Request
      */
-    public function getRequest()
+    public function getRequest(): Request
     {
         return $this->message;
     }
@@ -33,7 +35,7 @@ class PostResponseEvent extends PbjxEvent
     /**
      * @return Response
      */
-    public function getResponse()
+    public function getResponse(): Response
     {
         return $this->response;
     }
@@ -41,7 +43,7 @@ class PostResponseEvent extends PbjxEvent
     /**
      * @return bool
      */
-    public function supportsRecursion()
+    public function supportsRecursion(): bool
     {
         return false;
     }

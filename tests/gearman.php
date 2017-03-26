@@ -32,12 +32,16 @@ while (true) {
     echo $command . PHP_EOL . PHP_EOL;
 
     $event = SimpleEvent::create()->set('name', 'homer :: ' . $time);
+
     $pbjx->publish($event);
     echo 'Enriched, then Published -> ' . $event->get('event_id') . PHP_EOL;
     echo $event . PHP_EOL . PHP_EOL;
 
+    $event = clone $event;
+    $event->clear('event_id');
+    $event->isReplay(true);
     $pbjx->publish($event);
-    echo '(Enriched should not run again) Published -> ' . $event->get('event_id') . PHP_EOL;
+    echo 'Replayed Event Published -> ' . $event->get('event_id') . PHP_EOL;
     echo $event . PHP_EOL . PHP_EOL;
 
     $request = GetTimeRequest::create();

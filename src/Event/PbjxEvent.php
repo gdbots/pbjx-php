@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Pbjx\Event;
 
@@ -31,7 +32,7 @@ class PbjxEvent extends Event
     /**
      * @return bool
      */
-    public static function hasPbjx()
+    public static function hasPbjx(): bool
     {
         return null !== self::$pbjx;
     }
@@ -39,7 +40,7 @@ class PbjxEvent extends Event
     /**
      * @return Pbjx
      */
-    public static function getPbjx()
+    public static function getPbjx(): Pbjx
     {
         return self::$pbjx;
     }
@@ -47,7 +48,7 @@ class PbjxEvent extends Event
     /**
      * @param Pbjx $pbjx
      */
-    public static function setPbjx(Pbjx $pbjx)
+    public static function setPbjx(Pbjx $pbjx): void
     {
         self::$pbjx = $pbjx;
     }
@@ -55,7 +56,7 @@ class PbjxEvent extends Event
     /**
      * @return Message
      */
-    public function getMessage()
+    public function getMessage(): Message
     {
         return $this->message;
     }
@@ -63,23 +64,23 @@ class PbjxEvent extends Event
     /**
      * @return int
      */
-    public function getDepth()
+    public function getDepth(): int
     {
         return $this->depth;
     }
 
     /**
-     * @return static
+     * @return bool
      */
-    public function hasParentEvent()
+    public function hasParentEvent(): bool
     {
         return null !== $this->parentEvent;
     }
 
     /**
-     * @return static
+     * @return self
      */
-    public function getParentEvent()
+    public function getParentEvent(): self
     {
         return $this->parentEvent;
     }
@@ -87,17 +88,19 @@ class PbjxEvent extends Event
     /**
      * @return bool
      */
-    public function isRootEvent()
+    public function isRootEvent(): bool
     {
         return 0 === $this->depth;
     }
 
     /**
      * @param Message $message
-     * @return static
+     *
+     * @return self
+     *
      * @throws \LogicException
      */
-    public function createChildEvent(Message $message)
+    public function createChildEvent(Message $message): self
     {
         if (!$this->supportsRecursion()) {
             throw new \LogicException(sprintf('%s does not support recursion.', get_called_class()));
@@ -112,7 +115,7 @@ class PbjxEvent extends Event
     /**
      * @return bool
      */
-    public function supportsRecursion()
+    public function supportsRecursion(): bool
     {
         return true;
     }

@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Tests\Pbjx;
 
@@ -6,7 +7,7 @@ use Gdbots\Tests\Pbjx\Fixtures\GetTimeRequest;
 use Gdbots\Tests\Pbjx\Fixtures\GetTimeRequestHandler;
 use Gdbots\Tests\Pbjx\Fixtures\GetTimeResponse;
 
-class DefaultRequestBusTest extends AbstractBusTestCase
+class SimpleRequestBusTest extends AbstractBusTestCase
 {
     protected function setup()
     {
@@ -20,6 +21,7 @@ class DefaultRequestBusTest extends AbstractBusTestCase
     public function testRequest()
     {
         $request = GetTimeRequest::create();
+        /** @var \DateTime $expected */
         $expected = $request->get('occurred_at')->toDateTime();
         /** @var GetTimeResponse $response */
         $response = $this->pbjx->request($request);

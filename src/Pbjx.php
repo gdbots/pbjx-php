@@ -1,9 +1,12 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Pbjx;
 
 use Gdbots\Pbj\Message;
 use Gdbots\Pbjx\Event\PbjxEvent;
+use Gdbots\Pbjx\EventSearch\EventSearch;
+use Gdbots\Pbjx\EventStore\EventStore;
 use Gdbots\Pbjx\Exception\GdbotsPbjxException;
 use Gdbots\Pbjx\Exception\InvalidArgumentException;
 use Gdbots\Pbjx\Exception\TooMuchRecursion;
@@ -27,10 +30,10 @@ interface Pbjx
      * the trigger process.  The PbjxEvent object will have a reference to the parent event
      * and the depth of the recursion.
      *
-     * @param Message $message  The message that will be processed.
-     * @param string $suffix    A string indicating the lifecycle phase (bind, validate, enrich, etc.)
-     * @param PbjxEvent $event  An event object containing the message.
-     * @param bool $recursive   If true, all field values with MessageType are also triggered.
+     * @param Message   $message   The message that will be processed.
+     * @param string    $suffix    A string indicating the lifecycle phase (bind, validate, enrich, etc.)
+     * @param PbjxEvent $event     An event object containing the message.
+     * @param bool      $recursive If true, all field values with MessageType are also triggered.
      *
      * @return Pbjx
      *
@@ -39,7 +42,7 @@ interface Pbjx
      * @throws TooMuchRecursion
      * @throws \Exception
      */
-    public function trigger(Message $message, $suffix, PbjxEvent $event = null, $recursive = true);
+    public function trigger(Message $message, string $suffix, ?PbjxEvent $event = null, bool $recursive = true): Pbjx;
 
     /**
      * Runs the "standard" lifecycle for a message prior to send, publish or request.
@@ -49,13 +52,13 @@ interface Pbjx
      * or frozen and persisted to storage.
      *
      * @param Message $message
-     * @param bool $recursive
+     * @param bool    $recursive
      *
      * @return Pbjx
      *
      * @throws \Exception
      */
-    public function triggerLifecycle(Message $message, $recursive = true);
+    public function triggerLifecycle(Message $message, bool $recursive = true): Pbjx;
 
     /**
      * Copies context fields (ip, user agent, correlator, etc.) from one message to another.
@@ -65,7 +68,7 @@ interface Pbjx
      *
      * @return Pbjx
      */
-    public function copyContext(Message $from, Message $to);
+    public function copyContext(Message $from, Message $to): Pbjx;
 
     /**
      * Processes a command asynchronously.
@@ -75,7 +78,7 @@ interface Pbjx
      * @throws GdbotsPbjxException
      * @throws \Exception
      */
-    public function send(Command $command);
+    public function send(Command $command): void;
 
     /**
      * Publishes events to all subscribers.
@@ -85,16 +88,27 @@ interface Pbjx
      * @throws GdbotsPbjxException
      * @throws \Exception
      */
-    public function publish(Event $event);
+    public function publish(Event $event): void;
 
     /**
      * Processes a request synchronously and returns the response.
      *
      * @param Request $request
+     *
      * @return Response
      *
      * @throws GdbotsPbjxException
      * @throws \Exception
      */
-    public function request(Request $request);
+    public function request(Request $request): Response;
+
+    /**
+     * @return EventStore
+     */
+    public function getEventStore(): EventStore;
+
+    /**
+     * @return EventSearch
+     */
+    public function getEventSearch(): EventSearch;
 }

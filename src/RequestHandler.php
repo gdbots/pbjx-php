@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Pbjx;
 
@@ -10,11 +11,12 @@ interface RequestHandler
 {
     /**
      * @param Request $request
-     * @param Pbjx $pbjx
+     * @param Pbjx    $pbjx
+     *
      * @return Response
      *
      * @throws GdbotsPbjxException
      * @throws \Exception
      */
-    public function handleRequest(Request $request, Pbjx $pbjx);
+    public function handleRequest(Request $request, Pbjx $pbjx): Response;
 }

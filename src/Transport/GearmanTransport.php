@@ -1,53 +1,47 @@
 <?php
+declare(strict_types = 1);
 
 namespace Gdbots\Pbjx\Transport;
 
 use Gdbots\Common\Util\NumberUtils;
-use Gdbots\Pbj\Serializer\PhpSerializer;
-use Gdbots\Pbj\Serializer\Serializer;
-use Gdbots\Pbjx\Router;
 use Gdbots\Pbjx\ServiceLocator;
 use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
 use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
 use Gdbots\Schemas\Pbjx\Mixin\Request\Request;
 use Gdbots\Schemas\Pbjx\Mixin\Response\Response;
 
-class GearmanTransport extends AbstractTransport
+final class GearmanTransport extends AbstractTransport
 {
     /** @var \GearmanClient */
-    protected $client;
-
-    /** @var Serializer */
-    protected $serializer;
+    private $client;
 
     /** @var Router */
-    protected $router;
+    private $router;
 
     /**
      * @link http://php.net/manual/en/gearmanclient.addserver.php
      * @var array
      */
-    protected $servers = [];
+    private $servers = [];
 
     /**
      * @link http://php.net/manual/en/gearmanclient.settimeout.php
      * @var int
      */
-    protected $timeout = 5000;
+    private $timeout = 5000;
 
     /**
      * @param ServiceLocator $locator
-     * @param array $servers format [['host' => '127.0.0.1', 'port' => 4730]]
-     * @param int $timeout milliseconds
-     * @param Router $router
+     * @param array          $servers format [['host' => '127.0.0.1', 'port' => 4730]]
+     * @param int            $timeout milliseconds
+     * @param Router         $router
      */
-    public function __construct(ServiceLocator $locator, array $servers = [], $timeout = 5000, Router $router = null)
+    public function __construct(ServiceLocator $locator, array $servers = [], int $timeout = 5000, ?Router $router = null)
     {
         parent::__construct($locator);
         $this->servers = $servers;
         $this->timeout = NumberUtils::bound($timeout, 200, 10000);
         $this->router = $router ?: new GearmanRouter();
-        $this->serializer = new PhpSerializer();
     }
 
     /**
@@ -55,15 +49,16 @@ class GearmanTransport extends AbstractTransport
      * @see GearmanClient::doBackground
      *
      * @param Command $command
+     *
      * @throws \Exception
      */
-    protected function doSendCommand(Command $command)
+    protected function doSendCommand(Command $command): void
     {
-        $workload = $this->serializer->serialize($command);
+        $envelope = new TransportEnvelope($command, 'php');
         $channel = $this->router->forCommand($command);
         $client = $this->getClient();
 
-        @$client->doBackground($channel, $workload, $command->get('command_id'));
+        @$client->doBackground($channel, $envelope->toString(), (string)$command->get('command_id'));
         $this->validateReturnCode($client, $channel);
     }
 
@@ -72,15 +67,16 @@ class GearmanTransport extends AbstractTransport
      * @see GearmanClient::doBackground
      *
      * @param Event $event
+     *
      * @throws \Exception
      */
-    protected function doSendEvent(Event $event)
+    protected function doSendEvent(Event $event): void
     {
-        $workload = $this->serializer->serialize($event);
+        $envelope = new TransportEnvelope($event, 'php');
         $channel = $this->router->forEvent($event);
         $client = $this->getClient();
 
-        @$client->doBackground($channel, $workload, $event->get('event_id'));
+        @$client->doBackground($channel, $envelope->toString(), (string)$event->get('event_id'));
         $this->validateReturnCode($client, $channel);
     }
 
@@ -88,18 +84,19 @@ class GearmanTransport extends AbstractTransport
      * Processes the request in memory synchronously.
      *
      * @param Request $request
+     *
      * @return Response
      * @throws \Exception
      */
-    protected function doSendRequest(Request $request)
+    protected function doSendRequest(Request $request): Response
     {
-        $workload = $this->serializer->serialize($request);
+        $envelope = new TransportEnvelope($request, 'php');
         $channel = $this->router->forRequest($request);
         $client = $this->getClient();
 
-        $result = @$client->doNormal($channel, $workload, $request->get('request_id'));
+        $result = @$client->doNormal($channel, $envelope->toString(), (string)$request->get('request_id'));
         $this->validateReturnCode($client, $channel);
-        return $this->serializer->deserialize($result);
+        return TransportEnvelope::fromString($result)->getMessage();
     }
 
     /**
@@ -111,9 +108,10 @@ class GearmanTransport extends AbstractTransport
      * won't be sending any messages.  :)
      *
      * @return \GearmanClient
+     *
      * @throws \GearmanException
      */
-    protected function getClient()
+    private function getClient(): \GearmanClient
     {
         if (null === $this->client) {
             $client = new \GearmanClient();
@@ -133,7 +131,7 @@ class GearmanTransport extends AbstractTransport
                 $added = 0;
                 foreach ($this->servers as $server) {
                     $host = isset($server['host']) ? $server['host'] : '127.0.0.1';
-                    $port = (int) isset($server['port']) ? $server['port'] : 4730;
+                    $port = (int)isset($server['port']) ? $server['port'] : 4730;
                     try {
                         if ($client->addServer($host, $port)) {
                             $added++;
@@ -160,11 +158,11 @@ class GearmanTransport extends AbstractTransport
      * Checks the return code from gearman and throws an exception if it's a failure.
      *
      * @param \GearmanClient $client
-     * @param string $channel
+     * @param string         $channel
      *
      * @throws \Exception
      */
-    protected function validateReturnCode(\GearmanClient $client, $channel)
+    private function validateReturnCode(\GearmanClient $client, string $channel): void
     {
         switch ($client->returnCode()) {
             case GEARMAN_SUCCESS:

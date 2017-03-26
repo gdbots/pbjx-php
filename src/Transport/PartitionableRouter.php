@@ -1,6 +1,7 @@
 <?php
+declare(strict_types = 1);
 
-namespace Gdbots\Pbjx;
+namespace Gdbots\Pbjx\Transport;
 
 use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
 use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
@@ -18,19 +19,22 @@ interface PartitionableRouter extends Router
 {
     /**
      * @param Command $command
+     *
      * @return string
      */
-    public function partitionForCommand(Command $command);
+    public function partitionForCommand(Command $command): string;
 
     /**
      * @param Event $event
+     *
      * @return string
      */
-    public function partitionForEvent(Event $event);
+    public function partitionForEvent(Event $event): string;
 
     /**
      * @param Request $request
+     *
      * @return string
      */
-    public function partitionForRequest(Request $request);
+    public function partitionForRequest(Request $request): string;
 }
