@@ -89,10 +89,16 @@ final class GearmanConsumer extends AbstractConsumer
                 try {
                     // by default we add the local machine
                     if (!$worker->addServer()) {
-                        throw new \GearmanException('GearmanWorker::addServer returned false.');
+                        throw new \GearmanException(
+                            'GearmanWorker::addServer returned false.',
+                            GEARMAN_COULD_NOT_CONNECT
+                        );
                     }
                 } catch (\Exception $e) {
-                    throw new \GearmanException('Unable to add local server 127.0.0.1:4730.  ' . $e->getMessage());
+                    throw new \GearmanException(
+                        'Unable to add local server 127.0.0.1:4730.  ' . $e->getMessage(),
+                        GEARMAN_COULD_NOT_CONNECT
+                    );
                 }
             } else {
                 shuffle($this->servers);
@@ -111,7 +117,8 @@ final class GearmanConsumer extends AbstractConsumer
 
                 if (0 === $added) {
                     throw new \GearmanException(
-                        sprintf('Unable to add any of these servers: %s', json_encode($this->servers))
+                        sprintf('Unable to add any of these servers: %s', json_encode($this->servers)),
+                        GEARMAN_COULD_NOT_CONNECT
                     );
                 }
             }

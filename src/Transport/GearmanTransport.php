@@ -56,10 +56,27 @@ final class GearmanTransport extends AbstractTransport
     {
         $envelope = new TransportEnvelope($command, 'php');
         $channel = $this->router->forCommand($command);
-        $client = $this->getClient();
 
-        @$client->doBackground($channel, $envelope->toString(), (string)$command->get('command_id'));
-        $this->validateReturnCode($client, $channel);
+        try {
+            $client = $this->getClient();
+            @$client->doBackground($channel, $envelope->toString(), (string)$command->get('command_id'));
+            $this->validateReturnCode($client, $channel);
+        } catch (\GearmanException $ge) {
+            switch ($ge->getCode()) {
+                case GEARMAN_TIMEOUT:
+                case GEARMAN_LOST_CONNECTION:
+                case GEARMAN_COULD_NOT_CONNECT:
+                    $this->client = null;
+                    $this->timeout = 50;
+                    $this->locator->getCommandBus()->receiveCommand($command);
+                    break;
+
+                default:
+                    throw $ge;
+            }
+        } catch (\Exception $e) {
+            throw $e;
+        }
     }
 
     /**
@@ -74,10 +91,27 @@ final class GearmanTransport extends AbstractTransport
     {
         $envelope = new TransportEnvelope($event, 'php');
         $channel = $this->router->forEvent($event);
-        $client = $this->getClient();
 
-        @$client->doBackground($channel, $envelope->toString(), (string)$event->get('event_id'));
-        $this->validateReturnCode($client, $channel);
+        try {
+            $client = $this->getClient();
+            @$client->doBackground($channel, $envelope->toString(), (string)$event->get('event_id'));
+            $this->validateReturnCode($client, $channel);
+        } catch (\GearmanException $ge) {
+            switch ($ge->getCode()) {
+                case GEARMAN_TIMEOUT:
+                case GEARMAN_LOST_CONNECTION:
+                case GEARMAN_COULD_NOT_CONNECT:
+                    $this->client = null;
+                    $this->timeout = 50;
+                    $this->locator->getEventBus()->receiveEvent($event);
+                    break;
+
+                default:
+                    throw $ge;
+            }
+        } catch (\Exception $e) {
+            throw $e;
+        }
     }
 
     /**
@@ -92,11 +126,27 @@ final class GearmanTransport extends AbstractTransport
     {
         $envelope = new TransportEnvelope($request, 'php');
         $channel = $this->router->forRequest($request);
-        $client = $this->getClient();
 
-        $result = @$client->doNormal($channel, $envelope->toString(), (string)$request->get('request_id'));
-        $this->validateReturnCode($client, $channel);
-        return TransportEnvelope::fromString($result)->getMessage();
+        try {
+            $client = $this->getClient();
+            $result = @$client->doNormal($channel, $envelope->toString(), (string)$request->get('request_id'));
+            $this->validateReturnCode($client, $channel);
+            return TransportEnvelope::fromString($result)->getMessage();
+        } catch (\GearmanException $ge) {
+            switch ($ge->getCode()) {
+                case GEARMAN_TIMEOUT:
+                case GEARMAN_LOST_CONNECTION:
+                case GEARMAN_COULD_NOT_CONNECT:
+                    $this->client = null;
+                    $this->timeout = 50;
+                    return $this->locator->getRequestBus()->receiveRequest($request);
+
+                default:
+                    throw $ge;
+            }
+        } catch (\Exception $e) {
+            throw $e;
+        }
     }
 
     /**
@@ -121,10 +171,16 @@ final class GearmanTransport extends AbstractTransport
                 try {
                     // by default we add the local machine
                     if (!$client->addServer()) {
-                        throw new \GearmanException('GearmanClient::addServer returned false.');
+                        throw new \GearmanException(
+                            'GearmanClient::addServer returned false.',
+                            GEARMAN_COULD_NOT_CONNECT
+                        );
                     }
                 } catch (\Exception $e) {
-                    throw new \GearmanException('Unable to add local server 127.0.0.1:4730.  ' . $e->getMessage());
+                    throw new \GearmanException(
+                        'Unable to add local server 127.0.0.1:4730.  ' . $e->getMessage(),
+                        GEARMAN_COULD_NOT_CONNECT
+                    );
                 }
             } else {
                 shuffle($this->servers);
@@ -143,7 +199,8 @@ final class GearmanTransport extends AbstractTransport
 
                 if (0 === $added) {
                     throw new \GearmanException(
-                        sprintf('Unable to add any of these servers: %s', json_encode($this->servers))
+                        sprintf('Unable to add any of these servers: %s', json_encode($this->servers)),
+                        GEARMAN_COULD_NOT_CONNECT
                     );
                 }
             }

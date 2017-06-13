@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 2.x versions.
 
 
+## v2.0.1
+* issue #8: Automatically reconnect gearman if connection is lost.
+
+
 ## v2.0.0
 __BREAKING CHANGES__
 
