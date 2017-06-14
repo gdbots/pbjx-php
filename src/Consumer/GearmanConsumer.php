@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Gdbots\Pbjx\Consumer;
 
@@ -70,7 +70,7 @@ final class GearmanConsumer extends AbstractConsumer
                 GearmanRouter::DEFAULT_REQUEST_CHANNEL,
             ];
         $this->servers = $servers;
-        $this->timeout = NumberUtils::bound($timeout, 200, 10000);
+        $this->timeout = NumberUtils::bound($timeout, 100, 10000);
     }
 
     /**
@@ -139,6 +139,7 @@ final class GearmanConsumer extends AbstractConsumer
 
     /**
      * Runs the gearman worker process.
+     *
      * @link http://php.net/manual/en/gearmanworker.work.php
      */
     protected function work(): void
@@ -146,7 +147,6 @@ final class GearmanConsumer extends AbstractConsumer
         if (@$this->worker->work()
             || $this->worker->returnCode() == GEARMAN_IO_WAIT
             || $this->worker->returnCode() == GEARMAN_NO_JOBS
-            || $this->worker->returnCode() == GEARMAN_TIMEOUT
         ) {
             if ($this->worker->returnCode() == GEARMAN_SUCCESS) {
                 return;
@@ -155,11 +155,16 @@ final class GearmanConsumer extends AbstractConsumer
             if (!@$this->worker->wait()) {
                 if ($this->worker->returnCode() == GEARMAN_NO_ACTIVE_FDS) {
                     sleep(5);
-                } elseif ($this->worker->returnCode() == GEARMAN_TIMEOUT) {
-                    sleep(1);
                 }
             }
         }
+
+        // 0  = GEARMAN_SUCCESS
+        // 47 = GEARMAN_TIMEOUT
+        // 7  = GEARMAN_NO_ACTIVE_FDS
+        // 14 = GEARMAN_LOST_CONNECTION
+        // 26 = GEARMAN_COULD_NOT_CONNECT
+        echo $this->worker->returnCode().PHP_EOL;
     }
 
     /**

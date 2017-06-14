@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Gdbots\Pbjx\Transport;
 
@@ -31,17 +31,50 @@ final class GearmanTransport extends AbstractTransport
     private $timeout = 5000;
 
     /**
+     * Number of reconnects that have occurred.
+     *
+     * @var int
+     */
+    private $reconnects = 0;
+
+    /**
+     * Maximum number of times a reconnect will be attempted.
+     *
+     * @var int
+     */
+    private $maxReconnects = 10;
+
+    /**
+     * When these gearman exceptions occur, we'll attempt a reconnect
+     * so long as maxReconnects has not been exceeded.
+     *
+     * @var array
+     */
+    private static $reconnectCodes = [
+        GEARMAN_TIMEOUT           => true,
+        GEARMAN_LOST_CONNECTION   => true,
+        GEARMAN_COULD_NOT_CONNECT => true,
+    ];
+
+    /**
      * @param ServiceLocator $locator
      * @param array          $servers format [['host' => '127.0.0.1', 'port' => 4730]]
      * @param int            $timeout milliseconds
      * @param Router         $router
+     * @param int            $maxReconnects
      */
-    public function __construct(ServiceLocator $locator, array $servers = [], int $timeout = 5000, ?Router $router = null)
-    {
+    public function __construct(
+        ServiceLocator $locator,
+        array $servers = [],
+        int $timeout = 100,
+        ?Router $router = null,
+        int $maxReconnects = 10
+    ) {
         parent::__construct($locator);
         $this->servers = $servers;
-        $this->timeout = NumberUtils::bound($timeout, 200, 10000);
+        $this->timeout = NumberUtils::bound($timeout, 100, 10000);
         $this->router = $router ?: new GearmanRouter();
+        $this->maxReconnects = NumberUtils::bound($maxReconnects, 1, 10);
     }
 
     /**
@@ -54,6 +87,11 @@ final class GearmanTransport extends AbstractTransport
      */
     protected function doSendCommand(Command $command): void
     {
+        if (!$this->shouldUseGearman()) {
+            $this->locator->getCommandBus()->receiveCommand($command);
+            return;
+        }
+
         $envelope = new TransportEnvelope($command, 'php');
         $channel = $this->router->forCommand($command);
 
@@ -62,18 +100,13 @@ final class GearmanTransport extends AbstractTransport
             @$client->doBackground($channel, $envelope->toString(), (string)$command->get('command_id'));
             $this->validateReturnCode($client, $channel);
         } catch (\GearmanException $ge) {
-            switch ($ge->getCode()) {
-                case GEARMAN_TIMEOUT:
-                case GEARMAN_LOST_CONNECTION:
-                case GEARMAN_COULD_NOT_CONNECT:
-                    $this->client = null;
-                    $this->timeout = 50;
-                    $this->locator->getCommandBus()->receiveCommand($command);
-                    break;
-
-                default:
-                    throw $ge;
+            if (isset(self::$reconnectCodes[$ge->getCode()])) {
+                $this->destroyClient();
+                $this->locator->getCommandBus()->receiveCommand($command);
+                return;
             }
+
+            throw $ge;
         } catch (\Exception $e) {
             throw $e;
         }
@@ -89,6 +122,11 @@ final class GearmanTransport extends AbstractTransport
      */
     protected function doSendEvent(Event $event): void
     {
+        if (!$this->shouldUseGearman()) {
+            $this->locator->getEventBus()->receiveEvent($event);
+            return;
+        }
+
         $envelope = new TransportEnvelope($event, 'php');
         $channel = $this->router->forEvent($event);
 
@@ -97,18 +135,13 @@ final class GearmanTransport extends AbstractTransport
             @$client->doBackground($channel, $envelope->toString(), (string)$event->get('event_id'));
             $this->validateReturnCode($client, $channel);
         } catch (\GearmanException $ge) {
-            switch ($ge->getCode()) {
-                case GEARMAN_TIMEOUT:
-                case GEARMAN_LOST_CONNECTION:
-                case GEARMAN_COULD_NOT_CONNECT:
-                    $this->client = null;
-                    $this->timeout = 50;
-                    $this->locator->getEventBus()->receiveEvent($event);
-                    break;
-
-                default:
-                    throw $ge;
+            if (isset(self::$reconnectCodes[$ge->getCode()])) {
+                $this->destroyClient();
+                $this->locator->getEventBus()->receiveEvent($event);
+                return;
             }
+
+            throw $ge;
         } catch (\Exception $e) {
             throw $e;
         }
@@ -124,6 +157,10 @@ final class GearmanTransport extends AbstractTransport
      */
     protected function doSendRequest(Request $request): Response
     {
+        if (!$this->shouldUseGearman()) {
+            return $this->locator->getRequestBus()->receiveRequest($request);
+        }
+
         $envelope = new TransportEnvelope($request, 'php');
         $channel = $this->router->forRequest($request);
 
@@ -133,20 +170,49 @@ final class GearmanTransport extends AbstractTransport
             $this->validateReturnCode($client, $channel);
             return TransportEnvelope::fromString($result)->getMessage();
         } catch (\GearmanException $ge) {
-            switch ($ge->getCode()) {
-                case GEARMAN_TIMEOUT:
-                case GEARMAN_LOST_CONNECTION:
-                case GEARMAN_COULD_NOT_CONNECT:
-                    $this->client = null;
-                    $this->timeout = 50;
-                    return $this->locator->getRequestBus()->receiveRequest($request);
-
-                default:
-                    throw $ge;
+            if (isset(self::$reconnectCodes[$ge->getCode()])) {
+                $this->destroyClient();
+                return $this->locator->getRequestBus()->receiveRequest($request);
             }
+
+            throw $ge;
         } catch (\Exception $e) {
             throw $e;
         }
+    }
+
+    /**
+     * If the maxReconnects hasn't been exceeded and we still have
+     * an active client, then use gearman.
+     *
+     * @return bool
+     */
+    private function shouldUseGearman(): bool
+    {
+        $okay = $this->reconnects < $this->maxReconnects || null !== $this->client;
+        echo '$okay = '.($okay ? 'yes' : 'no').PHP_EOL;
+        echo '$this->reconnects = '.$this->reconnects.PHP_EOL;
+        echo '$this->maxReconnects = '.$this->maxReconnects.PHP_EOL;
+        if (!$okay) {
+            die ('nope');
+        }
+        return $this->reconnects < $this->maxReconnects || null !== $this->client;
+    }
+
+    /**
+     * Destroys the current client and calculates a new timeout for the
+     * next client created to be an exponential backoff with jitter,
+     * 100ms base, 5 sec ceiling.
+     *
+     * @return void
+     */
+    private function destroyClient(): void
+    {
+        ++$this->reconnects;
+        $this->client = null;
+        $delay = mt_rand(0, (int)min(5000, (int)pow(2, $this->reconnects) * 100));
+        echo '$delay = '.$delay.PHP_EOL;
+        usleep($delay * 1000);
     }
 
     /**
@@ -164,6 +230,10 @@ final class GearmanTransport extends AbstractTransport
     private function getClient(): \GearmanClient
     {
         if (null === $this->client) {
+            static $i = 0;
+            echo 'creating client '.++$i.PHP_EOL;
+            //$this->reconnects = 0;
+
             $client = new \GearmanClient();
             $client->setTimeout($this->timeout);
 
