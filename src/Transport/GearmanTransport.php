@@ -42,7 +42,7 @@ final class GearmanTransport extends AbstractTransport
      *
      * @var int
      */
-    private $maxReconnects = 10;
+    private $maxReconnects = 3;
 
     /**
      * When these gearman exceptions occur, we'll attempt a reconnect
@@ -66,9 +66,9 @@ final class GearmanTransport extends AbstractTransport
     public function __construct(
         ServiceLocator $locator,
         array $servers = [],
-        int $timeout = 100,
+        int $timeout = 5000,
         ?Router $router = null,
-        int $maxReconnects = 10
+        int $maxReconnects = 3
     ) {
         parent::__construct($locator);
         $this->servers = $servers;
@@ -189,13 +189,6 @@ final class GearmanTransport extends AbstractTransport
      */
     private function shouldUseGearman(): bool
     {
-        $okay = $this->reconnects < $this->maxReconnects || null !== $this->client;
-        echo '$okay = '.($okay ? 'yes' : 'no').PHP_EOL;
-        echo '$this->reconnects = '.$this->reconnects.PHP_EOL;
-        echo '$this->maxReconnects = '.$this->maxReconnects.PHP_EOL;
-        if (!$okay) {
-            die ('nope');
-        }
         return $this->reconnects < $this->maxReconnects || null !== $this->client;
     }
 
@@ -211,7 +204,6 @@ final class GearmanTransport extends AbstractTransport
         ++$this->reconnects;
         $this->client = null;
         $delay = mt_rand(0, (int)min(5000, (int)pow(2, $this->reconnects) * 100));
-        echo '$delay = '.$delay.PHP_EOL;
         usleep($delay * 1000);
     }
 
@@ -230,10 +222,6 @@ final class GearmanTransport extends AbstractTransport
     private function getClient(): \GearmanClient
     {
         if (null === $this->client) {
-            static $i = 0;
-            echo 'creating client '.++$i.PHP_EOL;
-            //$this->reconnects = 0;
-
             $client = new \GearmanClient();
             $client->setTimeout($this->timeout);
 

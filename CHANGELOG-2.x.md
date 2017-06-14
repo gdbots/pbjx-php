@@ -3,7 +3,8 @@ This changelog references the relevant changes done in 2.x versions.
 
 
 ## v2.0.1
-* issue #8: Automatically reconnect gearman if connection is lost.
+* issue #8: Automatically reconnect gearman if connection is lost.  After `maxReconnects` is reached (default=3)
+  then all further pbjx operations will be handled in memory.
 
 
 ## v2.0.0

@@ -158,13 +158,6 @@ final class GearmanConsumer extends AbstractConsumer
                 }
             }
         }
-
-        // 0  = GEARMAN_SUCCESS
-        // 47 = GEARMAN_TIMEOUT
-        // 7  = GEARMAN_NO_ACTIVE_FDS
-        // 14 = GEARMAN_LOST_CONNECTION
-        // 26 = GEARMAN_COULD_NOT_CONNECT
-        echo $this->worker->returnCode().PHP_EOL;
     }
 
     /**

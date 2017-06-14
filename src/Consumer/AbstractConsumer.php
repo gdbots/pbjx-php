@@ -62,8 +62,7 @@ abstract class AbstractConsumer
          * come and go.  Ensuring they don't come and go all close together makes it less
          * likely that no service will be available while consumers restart.
          */
-        $jitter = mt_rand(100, 3000);
-        $this->logger->info("jitter {$jitter}");
+        $jitter = mt_rand(0, 3000);
         usleep($jitter * 1000);
 
         $maxRuntime += mt_rand(0, 20);
