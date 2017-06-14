@@ -55,6 +55,17 @@ abstract class AbstractConsumer
             return;
         }
 
+        /*
+         * In many distributed systems multiple consumers are created and these often get
+         * started at the exact same time by something like upstart.  Randomizing start
+         * times helps with processes depending on live consumers (like gearman) that
+         * come and go.  Ensuring they don't come and go all close together makes it less
+         * likely that no service will be available while consumers restart.
+         */
+        $jitter = mt_rand(0, 3000);
+        usleep($jitter * 1000);
+
+        $maxRuntime += mt_rand(0, 20);
         $maxRuntime = NumberUtils::bound($maxRuntime, 10, 86400);
         $start = time();
         $this->logger->notice(

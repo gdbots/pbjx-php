@@ -29,6 +29,9 @@
       "Gdbots\\Tests\\Pbjx\\": "tests"
     }
   },
+  "scripts": {
+    "test": "vendor/bin/phpunit"
+  },
   "extra": {
     "branch-alias": {
       "dev-master": "2.0.x-dev"

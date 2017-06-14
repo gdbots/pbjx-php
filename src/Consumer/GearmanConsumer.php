@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Gdbots\Pbjx\Consumer;
 
@@ -70,7 +70,7 @@ final class GearmanConsumer extends AbstractConsumer
                 GearmanRouter::DEFAULT_REQUEST_CHANNEL,
             ];
         $this->servers = $servers;
-        $this->timeout = NumberUtils::bound($timeout, 200, 10000);
+        $this->timeout = NumberUtils::bound($timeout, 100, 10000);
     }
 
     /**
@@ -89,10 +89,16 @@ final class GearmanConsumer extends AbstractConsumer
                 try {
                     // by default we add the local machine
                     if (!$worker->addServer()) {
-                        throw new \GearmanException('GearmanWorker::addServer returned false.');
+                        throw new \GearmanException(
+                            'GearmanWorker::addServer returned false.',
+                            GEARMAN_COULD_NOT_CONNECT
+                        );
                     }
                 } catch (\Exception $e) {
-                    throw new \GearmanException('Unable to add local server 127.0.0.1:4730.  ' . $e->getMessage());
+                    throw new \GearmanException(
+                        'Unable to add local server 127.0.0.1:4730.  ' . $e->getMessage(),
+                        GEARMAN_COULD_NOT_CONNECT
+                    );
                 }
             } else {
                 shuffle($this->servers);
@@ -111,7 +117,8 @@ final class GearmanConsumer extends AbstractConsumer
 
                 if (0 === $added) {
                     throw new \GearmanException(
-                        sprintf('Unable to add any of these servers: %s', json_encode($this->servers))
+                        sprintf('Unable to add any of these servers: %s', json_encode($this->servers)),
+                        GEARMAN_COULD_NOT_CONNECT
                     );
                 }
             }
@@ -132,6 +139,7 @@ final class GearmanConsumer extends AbstractConsumer
 
     /**
      * Runs the gearman worker process.
+     *
      * @link http://php.net/manual/en/gearmanworker.work.php
      */
     protected function work(): void
@@ -139,7 +147,6 @@ final class GearmanConsumer extends AbstractConsumer
         if (@$this->worker->work()
             || $this->worker->returnCode() == GEARMAN_IO_WAIT
             || $this->worker->returnCode() == GEARMAN_NO_JOBS
-            || $this->worker->returnCode() == GEARMAN_TIMEOUT
         ) {
             if ($this->worker->returnCode() == GEARMAN_SUCCESS) {
                 return;
@@ -148,8 +155,6 @@ final class GearmanConsumer extends AbstractConsumer
             if (!@$this->worker->wait()) {
                 if ($this->worker->returnCode() == GEARMAN_NO_ACTIVE_FDS) {
                     sleep(5);
-                } elseif ($this->worker->returnCode() == GEARMAN_TIMEOUT) {
-                    sleep(1);
                 }
             }
         }
