@@ -182,7 +182,7 @@ final class GearmanTransport extends AbstractTransport
     }
 
     /**
-     * If the maxReconnects hasn't been exceeded and we still have
+     * If the maxReconnects hasn't been exceeded or we still have
      * an active client, then use gearman.
      *
      * @return bool
@@ -193,8 +193,7 @@ final class GearmanTransport extends AbstractTransport
     }
 
     /**
-     * Destroys the current client and calculates a new timeout for the
-     * next client created to be an exponential backoff with jitter,
+     * Destroys the current client and creates an exponential backoff with jitter,
      * 100ms base, 5 sec ceiling.
      *
      * @return void
