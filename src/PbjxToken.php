@@ -220,8 +220,13 @@ class PbjxToken implements \JsonSerializable
      */
     public function validate(string $secret): bool
     {
-        if($this->token) {
+        if ($this->token) {
             try {
+
+                if (!$secret || empty($secret)) {
+                    throw(new \Exception("Secret key must be supplied as a not blank value"));
+                }
+
                 //since JWT::$leeway is static, we only set it when needed then reset it to the default (0)
                 $defaultLeeway = JWT::$leeway;
                 JWT::$leeway = self::DEFAULT_LEEWAY;
@@ -258,15 +263,6 @@ class PbjxToken implements \JsonSerializable
     public function __toString(): string
     {
         return $this->getToken();
-    }
-
-    /**
-     * Returns a json encoded representation of a decoded JWT Token
-     * @return string
-     */
-    public function toJson() : string
-    {
-        return json_encode($this);
     }
 
     public function jsonSerialize() : array
