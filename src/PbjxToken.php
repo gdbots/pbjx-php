@@ -1,21 +1,22 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
-namespace Gdbots\Bundle\PbjxBundle;
+namespace Gdbots\Pbjx;
 
-use Firebase\JWT\JWT;
 use Firebase\JWT\ExpiredException;
+use Firebase\JWT\JWT;
+use Gdbots\Pbjx\Exception\InvalidArgumentException;
 use Gdbots\Pbjx\Exception\UnexpectedValueException;
-use Symfony\Component\Config\Definition\Exception\Exception;
 
 /**
- * Represents a signed PBJX-JWT token.  PBJX-JWT is a type of JWS.
+ * PbjxTokens are JWT
+ * @link https://tools.ietf.org/html/rfc7519
  *
- * Class PbjxToken
- * @package Gdbots\Bundle\PbjxBundle
- * @see http://self-issued.info/docs/draft-ietf-jose-json-web-signature.html JWS draft specification
+ * We enforce a certain structure and ttl for PbjxTokens
+ * as they are intended to be one time use tokens (nonce)
+ * and are unique per message payload being sent.
  */
-class PbjxToken implements \JsonSerializable
+final class PbjxToken implements \JsonSerializable
 {
     /**
      * @var string DEFAULT_ALGO The default algorithm and type of encryption scheme to use when signing JWT tokens.  Currently only HS256 (HMAC-SHA-256) is supported or allowed.
@@ -31,9 +32,9 @@ class PbjxToken implements \JsonSerializable
     private const DEFAULT_EXPIRATION = 5;
 
     private $token;
+    private $header;
     private $payload;
     private $signature;
-    private $header;
 
     /**
      * Gets the currently active algorithm used for signing JWT based tokens.
@@ -46,17 +47,19 @@ class PbjxToken implements \JsonSerializable
 
     /**
      * @param string $payload The content to hash
-     * @param string $secret Shared secret
+     * @param string $secret  Shared secret
+     *
      * @return string A base64-encoded hmac
      */
-    public static function getPayloadHash(string $payload, string $secret) : string
+    public static function getPayloadHash(string $payload, string $secret): string
     {
         return JWT::urlsafeB64Encode(hash_hmac('sha256', $payload, $secret, true));
     }
 
     /**
-     * @param string $host The host or endpoint that this payload is being sent to
-     * @param mixed $content The content to include in the payload.
+     * @param string $host    The host or endpoint that this payload is being sent to
+     * @param mixed  $content The content to include in the payload.
+     *
      * @return array The default structure for all PBJX tokens
      */
     public static function generatePayload(string $host, string $content, string $secret): array
@@ -64,28 +67,29 @@ class PbjxToken implements \JsonSerializable
         $ret = [
             "host" => $host,
             "pbjx" => self::getPayloadHash($content, $secret),
-            "exp"  => time() + self::DEFAULT_EXPIRATION
+            "exp"  => time() + self::DEFAULT_EXPIRATION,
         ];
 
         return $ret;
     }
 
     /**
-     * @param string $host Pbjx host or service name
-     * @param $content Pbjx content
-     * @param string $secret Shared secret
+     * @param string $host    Pbjx host or service name
+     * @param        $content Pbjx content
+     * @param string $secret  Shared secret
+     *
      * @return PbjxToken
      * @throws \Exception If the token could not be created
      * @throws DomainException If the content cannot be json encoded using json_encode
      */
-    public static function create(string $host, string $content, string $kId, string $secret) : PbjxToken
+    public static function create(string $host, string $content, string $kId, string $secret): PbjxToken
     {
         if (!$kId || empty($kId)) {
-            throw \Gdbots\Pbjx\Exception\InvalidArgumentException('$kId Value is a required parameter');
+            throw new InvalidArgumentException('$kId Value is a required parameter');
         }
 
         if (!$content || empty($content)) {
-            throw \Gdbots\Pbjx\Exception\InvalidArgumentException('$content Value is a required parameter');
+            throw new InvalidArgumentException('$content Value is a required parameter');
         }
 
         $pbjxToken = new self();
@@ -95,7 +99,7 @@ class PbjxToken implements \JsonSerializable
         try {
             $payloadEncoded = json_encode($payload);
 
-            if(!$payloadEncoded) {
+            if (!$payloadEncoded) {
                 throw new \DomainException('Could not encode payload');
             }
 
@@ -111,8 +115,9 @@ class PbjxToken implements \JsonSerializable
     /**
      * Parse a JWT token and attempt to decode it using the user supplied secret
      *
-     * @param string $jwt A JWT formatted token
+     * @param string $jwt    A JWT formatted token
      * @param string $secret Shared secret
+     *
      * @return PbjxToken
      * @throws \Exception If the token could not be decoded
      * @throws UnexpectedValueException If the token could not be parsed
@@ -121,7 +126,7 @@ class PbjxToken implements \JsonSerializable
     {
         $pbjxToken = new self();
         try {
-            if($pbjxToken->parseJwtToken($jwt)) {
+            if ($pbjxToken->parseJwtToken($jwt)) {
                 $pbjxToken->payload = JWT::decode($jwt, $secret, [self::DEFAULT_ALGO]);
                 return $pbjxToken;
             } else {
@@ -134,7 +139,9 @@ class PbjxToken implements \JsonSerializable
 
     /**
      * PbjxToken constructor.
+     *
      * @param string $token Optional JWT token string to parse on construction of this object.
+     *
      * @return PbjxToken
      */
     public function __construct(string $token = null)
@@ -150,12 +157,13 @@ class PbjxToken implements \JsonSerializable
      * not contain 2 '.' characters, false will be returned.
      *
      * @param string $token JWT formatted token
+     *
      * @return bool
      */
     private function parseJwtToken(string $token): bool
     {
 
-        if(substr_count($token, '.') != 2) {
+        if (substr_count($token, '.') != 2) {
             return false;
         }
         $this->token = $token;
@@ -202,6 +210,7 @@ class PbjxToken implements \JsonSerializable
      * Create just the signature portion for a JWT payload
      *
      * @param string $secret Shared secret
+     *
      * @return string
      * @throws DomainException Unsupported algorithm was specified
      */
@@ -214,6 +223,7 @@ class PbjxToken implements \JsonSerializable
      * Attempts to decode the current jwt token using the supplied secret.
      *
      * @param string $secret Shared secret
+     *
      * @return bool False is the token is invalid, otherwise True
      * @throws ExpiredException If the token has expired
      * @throws Exception The token was malformed or could not be decoded
@@ -240,15 +250,12 @@ class PbjxToken implements \JsonSerializable
                 }
 
                 return true;
-            }
-            catch(ExpiredException $e) {
+            } catch (ExpiredException $e) {
                 $this->expired = true;
                 throw($e);
-            }
-            catch(Exception $e) {
+            } catch (Exception $e) {
                 return false;
-            }
-            finally {
+            } finally {
                 JWT::$leeway = $defaultLeeway;
             }
         }
@@ -265,12 +272,12 @@ class PbjxToken implements \JsonSerializable
         return $this->getToken();
     }
 
-    public function jsonSerialize() : array
+    public function jsonSerialize(): array
     {
         return [
-            'header' => $this->getHeader(),
-            'payload' => $this->getPayload(),
-            'signature' => $this->getSignature()
+            'header'    => $this->getHeader(),
+            'payload'   => $this->getPayload(),
+            'signature' => $this->getSignature(),
         ];
     }
 }
