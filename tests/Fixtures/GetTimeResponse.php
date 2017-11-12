@@ -22,10 +22,10 @@ final class GetTimeResponse extends AbstractMessage implements ResponseV1
     {
         $schema = new Schema('pbj:gdbots:tests.pbjx:fixtures:get-time-response:1-0-0', __CLASS__,
             [
-                Fb::create('time', T\DateTimeType::create())->build()
+                Fb::create('time', T\DateTimeType::create())->build(),
             ],
             [
-                ResponseV1Mixin::create()
+                ResponseV1Mixin::create(),
             ]
         );
 

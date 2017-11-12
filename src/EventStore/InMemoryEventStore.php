@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Gdbots\Pbjx\EventStore;
 
@@ -29,7 +29,7 @@ final class InMemoryEventStore implements EventStore
     private $streams = [];
 
     /**
-     * @param Pbjx $pbjx
+     * @param Pbjx  $pbjx
      * @param array $streams
      */
     public function __construct(Pbjx $pbjx, array $streams = [])

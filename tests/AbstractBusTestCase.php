@@ -1,12 +1,13 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Gdbots\Tests\Pbjx;
 
 use Gdbots\Pbjx\Pbjx;
 use Gdbots\Pbjx\RegisteringServiceLocator;
+use PHPUnit\Framework\TestCase;
 
-abstract class AbstractBusTestCase extends \PHPUnit_Framework_TestCase
+abstract class AbstractBusTestCase extends TestCase
 {
     /** @var RegisteringServiceLocator */
     protected $locator;

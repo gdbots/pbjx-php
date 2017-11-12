@@ -25,7 +25,7 @@ final class SayHello extends AbstractMessage implements CommandV1
                 Fb::create('name', T\StringType::create())->build(),
             ],
             [
-                CommandV1Mixin::create()
+                CommandV1Mixin::create(),
             ]
         );
 

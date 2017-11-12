@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Gdbots\Pbjx;
 
@@ -23,7 +23,7 @@ interface RequestBus
      * and workers of the Pbjx system.
      *
      * @internal
-     * 
+     *
      * @param Request $request
      *
      * @return Response

@@ -25,7 +25,7 @@ final class SimpleEvent extends AbstractMessage implements EventV1
                 Fb::create('name', T\StringType::create())->build(),
             ],
             [
-                EventV1Mixin::create()
+                EventV1Mixin::create(),
             ]
         );
 
