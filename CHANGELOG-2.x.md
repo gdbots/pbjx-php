@@ -2,6 +2,11 @@
 This changelog references the relevant changes done in 2.x versions.
 
 
+## v2.0.2
+* Add `PbjxToken` which creates one time use signed tokens (JWT) that are intendeded
+  to be used to secure pbjx HTTP services against XSS, CSRF, replay attacks, etc.
+
+
 ## v2.0.1
 * issue #8: Automatically reconnect gearman if connection is lost.  After `maxReconnects` is reached (default=3)
   then all further pbjx operations will be handled in memory.
