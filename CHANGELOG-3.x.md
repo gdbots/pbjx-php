@@ -8,3 +8,6 @@ __BREAKING CHANGES__
 * Update `Gdbots\Pbjx\EventSearch\Elastica\*` classes to use `"ruflin/elastica": "~5.3"`.
 * Add `PbjxToken` which creates one time use signed tokens (JWT) that are intendeded
   to be used to secure pbjx HTTP services against XSS, CSRF, replay attacks, etc.
+
+> __NOTICE:__ The `EventStore` and `EventSearch` features may be moving to their own 
+> package as the pace of changes for those is dependent upon the underlying provider.
