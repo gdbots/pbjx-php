@@ -5,8 +5,8 @@
   "license": "Apache-2.0",
   "require": {
     "php": ">=7.1",
-    "gdbots/pbj": "~2.0",
-    "gdbots/query-parser": "~0.3",
+    "gdbots/pbj": "~1.1|~2.0",
+    "gdbots/query-parser": "~0.2",
     "gdbots/schemas": "~1.4",
     "psr/log": "~1",
     "symfony/event-dispatcher": "~3.0|~4.0"
@@ -34,7 +34,7 @@
   },
   "extra": {
     "branch-alias": {
-      "dev-master": "3.0.x-dev"
+      "dev-master": "2.1.x-dev"
     }
   }
 }
