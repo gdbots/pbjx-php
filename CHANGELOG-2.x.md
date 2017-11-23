@@ -3,8 +3,9 @@ This changelog references the relevant changes done in 2.x versions.
 
 
 ## v2.1.0
-* Update `gdbots/pbj` composer constraint to allow for `~1.1|~2.0`.
-* Update `symfony/event-dispatcher` composer constraint to allow for `~3.0|~4.0`.
+* Update `gdbots/schemas` composer constraint to allow for `^1.4.1`.
+* Remove `gdbots/pbj` package from composer as `gdbots/schemas` already requires it.
+* Update `symfony/event-dispatcher` composer constraint to allow for `^3.0 || ^4.0`.
 * Add `PbjxToken` which creates one time use signed tokens (JWT) that are intendeded
   to be used to secure pbjx HTTP services against XSS, CSRF, replay attacks, etc.
 

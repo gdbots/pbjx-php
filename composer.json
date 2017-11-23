@@ -5,16 +5,15 @@
   "license": "Apache-2.0",
   "require": {
     "php": ">=7.1",
-    "gdbots/pbj": "~1.1|~2.0",
     "gdbots/query-parser": "~0.2",
-    "gdbots/schemas": "~1.4",
-    "psr/log": "~1",
-    "symfony/event-dispatcher": "~3.0|~4.0"
+    "gdbots/schemas": "^1.4.1",
+    "psr/log": "^1",
+    "symfony/event-dispatcher": "^3.0 || ^4.0"
   },
   "require-dev": {
-    "phpunit/phpunit": "~6.4",
-    "aws/aws-sdk-php": "~3.38",
-    "ruflin/elastica": "~5.3"
+    "phpunit/phpunit": "^6.4",
+    "aws/aws-sdk-php": "^3.39",
+    "ruflin/elastica": "^5.3"
   },
   "suggest": {
     "ext-gearman": "Allows you to use GearmanTransport and GearmanConsumer for distributed processing."
