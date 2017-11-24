@@ -9,7 +9,7 @@ use Gdbots\Pbj\Serializer\PhpSerializer;
 use Gdbots\Pbj\Serializer\Serializer;
 use Gdbots\Pbj\Serializer\YamlSerializer;
 
-final class TransportEnvelope
+final class TransportEnvelope implements \JsonSerializable
 {
     /** @var Serializer[] */
     private static $serializers = [];
@@ -93,20 +93,6 @@ final class TransportEnvelope
     }
 
     /**
-     * Returns a json string version of the envelope.
-     *
-     * @return string
-     */
-    public function toString(): string
-    {
-        return json_encode([
-            'serializer' => $this->serializer,
-            'is_replay'  => $this->message->isReplay(),
-            'message'    => self::getSerializer($this->serializer)->serialize($this->message),
-        ]);
-    }
-
-    /**
      * @return Message
      */
     public function getMessage(): Message
@@ -128,5 +114,35 @@ final class TransportEnvelope
     public function getSerializerUsed(): string
     {
         return $this->serializer;
+    }
+
+    /**
+     * Returns a json string version of the envelope.
+     *
+     * @return string
+     */
+    public function toString(): string
+    {
+        return json_encode($this);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function __toString()
+    {
+        return $this->toString();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function jsonSerialize()
+    {
+        return [
+            'serializer' => $this->serializer,
+            'is_replay'  => $this->message->isReplay(),
+            'message'    => self::getSerializer($this->serializer)->serialize($this->message),
+        ];
     }
 }
