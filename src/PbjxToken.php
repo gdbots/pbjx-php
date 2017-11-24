@@ -98,13 +98,13 @@ final class PbjxToken implements \JsonSerializable
      * PbjxTokens are JWT so the arguments are used to create the payload
      * of the JWT with our own requirements/conventions.
      *
-     * @param string $content - Pbjx content (combined with aud and iat then hashed to create a jti)
-     * @param string $aud     - Pbjx endpoint this token will be sent to (or was sent to).
-     * @param string $kid     - Key ID used to sign the JWT.
-     * @param string $secret  - Secret used to sign the JWT.
-     * @param array  $options - Additional options for JWT creation (exp,iat)
+     * @param string $content Pbjx content (combined with aud and iat then hashed to create a jti)
+     * @param string $aud     Pbjx endpoint this token will be sent to (or was sent to).
+     * @param string $kid     Key ID used to sign the JWT.
+     * @param string $secret  Secret used to sign the JWT.
+     * @param array  $options Additional options for JWT creation (exp,iat)
      *
-     * @returns self
+     * @return self
      */
     public static function create(string $content, string $aud, string $kid, string $secret, array $options = []): self
     {
@@ -214,7 +214,7 @@ final class PbjxToken implements \JsonSerializable
     /**
      * @link https://tools.ietf.org/html/rfc7519#section-4.1.4
      *
-     * @return int - a unix timestamp in seconds
+     * @return int unix timestamp in seconds
      */
     public function getExp(): int
     {
@@ -224,7 +224,7 @@ final class PbjxToken implements \JsonSerializable
     /**
      * @link https://tools.ietf.org/html/rfc7519#section-4.1.6
      *
-     * @return int - a unix timestamp in seconds
+     * @return int unix timestamp in seconds
      */
     public function getIat(): int
     {
@@ -242,7 +242,7 @@ final class PbjxToken implements \JsonSerializable
     }
 
     /**
-     * Verify the token can be decoded given a user supplied secret.
+     * Verify the token signature matches when signed with the given secret.
      *
      * @param string $secret
      *
