@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Gdbots\Pbjx\Consumer;
 
@@ -74,7 +74,7 @@ abstract class AbstractConsumer
         $this->setup();
 
         $this->isRunning = true;
-        declare(ticks = 1);
+        declare(ticks=1);
         if (function_exists('pcntl_signal')) {
             pcntl_signal(SIGCHLD, SIG_IGN); // Zombies
             pcntl_signal(SIGTERM, [$this, 'handleSignals']); // Kill

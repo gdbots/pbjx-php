@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Gdbots\Tests\Pbjx;
 
@@ -38,6 +38,7 @@ class SimpleRequestBusTest extends AbstractBusTestCase
             $this->pbjx->request($request);
             $this->fail('Request did not fail as expected.');
         } catch (\Exception $e) {
+            $this->assertTrue(true, 'Request failed as expected.');
         }
     }
 }

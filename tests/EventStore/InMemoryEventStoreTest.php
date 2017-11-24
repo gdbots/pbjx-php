@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Gdbots\Tests\Pbjx\EventStore;
 
@@ -10,8 +10,9 @@ use Gdbots\Pbjx\RegisteringServiceLocator;
 use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
 use Gdbots\Schemas\Pbjx\StreamId;
 use Gdbots\Tests\Pbjx\Fixtures\SimpleEvent;
+use PHPUnit\Framework\TestCase;
 
-class InMemoryEventStoreTest extends \PHPUnit_Framework_TestCase
+class InMemoryEventStoreTest extends TestCase
 {
     /** @var RegisteringServiceLocator */
     protected $locator;

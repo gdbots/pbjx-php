@@ -22,7 +22,7 @@ Using this library assumes that you've already created and compiled your own pbj
 
 The strategy behind this library is similar to [GRPC](http://www.grpc.io/) and [CQRS](https://martinfowler.com/bliki/CQRS.html).
 
-> If your project is using Symfony3 use the [gdbots/pbjx-bundle-php](https://github.com/gdbots/pbjx-bundle-php) to simplify the integration.
+> If your project is using Symfony use the [gdbots/pbjx-bundle-php](https://github.com/gdbots/pbjx-bundle-php) to simplify the integration.
 
 
 # Transports
@@ -114,7 +114,7 @@ final class ArticleController extends Controller
 # Pbjx::publish
 Publishes events to all subscribers (asynchronously if transport supports it).  All subscribers will receive the event unless a fatal error occurs.
 
-> [Publisher/Subscriber](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern) is the pattern used.  This is important because it may look like the Symfony3 EventDispatcher but a Pbjx subscriber cannot stop the propagation of events like they can in a Symfony3 subscriber/listener.
+> [Publisher/Subscriber](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern) is the pattern used.  This is important because it may look like the Symfony EventDispatcher but a Pbjx subscriber cannot stop the propagation of events like they can in a Symfony subscriber/listener.
 
 Pbjx published events are distinct from application or "lifecycle" events.  These are your ["domain events"](https://martinfowler.com/eaaDev/DomainEvent.html).  The names you'll use here would make sense to most people, including the non-developer folks.  MoneyDeposited, ArticlePublished, AccountClosed, UserUpgraded, etc.
 
@@ -252,7 +252,7 @@ final class ArticleController extends Controller
 
 # Pbjx Lifecycle Events
 When a message is processed (send, publish, request) it goes through a lifecycle which allows for "in process"
-modification and validation.  The method of subscribing to these events is similar to how a Symfony3 event
+modification and validation.  The method of subscribing to these events is similar to how a Symfony event
 subscriber/listener works and can stop propagation.
 
 The lifecycle event names (what your subscriber/listener must be bound to) all have a standard format, _e.g: "gdbots:pbjx:mixin:command.bind"_.  These are named in the same way that the `SimpleEventBus` names them.  See `SimplePbjx::trigger` method for insight into how this is done.
@@ -267,7 +267,7 @@ Data that must be bound to the message by the environment its running in is done
 ### validate
 Before a message is allowed to be processed it should be validated.  This is where business rules are generally implemented.  This is more than just schema validation (which is done for you by pbj).
 
-> Checking permissions is generally done in this event.  In a Symfony3 app this would be where you run the `AuthorizationChecker` and/or security voters.
+> Checking permissions is generally done in this event.  In a Symfony app this would be where you run the `AuthorizationChecker` and/or security voters.
 > Additional examples:
   - Checking inventory level on "AddProductToCart"
   - Optimistic concurrency control on "UpdateArticle"
@@ -408,7 +408,7 @@ When developing applications using Pbjx you need to be able to see what's being 
 
 If you're using [monolog](https://github.com/Seldaek/monolog) you can route all of these entries to their own file in json line delimited format.  This is the recommended use because it makes it possible to use other great tools like [jq](https://stedolan.github.io/jq/).
 
-__Example yaml config for use in Symfony3.__
+__Example yaml config for use in Symfony.__
 
 ```yaml
 services:

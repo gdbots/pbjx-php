@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Gdbots\Pbjx\EventSearch\Elastica;
 
@@ -57,7 +57,10 @@ class QueryFactory
                 $parsedQuery->addNode(
                     new Field(
                         $f['field'],
-                        new Numbr(Microtime::fromDateTime($request->get($f['query']))->toString(), $f['operator']),
+                        new Numbr(
+                            (float)Microtime::fromDateTime($request->get($f['query']))->toString(),
+                            $f['operator']
+                        ),
                         $required
                     )
                 );
@@ -117,7 +120,8 @@ class QueryFactory
     protected function forSearchEventsRequest(SearchEventsRequest $request, ParsedQuery $parsedQuery): Query
     {
         $builder = new ElasticaQueryBuilder();
-        $query = $builder->setDefaultFieldName('_all')->addParsedQuery($parsedQuery)->getBoolQuery();
+        $builder->setDefaultFieldName('_all')->addParsedQuery($parsedQuery);
+        $query = $builder->getBoolQuery();
         return Query::create($this->createSortedQuery($query, $request));
     }
 }

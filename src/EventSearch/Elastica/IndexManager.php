@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Gdbots\Pbjx\EventSearch\Elastica;
 
@@ -318,7 +318,10 @@ class IndexManager
             $mapping = $mappingFactory->create($schema, 'english');
             $properties = $mapping->getProperties();
             $properties[self::OCCURRED_AT_ISO_FIELD_NAME] = ['type' => 'date', 'include_in_all' => false];
-            $properties['ctx_ua']['index'] = 'no';
+
+            // elastica >=5 uses boolean for "index" property and "text" for type
+            $properties['ctx_ua']['index'] = 'text' === $properties['ctx_ua']['type'] ? false : 'no';
+
             $mapping->setAllField(['enabled' => true, 'analyzer' => 'english'])->setProperties($properties);
 
             $dynamicTemplates = $mapping->getParam('dynamic_templates');

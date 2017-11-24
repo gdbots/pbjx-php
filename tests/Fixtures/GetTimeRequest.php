@@ -25,7 +25,7 @@ final class GetTimeRequest extends AbstractMessage implements RequestV1
                 Fb::create('test_fail', T\BooleanType::create())->build(),
             ],
             [
-                RequestV1Mixin::create()
+                RequestV1Mixin::create(),
             ]
         );
 
