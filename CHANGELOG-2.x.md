@@ -2,6 +2,18 @@
 This changelog references the relevant changes done in 2.x versions.
 
 
+## v2.1.1
+* Add `Gdbots\Pbjx\DependencyInjection\*` marker interfaces to make it possible
+  to autowire/autoconfigure services in frameworks like Symfony.
+* Update `CommandHandler` and `RequestHandler` interfaces to use new `PbjxHandler`
+  marker interface which requires static method `handlesCuries`.  If your code
+  is not using the `CommandHandlerTrait` or `RequestHandlerTrait` then you will
+  need to add those methods.  At the time of this update, no code in the wild
+  is known to exist not using the traits so this is left as a patch.  Also note,
+  emitting an empty array is fine if you're not using Symfony or another framework
+  that would make use of that method.
+
+
 ## v2.1.0
 * Update `gdbots/schemas` composer constraint to allow for `^1.4.1`.
 * Remove `gdbots/pbj` package from composer as `gdbots/schemas` already requires it.
