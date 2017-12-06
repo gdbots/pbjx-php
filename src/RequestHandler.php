@@ -3,11 +3,12 @@ declare(strict_types=1);
 
 namespace Gdbots\Pbjx;
 
+use Gdbots\Pbjx\DependencyInjection\PbjxHandler;
 use Gdbots\Pbjx\Exception\GdbotsPbjxException;
 use Gdbots\Schemas\Pbjx\Mixin\Request\Request;
 use Gdbots\Schemas\Pbjx\Mixin\Response\Response;
 
-interface RequestHandler
+interface RequestHandler extends PbjxHandler
 {
     /**
      * @param Request $request

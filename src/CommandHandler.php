@@ -3,10 +3,11 @@ declare(strict_types=1);
 
 namespace Gdbots\Pbjx;
 
+use Gdbots\Pbjx\DependencyInjection\PbjxHandler;
 use Gdbots\Pbjx\Exception\GdbotsPbjxException;
 use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
 
-interface CommandHandler
+interface CommandHandler extends PbjxHandler
 {
     /**
      * @param Command $command

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Gdbots\Pbjx;
 
+use Gdbots\Pbj\SchemaCurie;
 use Gdbots\Pbjx\Exception\GdbotsPbjxException;
 use Gdbots\Pbjx\Exception\InvalidHandler;
 use Gdbots\Schemas\Pbjx\Mixin\Request\Request;
@@ -61,5 +62,15 @@ MSG;
     protected function getMethodForRequest(Request $request): string
     {
         return 'handle';
+    }
+
+    /**
+     * @see PbjxHandler::handlesCuries()
+     *
+     * @return SchemaCurie[]
+     */
+    public static function handlesCuries(): array
+    {
+        return [];
     }
 }
