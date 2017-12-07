@@ -22,7 +22,7 @@ Using this library assumes that you've already created and compiled your own pbj
 
 The strategy behind this library is similar to [GRPC](http://www.grpc.io/) and [CQRS](https://martinfowler.com/bliki/CQRS.html).
 
-> If your project is using Symfony use the [gdbots/pbjx-bundle-php](https://github.com/gdbots/pbjx-bundle-php) to simplify the integration.
+> If your project is using Symfony use the [gdbots/pbjx-bundle-php](https://github.com/gdbots/pbjx-bundle-php) to simplify the integration .
 
 
 # Transports
