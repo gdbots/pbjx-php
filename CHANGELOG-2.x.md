@@ -2,6 +2,15 @@
 This changelog references the relevant changes done in 2.x versions.
 
 
+## v2.2.0
+__POSSIBLE BREAKING CHANGE__
+
+If you are not using the `SimplePbjx` implementation for `Pbjx` then you'll need to add the `sendAt` and `cancelSendAt` methods to your implementation.
+
+* Add `Gdbots\Pbjx\Scheduler\Scheduler` with a `DynamoDbScheduler` implementation.
+* Add `sendAt` and `cancelSendAt` methods to `Pbjx` with a AwsScheduler implementation.
+
+
 ## v2.1.1
 * Add `Gdbots\Pbjx\DependencyInjection\*` marker interfaces to make it possible
   to autowire/autoconfigure services in frameworks like Symfony.
