@@ -9,6 +9,18 @@ use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
 interface Scheduler
 {
     /**
+     * Creates the storage for the Scheduler.
+     */
+    public function createStorage(): void;
+
+    /**
+     * Returns debugging information about the storage for the Scheduler.
+     *
+     * @return string
+     */
+    public function describeStorage(): string;
+
+    /**
      * Schedules a command to send at a later time.
      *
      * @param Command $command   The command to send.

@@ -15,7 +15,6 @@ use Gdbots\Pbj\WellKnown\Microtime;
 use Gdbots\Pbjx\EventStore\EventStore;
 use Gdbots\Pbjx\EventStore\StreamSlice;
 use Gdbots\Pbjx\Exception\EventStoreOperationFailed;
-use Gdbots\Pbjx\Exception\GdbotsPbjxException;
 use Gdbots\Pbjx\Exception\OptimisticCheckFailed;
 use Gdbots\Pbjx\Pbjx;
 use Gdbots\Schemas\Pbjx\Enum\Code;
@@ -473,7 +472,6 @@ class DynamoDbEventStore implements EventStore
      * @param array    $context
      *
      * @throws OptimisticCheckFailed
-     * @throws GdbotsPbjxException
      */
     private function optimisticCheck(StreamId $streamId, string $expectedEtag, array $context): void
     {

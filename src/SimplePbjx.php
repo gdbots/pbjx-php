@@ -152,6 +152,22 @@ final class SimplePbjx implements Pbjx
     /**
      * {@inheritdoc}
      */
+    public function sendAt(Command $command, int $timestamp, ?string $jobId = null): string
+    {
+        // TODO: Implement sendAt() method.
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function cancelJobs(array $jobIds): void
+    {
+        // TODO: Implement cancelJobs() method.
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function publish(Event $event): void
     {
         $this->triggerLifecycle($event);
