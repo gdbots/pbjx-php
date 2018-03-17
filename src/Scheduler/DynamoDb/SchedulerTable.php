@@ -13,6 +13,7 @@ final class SchedulerTable
 {
     const SCHEMA_VERSION = 'v1';
     const HASH_KEY_NAME = 'job_id';
+    const SEND_AT_KEY_NAME = 'send_at';
     const TTL_KEY_NAME = 'ttl';
     const EXECUTION_ARN_KEY_NAME = 'execution_arn';
     const PAYLOAD_KEY_NAME = 'payload';

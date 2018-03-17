@@ -114,6 +114,7 @@ final class DynamoDbScheduler implements Scheduler
                 'TableName'    => $this->tableName,
                 'Item'         => [
                     SchedulerTable::HASH_KEY_NAME          => ['S' => $jobId],
+                    SchedulerTable::SEND_AT_KEY_NAME       => ['N' => (string)$timestamp],
                     SchedulerTable::TTL_KEY_NAME           => ['N' => (string)$ttl],
                     SchedulerTable::EXECUTION_ARN_KEY_NAME => ['S' => $executionArn],
                     SchedulerTable::PAYLOAD_KEY_NAME       => ['M' => $payload],
@@ -168,6 +169,50 @@ final class DynamoDbScheduler implements Scheduler
         // foreach job, run deleteItem in dynamodb
         // using the return values, get its execution arn and stop its execution
         // throw exception if dynamodb delete fails
+
+        foreach ($jobIds as $jobId) {
+            try {
+                $result = $this->dynamoDbClient->deleteItem([
+                    'TableName'    => $this->tableName,
+                    'Key'          => [SchedulerTable::HASH_KEY_NAME => ['S' => $jobId]],
+                    'ReturnValues' => 'ALL_OLD',
+                ]);
+
+                if (isset($result['Attributes'])
+                    && isset($result['Attributes'][SchedulerTable::EXECUTION_ARN_KEY_NAME])
+                    && isset($result['Attributes'][SchedulerTable::EXECUTION_ARN_KEY_NAME]['S'])
+                ) {
+                    $executionArn = $result['Attributes'][SchedulerTable::EXECUTION_ARN_KEY_NAME]['S'];
+                    $this->stopExecution($jobId, $executionArn);
+                }
+            } catch (\Throwable $t) {
+                if ($t instanceof AwsException) {
+                    $errorName = $t->getAwsErrorCode() ?: ClassUtils::getShortName($t);
+                    if ('ResourceNotFoundException' === $errorName) {
+                        // if it's already deleted/canceled, it's fine
+                        continue;
+                    } else if ('ProvisionedThroughputExceededException' === $errorName) {
+                        $code = Code::RESOURCE_EXHAUSTED;
+                    } else {
+                        $code = Code::UNAVAILABLE;
+                    }
+                } else {
+                    $errorName = ClassUtils::getShortName($t);
+                    $code = Code::INTERNAL;
+                }
+
+                throw new SchedulerOperationFailed(
+                    sprintf(
+                        '%s while deleting [%s] from DynamoDb table [%s].',
+                        $errorName,
+                        $jobId,
+                        $this->tableName
+                    ),
+                    $code,
+                    $t
+                );
+            }
+        }
     }
 
     /**
@@ -183,11 +228,34 @@ final class DynamoDbScheduler implements Scheduler
      */
     private function startExecution(int $timestamp, string $jobId): string
     {
+        $start = new \DateTime('now', new \DateTimeZone('UTC'));
         $sendAt = new \DateTime("@{$timestamp}");
-        $input = [
-            'send_at' => $sendAt->format(DateUtils::ISO8601_ZULU),
-            'job_id'  => $jobId,
-        ];
+        $span = (int)$start->diff($sendAt)->format('%a');
+
+        $input = ['job_id' => $jobId];
+
+        /*
+         * AWS Step Functions have a one year maximum execution time.
+         * Rather than artificially limit our sendAt dates to 1 year
+         * in the future we'll just restart the executions when we
+         * encounter this scenario.
+         */
+        if ($span < 365) {
+            $input['send_at'] = $sendAt->format(DateUtils::ISO8601_ZULU);
+        } else {
+            // just a skosh behind 1 year to fly under the radar
+            $start->modify('+364 days');
+            $input['resend_at'] = [];
+
+            do {
+                $input['resend_at'][] = $start->format(DateUtils::ISO8601_ZULU);
+                $start->modify('+364 days');
+            } while ($start < $sendAt);
+
+            // the original sendAt is the last one to "resend"
+            $input['resend_at'][] = $sendAt->format(DateUtils::ISO8601_ZULU);
+            $input['send_at'] = array_shift($input['resend_at']);
+        }
 
         try {
             $result = $this->sfnClient->startExecution([
