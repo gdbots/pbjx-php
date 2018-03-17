@@ -13,6 +13,7 @@ use Gdbots\Pbjx\Event\ResponseCreatedEvent;
 use Gdbots\Pbjx\EventSearch\EventSearch;
 use Gdbots\Pbjx\EventStore\EventStore;
 use Gdbots\Pbjx\Exception\InvalidArgumentException;
+use Gdbots\Pbjx\Exception\LogicException;
 use Gdbots\Pbjx\Exception\RequestHandlingFailed;
 use Gdbots\Pbjx\Exception\TooMuchRecursion;
 use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
@@ -154,7 +155,13 @@ final class SimplePbjx implements Pbjx
      */
     public function sendAt(Command $command, int $timestamp, ?string $jobId = null): string
     {
-        // TODO: Implement sendAt() method.
+        if ($timestamp <= time()) {
+            throw new LogicException('SendAt requires a timestamp in the future.');
+        }
+
+        $this->triggerLifecycle($command);
+        $command->freeze();
+        return $this->locator->getScheduler()->sendAt($command, $timestamp, $jobId);
     }
 
     /**
@@ -162,7 +169,7 @@ final class SimplePbjx implements Pbjx
      */
     public function cancelJobs(array $jobIds): void
     {
-        // TODO: Implement cancelJobs() method.
+        $this->locator->getScheduler()->cancelJobs($jobIds);
     }
 
     /**

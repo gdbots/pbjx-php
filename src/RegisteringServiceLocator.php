@@ -7,6 +7,7 @@ use Gdbots\Pbj\SchemaCurie;
 use Gdbots\Pbjx\EventSearch\EventSearch;
 use Gdbots\Pbjx\EventStore\EventStore;
 use Gdbots\Pbjx\Exception\HandlerNotFound;
+use Gdbots\Pbjx\Scheduler\Scheduler;
 use Gdbots\Pbjx\Transport\Transport;
 
 /**
@@ -84,5 +85,13 @@ final class RegisteringServiceLocator extends AbstractServiceLocator
     public function setEventSearch(EventSearch $eventSearch): void
     {
         $this->eventSearch = $eventSearch;
+    }
+
+    /**
+     * @param Scheduler $scheduler
+     */
+    public function setScheduler(Scheduler $scheduler): void
+    {
+        $this->scheduler = $scheduler;
     }
 }

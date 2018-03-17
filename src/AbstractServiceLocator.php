@@ -6,6 +6,7 @@ namespace Gdbots\Pbjx;
 use Gdbots\Pbjx\EventSearch\EventSearch;
 use Gdbots\Pbjx\EventStore\EventStore;
 use Gdbots\Pbjx\Exception\LogicException;
+use Gdbots\Pbjx\Scheduler\Scheduler;
 use Gdbots\Pbjx\Transport\InMemoryTransport;
 use Gdbots\Pbjx\Transport\Transport;
 use Gdbots\Schemas\Pbjx\Enum\Code;
@@ -19,6 +20,9 @@ abstract class AbstractServiceLocator implements ServiceLocator
 
     /** @var EventSearch */
     protected $eventSearch;
+
+    /** @var Scheduler */
+    protected $scheduler;
 
     /** @var Transport */
     protected $defaultTransport;
@@ -199,6 +203,26 @@ abstract class AbstractServiceLocator implements ServiceLocator
     protected function doGetEventSearch(): EventSearch
     {
         throw new LogicException('No EventSearch has been configured.', Code::UNIMPLEMENTED);
+    }
+
+    /**
+     * @return Scheduler
+     */
+    final public function getScheduler(): Scheduler
+    {
+        if (null === $this->scheduler) {
+            $this->scheduler = $this->doGetScheduler();
+        }
+
+        return $this->scheduler;
+    }
+
+    /**
+     * @return Scheduler
+     */
+    protected function doGetScheduler(): Scheduler
+    {
+        throw new LogicException('No Scheduler has been configured.', Code::UNIMPLEMENTED);
     }
 
     /**

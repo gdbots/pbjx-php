@@ -96,6 +96,7 @@ final class DynamoDbScheduler implements Scheduler
         $executionArn = $this->startExecution($timestamp, $jobId);
 
         try {
+            $command->freeze();
             $payload = $this->marshaler->marshal($command);
 
             // a command will not be sent in the same context as we currently
@@ -166,10 +167,6 @@ final class DynamoDbScheduler implements Scheduler
      */
     public function cancelJobs(array $jobIds): void
     {
-        // foreach job, run deleteItem in dynamodb
-        // using the return values, get its execution arn and stop its execution
-        // throw exception if dynamodb delete fails
-
         foreach ($jobIds as $jobId) {
             try {
                 $result = $this->dynamoDbClient->deleteItem([
@@ -310,6 +307,10 @@ final class DynamoDbScheduler implements Scheduler
     }
 
     /**
+     * I know you hurtin' and worryin', I can feel it on you,
+     * but you oughta quit on it now. Because I want it over
+     * and done. I do. I'm tired, boss.
+     *
      * @param string $jobId
      * @param string $executionArn
      */

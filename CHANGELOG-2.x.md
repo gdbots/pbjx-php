@@ -7,8 +7,9 @@ __POSSIBLE BREAKING CHANGE__
 
 If you are not using the `SimplePbjx` implementation for `Pbjx` then you'll need to add the `sendAt` and `cancelSendAt` methods to your implementation.
 
-* Add `Gdbots\Pbjx\Scheduler\Scheduler` with a `DynamoDbScheduler` implementation.
-* Add `sendAt` and `cancelSendAt` methods to `Pbjx` with a AwsScheduler implementation.
+* Add `Gdbots\Pbjx\Scheduler\Scheduler` with a `DynamoDbScheduler` implementation _(interally uses Step Functions and a DynamoDb table)_.
+* Add `sendAt` and `cancelSendAt` methods to `Pbjx`.
+* Add `getScheduler` method to `ServiceLocator`.  The service is optional, just like `EventStore` and `EventSearch`.  Attempting to call `sendAt` or `cancelJobs` will throw an exception if you haven't configured the scheduler.
 
 
 ## v2.1.1
