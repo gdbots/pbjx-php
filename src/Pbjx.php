@@ -40,7 +40,7 @@ interface Pbjx
      * @throws GdbotsPbjxException
      * @throws InvalidArgumentException
      * @throws TooMuchRecursion
-     * @throws \Exception
+     * @throws \Throwable
      */
     public function trigger(Message $message, string $suffix, ?PbjxEvent $event = null, bool $recursive = true): Pbjx;
 
@@ -56,7 +56,7 @@ interface Pbjx
      *
      * @return Pbjx
      *
-     * @throws \Exception
+     * @throws \Throwable
      */
     public function triggerLifecycle(Message $message, bool $recursive = true): Pbjx;
 
@@ -76,9 +76,33 @@ interface Pbjx
      * @param Command $command
      *
      * @throws GdbotsPbjxException
-     * @throws \Exception
+     * @throws \Throwable
      */
     public function send(Command $command): void;
+
+    /**
+     * Schedules a command to send at a later time.
+     *
+     * @param Command $command   The command to send.
+     * @param int     $timestamp Unix timestamp (in the future) when the command should be sent.
+     * @param string  $jobId     Optional identifier for the job (existing job with the same id will be canceled).
+     *
+     * @return string Returns the jobId (can be used for cancellation)
+     *
+     * @throws GdbotsPbjxException
+     * @throws \Throwable
+     */
+    public function sendAt(Command $command, int $timestamp, ?string $jobId = null): string;
+
+    /**
+     * Cancels previously scheduled commands by their job ids.
+     *
+     * @param string[] $jobIds
+     *
+     * @throws GdbotsPbjxException
+     * @throws \Throwable
+     */
+    public function cancelJobs(array $jobIds): void;
 
     /**
      * Publishes events to all subscribers.
@@ -86,7 +110,7 @@ interface Pbjx
      * @param Event $event
      *
      * @throws GdbotsPbjxException
-     * @throws \Exception
+     * @throws \Throwable
      */
     public function publish(Event $event): void;
 
@@ -98,7 +122,7 @@ interface Pbjx
      * @return Response
      *
      * @throws GdbotsPbjxException
-     * @throws \Exception
+     * @throws \Throwable
      */
     public function request(Request $request): Response;
 
