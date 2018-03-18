@@ -7,7 +7,6 @@ use Aws\DynamoDb\DynamoDbClient;
 use Aws\Exception\AwsException;
 use Aws\Sfn\SfnClient;
 use Gdbots\Common\Util\ClassUtils;
-use Gdbots\Common\Util\DateUtils;
 use Gdbots\Pbj\Marshaler\DynamoDb\ItemMarshaler;
 use Gdbots\Pbj\WellKnown\TimeUuidIdentifier;
 use Gdbots\Pbjx\Exception\SchedulerOperationFailed;
@@ -19,6 +18,12 @@ use Psr\Log\NullLogger;
 
 final class DynamoDbScheduler implements Scheduler
 {
+    /**
+     * @link  https://en.wikipedia.org/wiki/ISO_8601
+     * @const string
+     */
+    const DATE_FORMAT = 'Y-m-d\TH:i:s\Z';
+
     /** @var DynamoDbClient */
     private $dynamoDbClient;
 
@@ -106,6 +111,7 @@ final class DynamoDbScheduler implements Scheduler
             unset($payload['occurred_at']);
             unset($payload['expected_etag']);
             unset($payload['ctx_retries']);
+            unset($payload['ctx_correlator_ref']);
             unset($payload['ctx_app']);
             unset($payload['ctx_cloud']);
             unset($payload['ctx_ip']);
@@ -238,19 +244,19 @@ final class DynamoDbScheduler implements Scheduler
          * encounter this scenario.
          */
         if ($span < 365) {
-            $input['send_at'] = $sendAt->format(DateUtils::ISO8601_ZULU);
+            $input['send_at'] = $sendAt->format(self::DATE_FORMAT);
         } else {
             // just a skosh behind 1 year to fly under the radar
             $start->modify('+364 days');
             $input['resend_at'] = [];
 
             do {
-                $input['resend_at'][] = $start->format(DateUtils::ISO8601_ZULU);
+                $input['resend_at'][] = $start->format(self::DATE_FORMAT);
                 $start->modify('+364 days');
             } while ($start < $sendAt);
 
             // the original sendAt is the last one to "resend"
-            $input['resend_at'][] = $sendAt->format(DateUtils::ISO8601_ZULU);
+            $input['resend_at'][] = $sendAt->format(self::DATE_FORMAT);
             $input['send_at'] = array_shift($input['resend_at']);
         }
 
