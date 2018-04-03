@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 2.x versions.
 
 
+## v2.2.1
+* Catch and log error when updating existing analyzers on index in `Gdbots\Pbjx\EventSearch\Elastica\IndexManager::updateIndex`.
+
+
 ## v2.2.0
 __POSSIBLE BREAKING CHANGE__
 

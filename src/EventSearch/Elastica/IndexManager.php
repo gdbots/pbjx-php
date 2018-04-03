@@ -238,10 +238,19 @@ class IndexManager
         $customAnalyzers = MappingFactory::getCustomAnalyzers();
         $missingAnalyzers = [];
 
-        foreach ($customAnalyzers as $id => $analyzer) {
-            if (!$settings->get("analysis.analyzer.{$id}")) {
-                $missingAnalyzers[$id] = $analyzer;
+        try {
+            foreach ($customAnalyzers as $id => $analyzer) {
+                if (!$settings->get("analysis.analyzer.{$id}")) {
+                    $missingAnalyzers[$id] = $analyzer;
+                }
             }
+        } catch (\Throwable $e) {
+            $this->logger->error(
+                sprintf('Unable to read index [%s] and get settings.', $name),
+                ['exception' => $e, 'index_name' => $name]
+            );
+
+            return;
         }
 
         if (empty($missingAnalyzers)) {
