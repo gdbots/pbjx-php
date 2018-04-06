@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 2.x versions.
 
 
+## v2.2.2
+* Fix bug in `Gdbots\Pbjx\EventSearch\Elastica\IndexManager::getIndexNamesForSearch` that would not include the next index when overlapping quarters.
+
+
 ## v2.2.1
 * Catch and log error when updating existing analyzers on index in `Gdbots\Pbjx\EventSearch\Elastica\IndexManager::updateIndex`.
 

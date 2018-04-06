@@ -126,8 +126,9 @@ class IndexManager
 
         do {
             $indices[$this->indexPrefix . $this->getIndexIntervalSuffix($start)] = true;
-            $start->modify('+1 month');
+            $start->modify('+1 week');
         } while ($start < $end);
+        $indices[$this->indexPrefix . $this->getIndexIntervalSuffix($start)] = true;
 
         if (count($indices) > 9) {
             $start = clone $after;
