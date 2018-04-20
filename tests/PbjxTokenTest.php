@@ -18,13 +18,13 @@ class PbjxTokenTest extends TestCase
         $now = 1509836741;
         PbjxToken::$timestamp = $now;
 
-        $exp = $now + 5;
+        $exp = $now + 120;
         $iat = $now;
 
         // note that this token matches the one in the pbjx-js unit test
         // this is intentional as we're often generating tokens with the
         // pbjx-js lib and validating them with the php version.
-        $expectedJwt = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImtpZCJ9.eyJhdWQiOiJodHRwczovL2xvY2FsLmRldi9wYmp4IiwiZXhwIjoxNTA5ODM2NzQ2LCJpYXQiOjE1MDk4MzY3NDEsImp0aSI6IjZjYTk1OTRmNDQyZmY4YWFhNTUxNWJlMDFiMjRmZDE1MGIwYTI1ODdiNGI4ZWQwYTE1NzQ3YzQ0ZTk0MmIwZWYifQ.GgSB7ckv558HDKSgpSu_ZXv_uibu6J7qUAE38f8BOGg';
+        $expectedJwt = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImtpZCJ9.eyJhdWQiOiJodHRwczovL2xvY2FsLmRldi9wYmp4IiwiZXhwIjoxNTA5ODM2ODYxLCJpYXQiOjE1MDk4MzY3NDEsImp0aSI6IjZjYTk1OTRmNDQyZmY4YWFhNTUxNWJlMDFiMjRmZDE1MGIwYTI1ODdiNGI4ZWQwYTE1NzQ3YzQ0ZTk0MmIwZWYifQ.rP0d7suRJw1rjuOWb8zVsad2fCvE1qByC_xh-xIFC7U';
         $expectedJti = '6ca9594f442ff8aaa5515be01b24fd150b0a2587b4b8ed0a15747c44e942b0ef';
         $signature = substr($expectedJwt, strrpos($expectedJwt, '.') + 1);
 
@@ -59,7 +59,7 @@ class PbjxTokenTest extends TestCase
         $token = PbjxToken::create($content, $aud, $kid, $secret);
 
         try {
-            PbjxToken::$timestamp = $token->getExp() + 6;
+            PbjxToken::$timestamp = $token->getExp() + 31;
             PbjxToken::fromString($token->toString());
         } catch (\Exception $e) {
             $this->assertTrue(true, 'Did not allow expired token.');
@@ -80,7 +80,7 @@ class PbjxTokenTest extends TestCase
         $token = PbjxToken::create($content, $aud, $kid, $secret);
 
         try {
-            PbjxToken::$timestamp = $token->getIat() - 6;
+            PbjxToken::$timestamp = $token->getIat() - 31;
             PbjxToken::fromString($token->toString());
         } catch (\Exception $e) {
             $this->assertTrue(true, 'Did not allow early iat.');
