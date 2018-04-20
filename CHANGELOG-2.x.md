@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 2.x versions.
 
 
+## v2.2.3
+* Adjust `PbjxToken` TTL to 120 (up from 5) and LEEWAY to 30 (from 5).
+
+
 ## v2.2.2
 * Fix bug in `Gdbots\Pbjx\EventSearch\Elastica\IndexManager::getIndexNamesForSearch` that would not include the next index when overlapping quarters.
 
