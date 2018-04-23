@@ -41,12 +41,12 @@ final class PbjxToken implements \JsonSerializable
      * The ttl (time to live), in seconds, for a token.
      * Used to create the "exp" claim.
      */
-    private const TTL = 120;
+    private const TTL = 10;
 
     /**
      * Seconds to allow time skew for time sensitive signatures
      */
-    private const LEEWAY = 30;
+    private const LEEWAY = 300;
 
     /**
      * The token JWT in string format.
