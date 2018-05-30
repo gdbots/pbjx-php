@@ -316,7 +316,7 @@ class IndexManager
     /**
      * @return Mapping[]
      */
-    private function createMappings(): array
+    protected function createMappings(): array
     {
         $schemas = MessageResolver::findAllUsingMixin(IndexedV1Mixin::create());
         $mappingFactory = new MappingFactory();

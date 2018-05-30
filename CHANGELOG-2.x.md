@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 2.x versions.
 
 
+## v2.2.5
+* issue #15: Increase offset max from 1000 to 10,000 in `ElasticaEventSearch::searchEvents`.
+
+
 ## v2.2.4
 * Adjust `PbjxToken` TTL to 10 (down from 120) and LEEWAY to 300 (from 30).  Because LEEWAY is used in both iat and exp validation we need that window to be larger, exp works within that expanded window as well.
 

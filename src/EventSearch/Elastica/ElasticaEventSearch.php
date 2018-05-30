@@ -30,20 +30,20 @@ class ElasticaEventSearch implements EventSearch
     protected $logger;
 
     /** @var IndexManager */
-    private $indexManager;
+    protected $indexManager;
 
     /** @var DocumentMarshaler */
-    private $marshaler;
+    protected $marshaler;
 
     /** @var QueryFactory */
-    private $queryFactory;
+    protected $queryFactory;
 
     /**
      * Used to limit the amount of time a query can take.
      *
      * @var string
      */
-    private $timeout;
+    protected $timeout;
 
     /**
      * @param ClientManager   $clientManager
