@@ -5,6 +5,7 @@ namespace Gdbots\Pbjx\EventStore;
 
 use Gdbots\Pbj\WellKnown\Identifier;
 use Gdbots\Pbj\WellKnown\Microtime;
+use Gdbots\Pbjx\Exception\EventNotFound;
 use Gdbots\Pbjx\Exception\GdbotsPbjxException;
 use Gdbots\Pbjx\Exception\OptimisticCheckFailed;
 use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
@@ -36,10 +37,10 @@ interface EventStore
      *
      * @return Event
      *
-     * throws EventNotFound
+     * @throws EventNotFound
      * @throws GdbotsPbjxException
      */
-    //public function getEvent(Identifier $eventId, array $context = []);
+    public function getEvent(Identifier $eventId, array $context = []): Event;
 
     /**
      * Returns an array of events by their identifier (the "event_id" field on the event).
@@ -51,7 +52,19 @@ interface EventStore
      *
      * @throws GdbotsPbjxException
      */
-    //public function getEvents(array $eventIds, array $context = []);
+    public function getEvents(array $eventIds, array $context = []): array;
+
+    /**
+     * Deletes a single event by its identifier (the "event_id" field on the event).
+     *
+     * @param Identifier $eventId The id of the event to delete from the event store.
+     * @param array      $context Data that helps the EventStore decide where to delete data from.
+     *
+     * @return void
+     *
+     * @throws GdbotsPbjxException
+     */
+    public function deleteEvent(Identifier $eventId, array $context = []): void;
 
     /**
      * Returns a slice of events from the given stream that are greater than

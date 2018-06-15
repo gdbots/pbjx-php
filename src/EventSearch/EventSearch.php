@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Gdbots\Pbjx\EventSearch;
 
 use Gdbots\Pbj\SchemaCurie;
+use Gdbots\Pbj\WellKnown\Identifier;
 use Gdbots\Pbjx\Exception\GdbotsPbjxException;
 use Gdbots\QueryParser\ParsedQuery;
 use Gdbots\Schemas\Pbjx\Mixin\Indexed\Indexed;
@@ -37,6 +38,16 @@ interface EventSearch
      * @throws GdbotsPbjxException
      */
     public function indexEvents(array $events, array $context = []): void;
+
+    /**
+     * Deletes an array events by their identifiers (the "event_id" field on the event).
+     *
+     * @param Identifier[] $eventIds An array of event ids to delete from the search index.
+     * @param array        $context  Data that helps the EventStore decide where to delete data from.
+     *
+     * @throws GdbotsPbjxException
+     */
+    public function deleteEvents(array $eventIds, array $context = []): void;
 
     /**
      * Executes a search request and populates the provided response object with

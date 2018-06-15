@@ -2,6 +2,15 @@
 This changelog references the relevant changes done in 2.x versions.
 
 
+## v2.3.0
+__POSSIBLE BREAKING CHANGE__
+
+If you are not using an `EventStore` or `EventSearch` implementation from this library then you'll need to add the `getEvent`, `deleteEvent` and `deleteEvents` methods to your implementation.
+
+* Add `getEvent`, `getEvents` and `deleteEvent` methods to `EventStore`.
+* Add `deleteEvents` methods to `EventSearch`. 
+ 
+
 ## v2.2.5
 * issue #15: Increase offset max from 1000 to 10,000 in `ElasticaEventSearch::searchEvents`.
 

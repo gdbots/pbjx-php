@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Gdbots\Pbjx\EventStore;
 
+use Gdbots\Pbj\WellKnown\Identifier;
 use Gdbots\Pbj\WellKnown\Microtime;
 use Gdbots\Pbjx\Pbjx;
 use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
@@ -59,6 +60,30 @@ final class TwoPhaseCommitEventStore implements EventStore
     public function describeStorage(array $context = []): string
     {
         return $this->next->describeStorage($context);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getEvent(Identifier $eventId, array $context = []): Event
+    {
+        return $this->next->getEvent($eventId, $context);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getEvents(array $eventIds, array $context = []): array
+    {
+        return $this->next->getEvents($eventIds, $context);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function deleteEvent(Identifier $eventId, array $context = []): void
+    {
+        $this->next->deleteEvent($eventId, $context);
     }
 
     /**

@@ -11,6 +11,7 @@ use Aws\ResultInterface;
 use Gdbots\Common\Util\ClassUtils;
 use Gdbots\Common\Util\NumberUtils;
 use Gdbots\Pbj\Marshaler\DynamoDb\ItemMarshaler;
+use Gdbots\Pbj\WellKnown\Identifier;
 use Gdbots\Pbj\WellKnown\Microtime;
 use Gdbots\Pbjx\EventStore\EventStore;
 use Gdbots\Pbjx\EventStore\StreamSlice;
@@ -36,16 +37,16 @@ class DynamoDbEventStore implements EventStore
     protected $tableName;
 
     /** @var Pbjx */
-    private $pbjx;
+    protected $pbjx;
 
     /** @var DynamoDbClient */
-    private $client;
+    protected $client;
 
     /** @var LoggerInterface */
-    private $logger;
+    protected $logger;
 
     /** @var ItemMarshaler */
-    private $marshaler;
+    protected $marshaler;
 
     /**
      * @param Pbjx            $pbjx
@@ -78,6 +79,94 @@ class DynamoDbEventStore implements EventStore
     {
         $table = new EventStoreTable();
         return $table->describe($this->client, $this->getTableNameForWrite($context));
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    final public function deleteEvent(Identifier $eventId, array $context = []): void
+    {
+        $tableName = $this->getTableNameForWrite($context);
+        $params = [
+            'TableName'                 => $tableName,
+            'IndexName'                 => EventStoreTable::GSI_EVENT_ID_NAME,
+            'Limit'                     => 1,
+            'ExpressionAttributeNames'  => [
+                '#hash' => EventStoreTable::GSI_EVENT_ID_HASH_KEY_NAME,
+            ],
+            'ExpressionAttributeValues' => [
+                ':v_hash' => ['S' => (string)$eventId],
+            ],
+            'KeyConditionExpression'    => '#hash = :v_hash',
+        ];
+
+        try {
+            $response = $this->client->query($params);
+        } catch (\Exception $e) {
+            if ($e instanceof AwsException) {
+                $errorName = $e->getAwsErrorCode() ?: ClassUtils::getShortName($e);
+                if ('ProvisionedThroughputExceededException' === $errorName) {
+                    $code = Code::RESOURCE_EXHAUSTED;
+                } else {
+                    $code = Code::UNAVAILABLE;
+                }
+            } else {
+                $errorName = ClassUtils::getShortName($e);
+                $code = Code::INTERNAL;
+            }
+
+            throw new EventStoreOperationFailed(
+                sprintf(
+                    '%s on IndexQuery [%s] on DynamoDb table [%s].',
+                    $errorName,
+                    EventStoreTable::GSI_EVENT_ID_NAME,
+                    $tableName
+                ),
+                $code,
+                $e
+            );
+        }
+
+        if (!isset($response['Items']) || empty($response['Items'])) {
+            return;
+        }
+
+        try {
+            $item = array_pop($response['Items']);
+            $this->client->deleteItem([
+                'TableName' => $tableName,
+                'Key'       => [
+                    EventStoreTable::HASH_KEY_NAME  => ['S' => $item[EventStoreTable::HASH_KEY_NAME]['S']],
+                    EventStoreTable::RANGE_KEY_NAME => ['N' => (string)$item[EventStoreTable::RANGE_KEY_NAME]['N']],
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            if ($e instanceof AwsException) {
+                $errorName = $e->getAwsErrorCode() ?: ClassUtils::getShortName($e);
+                if ('ResourceNotFoundException' === $errorName) {
+                    // if it's already deleted, it's fine
+                    return;
+                } elseif ('ProvisionedThroughputExceededException' === $errorName) {
+                    $code = Code::RESOURCE_EXHAUSTED;
+                } else {
+                    $code = Code::UNAVAILABLE;
+                }
+            } else {
+                $errorName = ClassUtils::getShortName($e);
+                $code = Code::INTERNAL;
+            }
+
+            throw new EventStoreOperationFailed(
+                sprintf(
+                    '%s while deleting [%s] from DynamoDb table [%s].',
+                    $errorName,
+                    $eventId,
+                    $tableName
+                ),
+                $code,
+                $e
+            );
+        }
     }
 
     /**

@@ -217,7 +217,7 @@ class IndexManager
             try {
                 $mapping->setType(new Type($index, $typeName));
                 $mapping->send();
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 if (false !== strpos($e->getMessage(), 'no such index')) {
                     $this->logger->info(
                         sprintf('No index exists yet [%s/%s] in ElasticSearch.  Ignoring.', $name, $typeName)
@@ -278,7 +278,7 @@ class IndexManager
             $index->close();
             $index->setSettings(['analysis' => ['analyzer' => $customAnalyzers]]);
             $index->open();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->logger->error(
                 sprintf('Unable to close index [%s] and update settings.', $name),
                 ['exception' => $e, 'index_name' => $name]
