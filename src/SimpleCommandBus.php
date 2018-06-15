@@ -59,7 +59,7 @@ final class SimpleCommandBus implements CommandBus
         } else {
             try {
                 $handler = $this->locator->getCommandHandler($curie);
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 $this->locator->getExceptionHandler()->onCommandBusException(new BusExceptionEvent($command, $e));
                 return;
             }
@@ -74,7 +74,7 @@ final class SimpleCommandBus implements CommandBus
             $pbjx->trigger($command, PbjxEvents::SUFFIX_BEFORE_HANDLE, $event, false);
             $handler->handleCommand($command, $pbjx);
             $pbjx->trigger($command, PbjxEvents::SUFFIX_AFTER_HANDLE, $event, false);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->locator->getExceptionHandler()->onCommandBusException(new BusExceptionEvent($command, $e));
         }
     }

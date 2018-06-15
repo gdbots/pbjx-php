@@ -55,7 +55,7 @@ final class SchedulerTable
             ]);
 
             $client->waitUntil('TableExists', ['TableName' => $tableName]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             throw new SchedulerOperationFailed(
                 sprintf(
                     '%s::Unable to create table [%s] in region [%s].',
@@ -84,7 +84,7 @@ final class SchedulerTable
         try {
             $result = $client->describeTable(['TableName' => $tableName]);
             return json_encode($result->toArray(), JSON_PRETTY_PRINT);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             throw new SchedulerOperationFailed(
                 sprintf(
                     '%s::Unable to describe table [%s] in region [%s].',

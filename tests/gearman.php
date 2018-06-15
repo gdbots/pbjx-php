@@ -51,7 +51,7 @@ while (true) {
     try {
         $response = $pbjx->request($request);
         echo $response . PHP_EOL . PHP_EOL;
-    } catch (\Exception $e) {
+    } catch (\Throwable $e) {
         echo $e->getMessage() . PHP_EOL . PHP_EOL;
     }
 

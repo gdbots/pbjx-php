@@ -61,7 +61,7 @@ class PbjxTokenTest extends TestCase
         try {
             PbjxToken::$timestamp = $token->getExp() + 301;
             PbjxToken::fromString($token->toString());
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->assertTrue(true, 'Did not allow expired token.');
             return;
         }
@@ -82,7 +82,7 @@ class PbjxTokenTest extends TestCase
         try {
             PbjxToken::$timestamp = $token->getIat() - 301;
             PbjxToken::fromString($token->toString());
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->assertTrue(true, 'Did not allow early iat.');
             return;
         }
@@ -99,7 +99,7 @@ class PbjxTokenTest extends TestCase
     {
         try {
             PbjxToken::fromString($token);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->assertTrue(true, 'Did not allow early iat.');
             return;
         }

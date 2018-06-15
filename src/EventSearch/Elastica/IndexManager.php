@@ -77,6 +77,22 @@ class IndexManager
     }
 
     /**
+     * Returns the name of the index that should be used when only
+     * a date and context is available. Typically this is when
+     * deleting events and you don't have a search request or
+     * an event and can't derive the index from the usual methods.
+     *
+     * @param \DateTime $date
+     * @param array     $context
+     *
+     * @return string
+     */
+    public function getIndexNameFromContext(\DateTime $date, array $context): string
+    {
+        return $context['index_name'] ?? $this->indexPrefix . $this->getIndexIntervalSuffix($date);
+    }
+
+    /**
      * Returns the name of the index that the event should be written to.
      *
      * @param Indexed $event

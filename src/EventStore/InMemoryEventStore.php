@@ -55,7 +55,7 @@ final class InMemoryEventStore implements EventStore
                     }
 
                     $this->streams[$streamId][(string)$event->get('occurred_at')] = $event;
-                } catch (\Exception $e) {
+                } catch (\Throwable $e) {
                 }
             }
 
@@ -122,7 +122,6 @@ TEXT;
             foreach ($stream as $key => $event) {
                 if ($eventId->equals($event->get('event_id'))) {
                     unset($this->streams[$streamId][$key]);
-                    return;
                 }
             }
         }

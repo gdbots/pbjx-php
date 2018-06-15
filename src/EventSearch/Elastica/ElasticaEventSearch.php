@@ -174,7 +174,7 @@ TEXT;
                     ->setType($typeName)
                     ->setIndex($indexName);
                 $documents[] = $document;
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 $message = sprintf(
                     '%s while adding event [{event_id}] to batch index request ' .
                     'into ElasticSearch [{index_name}/{type_name}].',
@@ -200,7 +200,7 @@ TEXT;
             if (!$response->isOk()) {
                 throw new \Exception($response->getStatus() . '::' . $response->getErrorMessage());
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             throw new EventSearchOperationFailed(
                 sprintf(
                     '%s while indexing batch into ElasticSearch with message: %s',
@@ -226,16 +226,18 @@ TEXT;
         $documents = [];
 
         foreach ($eventIds as $eventId) {
-            // this will be correct *most* of the time.
-            $timeUuid = Uuid::fromString($eventId->toString());
-            $indexName = $this->indexManager->getIndexNameFromContext($timeUuid->getDateTime(), $context);
+            $indexName = null;
+            $typeName = $context['_type'] ?? '_all';
 
             try {
+                // this will be correct *most* of the time.
+                $timeUuid = Uuid::fromString($eventId->toString());
+                $indexName = $this->indexManager->getIndexNameFromContext($timeUuid->getDateTime(), $context);
                 $documents[] = (new Document())
                     ->setId((string)$eventId)
-                    ->setType($context['_type'] ?? '_all')
+                    ->setType($typeName)
                     ->setIndex($indexName);
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 $message = sprintf(
                     '%s while adding event [{event_id}] to batch delete request ' .
                     'from ElasticSearch [{index_name}/{type_name}].',
@@ -245,7 +247,7 @@ TEXT;
                 $this->logger->error($message, [
                     'exception'  => $e,
                     'index_name' => $indexName,
-                    'type_name'  => $context['_type'] ?? '_all',
+                    'type_name'  => $typeName,
                     'event_id'   => (string)$eventId,
                 ]);
             }
@@ -300,7 +302,7 @@ TEXT;
             $results = $search
                 ->setOptionsAndQuery($options, $this->getQueryFactory()->create($request, $parsedQuery))
                 ->search();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->logger->error(
                 'ElasticSearch query [{query}] failed.',
                 [
@@ -326,7 +328,7 @@ TEXT;
         foreach ($results->getResults() as $result) {
             try {
                 $events[] = $this->marshaler->unmarshal($result->getSource());
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 $this->logger->error(
                     'Source returned from ElasticSearch could not be unmarshaled.',
                     ['exception' => $e, 'hit' => $result->getHit()]

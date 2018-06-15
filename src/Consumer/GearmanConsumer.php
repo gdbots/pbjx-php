@@ -94,7 +94,7 @@ final class GearmanConsumer extends AbstractConsumer
                             GEARMAN_COULD_NOT_CONNECT
                         );
                     }
-                } catch (\Exception $e) {
+                } catch (\Throwable $e) {
                     throw new \GearmanException(
                         'Unable to add local server 127.0.0.1:4730.  ' . $e->getMessage(),
                         GEARMAN_COULD_NOT_CONNECT
@@ -110,7 +110,7 @@ final class GearmanConsumer extends AbstractConsumer
                         if ($worker->addServer($host, $port)) {
                             $added++;
                         }
-                    } catch (\Exception $e) {
+                    } catch (\Throwable $e) {
                         // do nothing, yet.
                     }
                 }
@@ -191,7 +191,7 @@ final class GearmanConsumer extends AbstractConsumer
                 // if the request is a replay, does that imply the response is too?
                 return (new TransportEnvelope($result, $envelope->getSerializerUsed()))->toString();
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $job->sendFail();
             $this->logger->error(
                 sprintf(

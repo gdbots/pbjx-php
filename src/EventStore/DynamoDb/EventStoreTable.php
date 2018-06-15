@@ -73,7 +73,7 @@ final class EventStoreTable
             ]);
 
             $client->waitUntil('TableExists', ['TableName' => $tableName]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             throw new EventStoreOperationFailed(
                 sprintf(
                     '%s::Unable to create table [%s] in region [%s].',
@@ -102,7 +102,7 @@ final class EventStoreTable
         try {
             $result = $client->describeTable(['TableName' => $tableName]);
             return json_encode($result->toArray(), JSON_PRETTY_PRINT);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             throw new EventStoreOperationFailed(
                 sprintf(
                     '%s::Unable to describe table [%s] in region [%s].',

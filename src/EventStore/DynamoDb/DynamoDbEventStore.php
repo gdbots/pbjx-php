@@ -271,7 +271,7 @@ class DynamoDbEventStore implements EventStore
 
         try {
             $response = $this->client->query($params);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             if ($e instanceof AwsException) {
                 $errorName = $e->getAwsErrorCode() ?: ClassUtils::getShortName($e);
                 if ('ProvisionedThroughputExceededException' === $errorName) {
@@ -304,7 +304,7 @@ class DynamoDbEventStore implements EventStore
         foreach ($response['Items'] as $item) {
             try {
                 $events[] = $this->marshaler->unmarshal($item);
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 $this->logger->error(
                     'Item returned from DynamoDb table [{table_name}] from stream [{stream_id}] could not be unmarshaled.',
                     [
@@ -475,7 +475,7 @@ class DynamoDbEventStore implements EventStore
                 try {
                     $streamId = StreamId::fromString($item[EventStoreTable::HASH_KEY_NAME]['S']);
                     $event = $this->marshaler->unmarshal($item);
-                } catch (\Exception $e) {
+                } catch (\Throwable $e) {
                     $this->logger->error(
                         'Item returned from DynamoDb table [{table_name}] segment [{segment}] ' .
                         'from stream [{stream_id}] could not be unmarshaled.',

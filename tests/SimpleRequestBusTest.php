@@ -37,7 +37,7 @@ class SimpleRequestBusTest extends AbstractBusTestCase
         try {
             $this->pbjx->request($request);
             $this->fail('Request did not fail as expected.');
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->assertTrue(true, 'Request failed as expected.');
         }
     }
