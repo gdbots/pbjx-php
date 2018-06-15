@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Gdbots\Pbjx\EventSearch\Elastica;
 
 use Elastica\Client;
+use Elastica\Document;
 use Elastica\Index;
 use Elastica\Search;
 use Gdbots\Common\Util\ClassUtils;
@@ -20,6 +21,7 @@ use Gdbots\Schemas\Pbjx\Mixin\SearchEventsRequest\SearchEventsRequest;
 use Gdbots\Schemas\Pbjx\Mixin\SearchEventsResponse\SearchEventsResponse;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Ramsey\Uuid\Uuid;
 
 class ElasticaEventSearch implements EventSearch
 {
@@ -172,7 +174,7 @@ TEXT;
                     ->setType($typeName)
                     ->setIndex($indexName);
                 $documents[] = $document;
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 $message = sprintf(
                     '%s while adding event [{event_id}] to batch index request ' .
                     'into ElasticSearch [{index_name}/{type_name}].',
@@ -196,12 +198,74 @@ TEXT;
         try {
             $response = $client->addDocuments($documents);
             if (!$response->isOk()) {
-                throw new \Exception($response->getStatus() . '::' . $response->getError());
+                throw new \Exception($response->getStatus() . '::' . $response->getErrorMessage());
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             throw new EventSearchOperationFailed(
                 sprintf(
                     '%s while indexing batch into ElasticSearch with message: %s',
+                    ClassUtils::getShortName($e),
+                    $e->getMessage()
+                ),
+                Code::INTERNAL,
+                $e
+            );
+        }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    final public function deleteEvents(array $eventIds, array $context = []): void
+    {
+        if (empty($eventIds)) {
+            return;
+        }
+
+        $client = $this->getClientForWrite($context);
+        $documents = [];
+
+        foreach ($eventIds as $eventId) {
+            $indexName = null;
+            $typeName = $context['_type'] ?? '_all';
+
+            try {
+                // this will be correct *most* of the time.
+                $timeUuid = Uuid::fromString($eventId->toString());
+                $indexName = $this->indexManager->getIndexNameFromContext($timeUuid->getDateTime(), $context);
+                $documents[] = (new Document())
+                    ->setId((string)$eventId)
+                    ->setType($typeName)
+                    ->setIndex($indexName);
+            } catch (\Throwable $e) {
+                $message = sprintf(
+                    '%s while adding event [{event_id}] to batch delete request ' .
+                    'from ElasticSearch [{index_name}/{type_name}].',
+                    ClassUtils::getShortName($e)
+                );
+
+                $this->logger->error($message, [
+                    'exception'  => $e,
+                    'index_name' => $indexName,
+                    'type_name'  => $typeName,
+                    'event_id'   => (string)$eventId,
+                ]);
+            }
+        }
+
+        if (empty($documents)) {
+            return;
+        }
+
+        try {
+            $response = $client->deleteDocuments($documents);
+            if ($response->hasError()) {
+                throw new \Exception($response->getStatus() . '::' . $response->getErrorMessage());
+            }
+        } catch (\Throwable $e) {
+            throw new EventSearchOperationFailed(
+                sprintf(
+                    '%s while deleting batch from ElasticSearch with message: %s',
                     ClassUtils::getShortName($e),
                     $e->getMessage()
                 ),
@@ -238,7 +302,7 @@ TEXT;
             $results = $search
                 ->setOptionsAndQuery($options, $this->getQueryFactory()->create($request, $parsedQuery))
                 ->search();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->logger->error(
                 'ElasticSearch query [{query}] failed.',
                 [
@@ -264,7 +328,7 @@ TEXT;
         foreach ($results->getResults() as $result) {
             try {
                 $events[] = $this->marshaler->unmarshal($result->getSource());
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 $this->logger->error(
                     'Source returned from ElasticSearch could not be unmarshaled.',
                     ['exception' => $e, 'hit' => $result->getHit()]

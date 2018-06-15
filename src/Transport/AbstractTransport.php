@@ -50,7 +50,7 @@ abstract class AbstractTransport implements Transport
 
         try {
             $this->doSendCommand($command);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->locator->getExceptionHandler()->onTransportException(
                 new TransportExceptionEvent($this->transportName, $command, $e)
             );
@@ -82,7 +82,7 @@ abstract class AbstractTransport implements Transport
 
         try {
             $this->doSendEvent($event);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->locator->getExceptionHandler()->onTransportException(
                 new TransportExceptionEvent($this->transportName, $event, $e)
             );
@@ -114,7 +114,7 @@ abstract class AbstractTransport implements Transport
 
         try {
             $response = $this->doSendRequest($request);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->locator->getExceptionHandler()->onTransportException(
                 new TransportExceptionEvent($this->transportName, $request, $e)
             );
@@ -123,7 +123,7 @@ abstract class AbstractTransport implements Transport
             if ('in_memory' !== $this->transportName) {
                 try {
                     $response = $this->locator->getRequestBus()->receiveRequest($request);
-                } catch (\Exception $e) {
+                } catch (\Throwable $e) {
                     $response = $this->createResponseForFailedRequest($request, $e);
                 }
             } else {

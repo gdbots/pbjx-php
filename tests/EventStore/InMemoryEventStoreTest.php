@@ -62,6 +62,77 @@ class InMemoryEventStoreTest extends TestCase
         $this->assertSame(2, $slice->count());
     }
 
+    public function testGetEvent()
+    {
+        $streamId = StreamId::fromString('test');
+        $store = $this->pbjx->getEventStore();
+
+        $expectedEvents = [
+            SimpleEvent::fromArray([
+                'occurred_at' => '1489129155504330',
+                'name'        => 'past event',
+            ]),
+
+            SimpleEvent::fromArray([
+                'occurred_at' => '2489129155504330',
+                'name'        => 'future event',
+            ]),
+        ];
+        $store->putEvents($streamId, $expectedEvents);
+
+        $actualEvent = $store->getEvent($expectedEvents[0]->get('event_id'));
+        $this->assertTrue($expectedEvents[0]->equals($actualEvent));
+
+        $actualEvent = $store->getEvent($expectedEvents[1]->get('event_id'));
+        $this->assertTrue($expectedEvents[1]->equals($actualEvent));
+    }
+
+    public function testGetEvent2()
+    {
+        $streamId = StreamId::fromString('test');
+        $store = $this->pbjx->getEventStore();
+
+        $expectedEvents = [
+            SimpleEvent::fromArray([
+                'occurred_at' => '1489129155504330',
+                'name'        => 'past event',
+            ]),
+
+            SimpleEvent::fromArray([
+                'occurred_at' => '2489129155504330',
+                'name'        => 'future event',
+            ]),
+        ];
+        $store->putEvents($streamId, $expectedEvents);
+
+        $eventIds = [
+            $expectedEvents[0]->get('event_id'),
+            $expectedEvents[1]->get('event_id'),
+        ];
+
+        $actualEvents = array_values($store->getEvents($eventIds));
+        $this->assertTrue($expectedEvents[0]->equals($actualEvents[0]));
+        $this->assertTrue($expectedEvents[1]->equals($actualEvents[1]));
+    }
+
+    /**
+     * @expectedException \Gdbots\Pbjx\Exception\EventNotFound
+     */
+    public function testDeleteEvent()
+    {
+        $streamId = StreamId::fromString('test');
+        $store = $this->pbjx->getEventStore();
+
+        $expectedEvent = SimpleEvent::fromArray([
+            'occurred_at' => '1489129155504330',
+            'name'        => 'past event',
+        ]);
+        $store->putEvents($streamId, [$expectedEvent]);
+
+        $store->deleteEvent($expectedEvent->get('event_id'));
+        $store->getEvent($expectedEvent->get('event_id'));
+    }
+
     public function testPutEvents()
     {
         $streamId = StreamId::fromString('test.put');

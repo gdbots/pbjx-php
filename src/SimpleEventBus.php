@@ -96,7 +96,7 @@ final class SimpleEventBus implements EventBus
         foreach ($listeners as $listener) {
             try {
                 call_user_func($listener, $event, $this->pbjx);
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 if ($event instanceof EventExecutionFailed) {
                     $this->locator->getExceptionHandler()->onEventBusException(new BusExceptionEvent($event, $e));
                     return;

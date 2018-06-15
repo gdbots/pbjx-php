@@ -55,7 +55,7 @@ final class SimpleRequestBus implements RequestBus
         } else {
             try {
                 $handler = $this->locator->getRequestHandler($curie);
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 return $this->createResponseForFailedRequest($request, $e);
             }
 
@@ -71,7 +71,7 @@ final class SimpleRequestBus implements RequestBus
             }
 
             return $response;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return $this->createResponseForFailedRequest($request, $e);
         }
     }

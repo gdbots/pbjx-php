@@ -77,6 +77,22 @@ class IndexManager
     }
 
     /**
+     * Returns the name of the index that should be used when only
+     * a date and context is available. Typically this is when
+     * deleting events and you don't have a search request or
+     * an event and can't derive the index from the usual methods.
+     *
+     * @param \DateTime $date
+     * @param array     $context
+     *
+     * @return string
+     */
+    public function getIndexNameFromContext(\DateTime $date, array $context): string
+    {
+        return $context['index_name'] ?? $this->indexPrefix . $this->getIndexIntervalSuffix($date);
+    }
+
+    /**
      * Returns the name of the index that the event should be written to.
      *
      * @param Indexed $event
@@ -217,7 +233,7 @@ class IndexManager
             try {
                 $mapping->setType(new Type($index, $typeName));
                 $mapping->send();
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 if (false !== strpos($e->getMessage(), 'no such index')) {
                     $this->logger->info(
                         sprintf('No index exists yet [%s/%s] in ElasticSearch.  Ignoring.', $name, $typeName)
@@ -278,7 +294,7 @@ class IndexManager
             $index->close();
             $index->setSettings(['analysis' => ['analyzer' => $customAnalyzers]]);
             $index->open();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->logger->error(
                 sprintf('Unable to close index [%s] and update settings.', $name),
                 ['exception' => $e, 'index_name' => $name]

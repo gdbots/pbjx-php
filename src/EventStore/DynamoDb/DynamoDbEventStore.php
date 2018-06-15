@@ -11,9 +11,11 @@ use Aws\ResultInterface;
 use Gdbots\Common\Util\ClassUtils;
 use Gdbots\Common\Util\NumberUtils;
 use Gdbots\Pbj\Marshaler\DynamoDb\ItemMarshaler;
+use Gdbots\Pbj\WellKnown\Identifier;
 use Gdbots\Pbj\WellKnown\Microtime;
 use Gdbots\Pbjx\EventStore\EventStore;
 use Gdbots\Pbjx\EventStore\StreamSlice;
+use Gdbots\Pbjx\Exception\EventNotFound;
 use Gdbots\Pbjx\Exception\EventStoreOperationFailed;
 use Gdbots\Pbjx\Exception\OptimisticCheckFailed;
 use Gdbots\Pbjx\Pbjx;
@@ -36,16 +38,16 @@ class DynamoDbEventStore implements EventStore
     protected $tableName;
 
     /** @var Pbjx */
-    private $pbjx;
+    protected $pbjx;
 
     /** @var DynamoDbClient */
-    private $client;
+    protected $client;
 
     /** @var LoggerInterface */
-    private $logger;
+    protected $logger;
 
     /** @var ItemMarshaler */
-    private $marshaler;
+    protected $marshaler;
 
     /**
      * @param Pbjx            $pbjx
@@ -78,6 +80,137 @@ class DynamoDbEventStore implements EventStore
     {
         $table = new EventStoreTable();
         return $table->describe($this->client, $this->getTableNameForWrite($context));
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    final public function getEvent(Identifier $eventId, array $context = []): Event
+    {
+        $tableName = $this->getTableNameForRead($context);
+        $key = $this->getItemKeyByEventId($eventId, $context);
+        if (null === $key) {
+            throw new EventNotFound();
+        }
+
+        try {
+            $response = $this->client->getItem(['TableName' => $tableName, 'Key' => $key]);
+        } catch (\Throwable $e) {
+            if ($e instanceof AwsException) {
+                $errorName = $e->getAwsErrorCode() ?: ClassUtils::getShortName($e);
+                if ('ResourceNotFoundException' === $errorName) {
+                    throw new EventNotFound();
+                } elseif ('ProvisionedThroughputExceededException' === $errorName) {
+                    $code = Code::RESOURCE_EXHAUSTED;
+                } else {
+                    $code = Code::UNAVAILABLE;
+                }
+            } else {
+                $errorName = ClassUtils::getShortName($e);
+                $code = Code::INTERNAL;
+            }
+
+            throw new EventStoreOperationFailed(
+                sprintf(
+                    '%s while getting [%s] from DynamoDb table [%s] using key [%s].',
+                    $errorName,
+                    $eventId,
+                    $tableName,
+                    json_encode($key)
+                ),
+                $code,
+                $e
+            );
+        }
+
+        if (!isset($response['Item']) || empty($response['Item'])) {
+            throw new EventNotFound();
+        }
+
+        try {
+            /** @var Event $event */
+            $event = $this->marshaler->unmarshal($response['Item']);
+        } catch (\Throwable $e) {
+            $this->logger->error(
+                'Item returned from DynamoDb table [{table_name}] for [{event_id}] could not be unmarshaled.',
+                [
+                    'exception'  => $e,
+                    'item'       => $response['Item'],
+                    'context'    => $context,
+                    'table_name' => $tableName,
+                    'event_id'   => (string)$eventId,
+                ]
+            );
+
+            throw new EventNotFound();
+        }
+
+        return $event;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    final public function getEvents(array $eventIds, array $context = []): array
+    {
+        // todo: optimize using batchGetItem
+        $events = [];
+
+        foreach ($eventIds as $eventId) {
+            try {
+                $event = $this->getEvent($eventId, $context);
+                $events[(string)$event->get('event_id')] = $event;
+            } catch (EventNotFound $nf) {
+                // missing events are not exception worthy at this time
+            } catch (\Throwable $e) {
+                throw $e;
+            }
+        }
+
+        return $events;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    final public function deleteEvent(Identifier $eventId, array $context = []): void
+    {
+        $tableName = $this->getTableNameForWrite($context);
+        $key = $this->getItemKeyByEventId($eventId, $context);
+        if (null === $key) {
+            return;
+        }
+
+        try {
+            $this->client->deleteItem(['TableName' => $tableName, 'Key' => $key]);
+        } catch (\Throwable $e) {
+            if ($e instanceof AwsException) {
+                $errorName = $e->getAwsErrorCode() ?: ClassUtils::getShortName($e);
+                if ('ResourceNotFoundException' === $errorName) {
+                    // if it's already deleted, it's fine
+                    return;
+                } elseif ('ProvisionedThroughputExceededException' === $errorName) {
+                    $code = Code::RESOURCE_EXHAUSTED;
+                } else {
+                    $code = Code::UNAVAILABLE;
+                }
+            } else {
+                $errorName = ClassUtils::getShortName($e);
+                $code = Code::INTERNAL;
+            }
+
+            throw new EventStoreOperationFailed(
+                sprintf(
+                    '%s while deleting [%s] from DynamoDb table [%s] using key [%s].',
+                    $errorName,
+                    $eventId,
+                    $tableName,
+                    json_encode($key)
+                ),
+                $code,
+                $e
+            );
+        }
     }
 
     /**
@@ -138,7 +271,7 @@ class DynamoDbEventStore implements EventStore
 
         try {
             $response = $this->client->query($params);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             if ($e instanceof AwsException) {
                 $errorName = $e->getAwsErrorCode() ?: ClassUtils::getShortName($e);
                 if ('ProvisionedThroughputExceededException' === $errorName) {
@@ -171,7 +304,7 @@ class DynamoDbEventStore implements EventStore
         foreach ($response['Items'] as $item) {
             try {
                 $events[] = $this->marshaler->unmarshal($item);
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 $this->logger->error(
                     'Item returned from DynamoDb table [{table_name}] from stream [{stream_id}] could not be unmarshaled.',
                     [
@@ -342,7 +475,7 @@ class DynamoDbEventStore implements EventStore
                 try {
                     $streamId = StreamId::fromString($item[EventStoreTable::HASH_KEY_NAME]['S']);
                     $event = $this->marshaler->unmarshal($item);
-                } catch (\Exception $e) {
+                } catch (\Throwable $e) {
                     $this->logger->error(
                         'Item returned from DynamoDb table [{table_name}] segment [{segment}] ' .
                         'from stream [{stream_id}] could not be unmarshaled.',
@@ -464,6 +597,71 @@ class DynamoDbEventStore implements EventStore
     }
 
     /**
+     * When needing to get or delete an event by its id we must first
+     * get the DynamoDb item key from the GSI.  At this time DynamoDb
+     * does not support a batch get from a GSI so this can only handle
+     * one event id at a time.
+     *
+     * @param Identifier $eventId
+     * @param array      $context
+     *
+     * @return array|null
+     */
+    protected function getItemKeyByEventId(Identifier $eventId, array $context = []): ?array
+    {
+        $tableName = $this->getTableNameForRead($context);
+        $params = [
+            'TableName'                 => $tableName,
+            'IndexName'                 => EventStoreTable::GSI_EVENT_ID_NAME,
+            'Limit'                     => 1,
+            'ExpressionAttributeNames'  => [
+                '#hash' => EventStoreTable::GSI_EVENT_ID_HASH_KEY_NAME,
+            ],
+            'ExpressionAttributeValues' => [
+                ':v_hash' => ['S' => (string)$eventId],
+            ],
+            'KeyConditionExpression'    => '#hash = :v_hash',
+        ];
+
+        try {
+            $response = $this->client->query($params);
+        } catch (\Throwable $e) {
+            if ($e instanceof AwsException) {
+                $errorName = $e->getAwsErrorCode() ?: ClassUtils::getShortName($e);
+                if ('ProvisionedThroughputExceededException' === $errorName) {
+                    $code = Code::RESOURCE_EXHAUSTED;
+                } else {
+                    $code = Code::UNAVAILABLE;
+                }
+            } else {
+                $errorName = ClassUtils::getShortName($e);
+                $code = Code::INTERNAL;
+            }
+
+            throw new EventStoreOperationFailed(
+                sprintf(
+                    '%s on IndexQuery [%s] on DynamoDb table [%s].',
+                    $errorName,
+                    EventStoreTable::GSI_EVENT_ID_NAME,
+                    $tableName
+                ),
+                $code,
+                $e
+            );
+        }
+
+        if (!isset($response['Items']) || empty($response['Items'])) {
+            return null;
+        }
+
+        $item = array_pop($response['Items']);
+        return [
+            EventStoreTable::HASH_KEY_NAME  => ['S' => $item[EventStoreTable::HASH_KEY_NAME]['S']],
+            EventStoreTable::RANGE_KEY_NAME => ['N' => (string)$item[EventStoreTable::RANGE_KEY_NAME]['N']],
+        ];
+    }
+
+    /**
      * When an expected etag is provided we can check the head of the stream to see if it's
      * at the expected state before appending events.
      *
@@ -473,7 +671,7 @@ class DynamoDbEventStore implements EventStore
      *
      * @throws OptimisticCheckFailed
      */
-    private function optimisticCheck(StreamId $streamId, string $expectedEtag, array $context): void
+    protected function optimisticCheck(StreamId $streamId, string $expectedEtag, array $context): void
     {
         $slice = $this->getStreamSlice($streamId, null, 1, false, true, $context);
 

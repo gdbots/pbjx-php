@@ -4,7 +4,9 @@ declare(strict_types=1);
 namespace Gdbots\Pbjx\EventStore;
 
 use Gdbots\Pbj\Serializer\PhpArraySerializer;
+use Gdbots\Pbj\WellKnown\Identifier;
 use Gdbots\Pbj\WellKnown\Microtime;
+use Gdbots\Pbjx\Exception\EventNotFound;
 use Gdbots\Pbjx\Pbjx;
 use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
 use Gdbots\Schemas\Pbjx\Mixin\Indexed\Indexed;
@@ -29,6 +31,13 @@ final class InMemoryEventStore implements EventStore
     private $streams = [];
 
     /**
+     * Array of events keyed by their eventId.
+     *
+     * @var Event[]
+     */
+    private $events = [];
+
+    /**
      * @param Pbjx  $pbjx
      * @param array $streams
      */
@@ -46,7 +55,7 @@ final class InMemoryEventStore implements EventStore
                     }
 
                     $this->streams[$streamId][(string)$event->get('occurred_at')] = $event;
-                } catch (\Exception $e) {
+                } catch (\Throwable $e) {
                 }
             }
 
@@ -66,16 +75,56 @@ final class InMemoryEventStore implements EventStore
      */
     public function describeStorage(array $context = []): string
     {
-        $count = count($this->streams);
+        $scount = count($this->streams);
+        $ecount = count($this->events);
         $streamIds = implode(PHP_EOL, array_keys($this->streams));
         return <<<TEXT
 InMemoryEventStore
 
-Count: {$count}
+Stream Count: {$scount}
+Event Count: {$ecount}
 Streams:
 {$streamIds}
 
 TEXT;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getEvent(Identifier $eventId, array $context = []): Event
+    {
+        $key = (string)$eventId;
+        if (isset($this->events[$key])) {
+            return $this->events[$key];
+        }
+
+        throw new EventNotFound();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getEvents(array $eventIds, array $context = []): array
+    {
+        $keys = array_map('strval', $eventIds);
+        return array_intersect_key($this->events, array_flip($keys));
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function deleteEvent(Identifier $eventId, array $context = []): void
+    {
+        unset($this->events[(string)$eventId]);
+        foreach ($this->streams as $streamId => $stream) {
+            /** @var Event $event */
+            foreach ($stream as $key => $event) {
+                if ($eventId->equals($event->get('event_id'))) {
+                    unset($this->streams[$streamId][$key]);
+                }
+            }
+        }
     }
 
     /**
@@ -146,6 +195,7 @@ TEXT;
         foreach ($events as $event) {
             $this->pbjx->triggerLifecycle($event);
             $this->streams[$key][(string)$event->get('occurred_at')] = $event;
+            $this->events[(string)$event->get('event_id')] = $event;
         }
 
         ksort($this->streams[$key]);
@@ -192,6 +242,7 @@ TEXT;
     public function clear(): void
     {
         $this->streams = [];
+        $this->events = [];
     }
 
     /**

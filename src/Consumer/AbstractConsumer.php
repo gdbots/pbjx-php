@@ -85,7 +85,7 @@ abstract class AbstractConsumer
         do {
             try {
                 $this->work();
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 $this->stop();
                 $this->logger->critical(
                     sprintf(

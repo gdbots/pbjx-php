@@ -254,7 +254,7 @@ final class PbjxToken implements \JsonSerializable
             $withoutSig = substr($this->token, 0, strrpos($this->token, '.'));
             $expected = hash_hmac(self::HASH_HMAC_ALGO, $withoutSig, $secret, true);
             return hash_equals($expected, $this->signature);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return false;
         }
     }

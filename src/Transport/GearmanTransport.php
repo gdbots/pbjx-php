@@ -107,7 +107,7 @@ final class GearmanTransport extends AbstractTransport
             }
 
             throw $ge;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             throw $e;
         }
     }
@@ -142,7 +142,7 @@ final class GearmanTransport extends AbstractTransport
             }
 
             throw $ge;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             throw $e;
         }
     }
@@ -176,7 +176,7 @@ final class GearmanTransport extends AbstractTransport
             }
 
             throw $ge;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             throw $e;
         }
     }
@@ -233,7 +233,7 @@ final class GearmanTransport extends AbstractTransport
                             GEARMAN_COULD_NOT_CONNECT
                         );
                     }
-                } catch (\Exception $e) {
+                } catch (\Throwable $e) {
                     throw new \GearmanException(
                         'Unable to add local server 127.0.0.1:4730.  ' . $e->getMessage(),
                         GEARMAN_COULD_NOT_CONNECT
@@ -249,7 +249,7 @@ final class GearmanTransport extends AbstractTransport
                         if ($client->addServer($host, $port)) {
                             $added++;
                         }
-                    } catch (\Exception $e) {
+                    } catch (\Throwable $e) {
                         // do nothing, yet.
                     }
                 }

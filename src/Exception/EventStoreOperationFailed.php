@@ -5,7 +5,7 @@ namespace Gdbots\Pbjx\Exception;
 
 use Gdbots\Schemas\Pbjx\Enum\Code;
 
-final class EventStoreOperationFailed extends \RuntimeException implements GdbotsPbjxException
+class EventStoreOperationFailed extends \RuntimeException implements GdbotsPbjxException
 {
     /**
      * @param string     $message

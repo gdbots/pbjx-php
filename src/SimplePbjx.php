@@ -205,7 +205,7 @@ final class SimplePbjx implements Pbjx
             $event = new ResponseCreatedEvent($request, $response);
             $this->trigger($request, PbjxEvents::SUFFIX_AFTER_HANDLE, $event, false);
             $this->trigger($response, PbjxEvents::SUFFIX_CREATED, $event, false);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->locator->getExceptionHandler()->onRequestBusException(new BusExceptionEvent($response, $e));
         }
 
