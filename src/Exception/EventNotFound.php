@@ -10,9 +10,9 @@ final class EventNotFound extends EventStoreOperationFailed implements HasEndUse
 {
     /**
      * @param string     $message
-     * @param \Exception $previous
+     * @param \Throwable $previous
      */
-    public function __construct(string $message = 'Event not found', ?\Exception $previous = null)
+    public function __construct(string $message = 'Event not found', ?\Throwable $previous = null)
     {
         parent::__construct($message, Code::NOT_FOUND, $previous);
     }

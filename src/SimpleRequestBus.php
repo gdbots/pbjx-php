@@ -78,11 +78,11 @@ final class SimpleRequestBus implements RequestBus
 
     /**
      * @param Request    $request
-     * @param \Exception $exception
+     * @param \Throwable $exception
      *
      * @return Response
      */
-    private function createResponseForFailedRequest(Request $request, \Exception $exception): Response
+    private function createResponseForFailedRequest(Request $request, \Throwable $exception): Response
     {
         $code = $exception->getCode() > 0 ? $exception->getCode() : Code::UNKNOWN;
 

@@ -151,11 +151,11 @@ abstract class AbstractTransport implements Transport
 
     /**
      * @param Request    $request
-     * @param \Exception $exception
+     * @param \Throwable $exception
      *
      * @return Response
      */
-    protected function createResponseForFailedRequest(Request $request, \Exception $exception): Response
+    protected function createResponseForFailedRequest(Request $request, \Throwable $exception): Response
     {
         $code = $exception->getCode() > 0 ? $exception->getCode() : Code::UNKNOWN;
 

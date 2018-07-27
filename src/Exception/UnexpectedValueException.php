@@ -10,9 +10,9 @@ final class UnexpectedValueException extends \UnexpectedValueException implement
     /**
      * @param string     $message
      * @param int        $code
-     * @param \Exception $previous
+     * @param \Throwable $previous
      */
-    public function __construct(string $message = '', int $code = Code::OUT_OF_RANGE, ?\Exception $previous = null)
+    public function __construct(string $message = '', int $code = Code::OUT_OF_RANGE, ?\Throwable $previous = null)
     {
         parent::__construct($message, $code, $previous);
     }

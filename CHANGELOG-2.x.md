@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 2.x versions.
 
 
+## v2.3.1
+* Use Throwable for all typehints instead of Exception to catch TypeError as well.
+
+
 ## v2.3.0
 __POSSIBLE BREAKING CHANGE__
 

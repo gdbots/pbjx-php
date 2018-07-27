@@ -13,18 +13,18 @@ class TransportExceptionEvent extends TransportEvent
     /**
      * @param string     $transportName
      * @param Message    $message
-     * @param \Exception $exception
+     * @param \Throwable $exception
      */
-    public function __construct(string $transportName, Message $message, \Exception $exception)
+    public function __construct(string $transportName, Message $message, \Throwable $exception)
     {
         parent::__construct($transportName, $message);
         $this->exception = $exception;
     }
 
     /**
-     * @return \Exception
+     * @return \Throwable
      */
-    public function getException(): \Exception
+    public function getException(): \Throwable
     {
         return $this->exception;
     }

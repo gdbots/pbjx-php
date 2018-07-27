@@ -12,18 +12,18 @@ class BusExceptionEvent extends PbjxEvent
 
     /**
      * @param Message    $message
-     * @param \Exception $exception
+     * @param \Throwable $exception
      */
-    public function __construct(Message $message, \Exception $exception)
+    public function __construct(Message $message, \Throwable $exception)
     {
         parent::__construct($message);
         $this->exception = $exception;
     }
 
     /**
-     * @return \Exception
+     * @return \Throwable
      */
-    public function getException(): \Exception
+    public function getException(): \Throwable
     {
         return $this->exception;
     }
