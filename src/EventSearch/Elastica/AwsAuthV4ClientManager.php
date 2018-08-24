@@ -3,24 +3,24 @@ declare(strict_types=1);
 
 namespace Gdbots\Pbjx\EventSearch\Elastica;
 
-use Aws\Credentials\Credentials;
+use Aws\Credentials\CredentialsInterface;
 use Psr\Log\LoggerInterface;
 
 class AwsAuthV4ClientManager extends ClientManager
 {
-    /** @var Credentials */
+    /** @var CredentialsInterface */
     private $credentials;
 
     /** @var string */
     private $region;
 
     /**
-     * @param Credentials     $credentials
-     * @param string          $region
-     * @param array           $clusters
-     * @param LoggerInterface $logger
+     * @param CredentialsInterface $credentials
+     * @param string               $region
+     * @param array                $clusters
+     * @param LoggerInterface      $logger
      */
-    public function __construct(Credentials $credentials, string $region, array $clusters, ?LoggerInterface $logger = null)
+    public function __construct(CredentialsInterface $credentials, string $region, array $clusters, ?LoggerInterface $logger = null)
     {
         parent::__construct($clusters, $logger);
         $this->credentials = $credentials;
@@ -38,6 +38,7 @@ class AwsAuthV4ClientManager extends ClientManager
         $config['transport'] = 'AwsAuthV4';
         $config['aws_access_key_id'] = $this->credentials->getAccessKeyId();
         $config['aws_secret_access_key'] = $this->credentials->getSecretKey();
+        $config['aws_session_token'] = $this->credentials->getSecurityToken();
         $config['aws_region'] = $this->region;
         return $config;
     }

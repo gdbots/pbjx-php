@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 2.x versions.
 
 
+## v2.3.2
+* Add `$config['aws_session_token'] = $this->credentials->getSecurityToken();` in `Gdbots\Pbjx\EventSearch\Elastica\AwsAuthV4ClientManager` so signatures work in AWS ECS.
+
+
 ## v2.3.1
 * Use Throwable for all typehints instead of Exception to catch TypeError as well.
 
