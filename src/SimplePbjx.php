@@ -124,6 +124,10 @@ final class SimplePbjx implements Pbjx
             $to->set('ctx_causator_ref', $from->generateMessageRef());
         }
 
+        if ($to::schema()->hasField('ctx_causator') && !$to->has('ctx_causator')) {
+            $to->set('ctx_causator', $from);
+        }
+
         if (!$to->has('ctx_app') && $from->has('ctx_app')) {
             $to->set('ctx_app', clone $from->get('ctx_app'));
         }
