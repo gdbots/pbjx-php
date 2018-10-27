@@ -2,8 +2,8 @@
 This changelog references the relevant changes done in 2.x versions.
 
 
-## v2.4.0
-* Use `normalizers` from `MappingFactory::getCustomNormalizers()`
+## v2.3.3
+* Use `normalizers` (from `MappingFactory::getCustomNormalizers()` if available, otherwise hardcoded). 
 
 
 ## v2.3.2
