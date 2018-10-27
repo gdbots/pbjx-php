@@ -199,6 +199,7 @@ class IndexManager
                 'index'              => [
                     'analysis' => [
                         'analyzer' => MappingFactory::getCustomAnalyzers(),
+                        'normalizer' => MappingFactory::getCustomNormalizers(),
                     ],
                 ],
             ],
