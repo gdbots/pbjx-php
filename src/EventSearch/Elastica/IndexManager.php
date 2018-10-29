@@ -198,7 +198,7 @@ class IndexManager
                 'number_of_replicas' => 1,
                 'index'              => [
                     'analysis' => [
-                        'analyzer' => MappingFactory::getCustomAnalyzers(),
+                        'analyzer' => $this->getCustomAnalyzers(),
                         'normalizer' => $this->getCustomNormalizers(),
                     ],
                 ],
