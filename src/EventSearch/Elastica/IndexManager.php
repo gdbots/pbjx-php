@@ -252,6 +252,19 @@ class IndexManager
             $this->logger->info(sprintf('Successfully put mapping for type [%s/%s]', $name, $typeName));
         }
 
+        $this->updateAnalyzers($index, $name);
+        $this->updateNormalizers($index, $name);
+    }
+
+    /**
+     * Checks if an existing index is missing any custom analyzers
+     * and if it is, updates settings to include them.
+     *
+     * @param Index  $index
+     * @param string $name
+     */
+    protected function updateAnalyzers(Index $index, string $name)
+    {
         $settings = $index->getSettings();
         $customAnalyzers = MappingFactory::getCustomAnalyzers();
         $missingAnalyzers = [];
@@ -264,7 +277,7 @@ class IndexManager
             }
         } catch (\Throwable $e) {
             $this->logger->error(
-                sprintf('Unable to read index [%s] and get settings.', $name),
+                sprintf('Unable to read index [%s] and get analyzer settings.', $name),
                 ['exception' => $e, 'index_name' => $name]
             );
 
@@ -297,7 +310,7 @@ class IndexManager
             $index->open();
         } catch (\Throwable $e) {
             $this->logger->error(
-                sprintf('Unable to close index [%s] and update settings.', $name),
+                sprintf('Unable to close index [%s] and update analyzer settings.', $name),
                 ['exception' => $e, 'index_name' => $name]
             );
 
@@ -305,6 +318,70 @@ class IndexManager
         }
 
         $this->logger->info(sprintf('Successfully added missing analyzers to index [%s]', $name));
+    }
+
+    /**
+     * Checks if an existing index is missing any custom normalizers
+     * and if it is, updates settings to include them.
+     *
+     * @param Index  $index
+     * @param string $name
+     */
+    protected function updateNormalizers(Index $index, string $name)
+    {
+        $settings = $index->getSettings();
+        $customNormalizers = $this->getCustomNormalizers();
+        $missingNormalizers = [];
+
+        try {
+            foreach ($customNormalizers as $id => $normalizer) {
+                if (!$settings->get("analysis.normalizer.{$id}")) {
+                    $missingNormalizers[$id] = $normalizer;
+                }
+            }
+        } catch (\Throwable $e) {
+            $this->logger->error(
+                sprintf('Unable to read index [%s] and get normalizer settings.', $name),
+                ['exception' => $e, 'index_name' => $name]
+            );
+
+            return;
+        }
+
+        if (empty($missingNormalizers)) {
+            $this->logger->info(
+                sprintf(
+                    'Index [%s] has all custom normalizers [%s].',
+                    $name,
+                    implode(',', array_keys($customNormalizers))
+                )
+            );
+
+            return;
+        }
+
+        $this->logger->warning(
+            sprintf(
+                'Closing index [%s] to add custom normalizers [%s].',
+                $name,
+                implode(',', array_keys($missingNormalizers))
+            )
+        );
+
+        try {
+            $index->close();
+            $index->setSettings(['analysis' => ['normalizer' => $missingNormalizers]]);
+            $index->open();
+        } catch (\Throwable $e) {
+            $this->logger->error(
+                sprintf('Unable to close index [%s] and update normalizer settings.', $name),
+                ['exception' => $e, 'index_name' => $name]
+            );
+
+            return;
+        }
+
+        $this->logger->info(sprintf('Successfully added missing normalizers to index [%s]', $name));
     }
 
     /**
