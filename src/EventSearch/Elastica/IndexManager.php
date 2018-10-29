@@ -266,7 +266,7 @@ class IndexManager
     protected function updateAnalyzers(Index $index, string $name)
     {
         $settings = $index->getSettings();
-        $customAnalyzers = MappingFactory::getCustomAnalyzers();
+        $customAnalyzers = $this->getCustomAnalyzers();
         $missingAnalyzers = [];
 
         try {
@@ -443,6 +443,14 @@ class IndexManager
         }
 
         return $mappings;
+    }
+
+    /**
+     * @return array
+     */
+    protected function getCustomAnalyzers(): array
+    {
+        return MappingFactory::getCustomAnalyzers();
     }
 
     /**
