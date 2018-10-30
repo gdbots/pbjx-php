@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 2.x versions.
 
 
+## v2.3.3
+* In `Gdbots\Pbjx\EventSearch\Elastica\IndexManager` add custom normalizers from `MappingFactory::getCustomNormalizers` if available, otherwise hardcoded. 
+
+
 ## v2.3.2
 * Add `$config['aws_session_token'] = $this->credentials->getSecurityToken();` in `Gdbots\Pbjx\EventSearch\Elastica\AwsAuthV4ClientManager` so signatures work in AWS ECS.
 
