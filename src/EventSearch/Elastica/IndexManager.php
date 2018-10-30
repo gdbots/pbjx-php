@@ -198,7 +198,7 @@ class IndexManager
                 'number_of_replicas' => 1,
                 'index'              => [
                     'analysis' => [
-                        'analyzer' => $this->getCustomAnalyzers(),
+                        'analyzer'   => $this->getCustomAnalyzers(),
                         'normalizer' => $this->getCustomNormalizers(),
                     ],
                 ],
@@ -446,6 +446,8 @@ class IndexManager
     }
 
     /**
+     * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-custom-analyzer.html
+     *
      * @return array
      */
     protected function getCustomAnalyzers(): array
@@ -454,6 +456,8 @@ class IndexManager
     }
 
     /**
+     * @link https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-normalizers.html
+     *
      * @return array
      */
     protected function getCustomNormalizers(): array

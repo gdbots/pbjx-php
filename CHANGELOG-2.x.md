@@ -3,7 +3,7 @@ This changelog references the relevant changes done in 2.x versions.
 
 
 ## v2.3.3
-* Use `normalizer` (from `MappingFactory::getCustomNormalizers()` if available, otherwise hardcoded). 
+* In `Gdbots\Pbjx\EventSearch\Elastica\IndexManager` add custom normalizers from `MappingFactory::getCustomNormalizers` if available, otherwise hardcoded. 
 
 
 ## v2.3.2
