@@ -2,6 +2,11 @@
 This changelog references the relevant changes done in 2.x versions.
 
 
+## v2.3.4
+* In `SimplePbjx` rethrow any exceptions when response created events are triggered.
+* In `ElasticaEventSearch` use response query time to determine `time_taken`.
+
+
 ## v2.3.3
 * In `Gdbots\Pbjx\EventSearch\Elastica\IndexManager` add custom normalizers from `MappingFactory::getCustomNormalizers` if available, otherwise hardcoded. 
 
