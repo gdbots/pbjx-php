@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 2.x versions.
 
 
+## v2.3.5
+* Add `DynamoDbEventStore::beforePutItem` hook so item can be customized, e.g. setting ttl field so DynamoDb automatically deletes it.
+
+
 ## v2.3.4
 * In `SimplePbjx` rethrow any exceptions when response created events are triggered.
 * In `ElasticaEventSearch` use response query time to determine `time_taken`.

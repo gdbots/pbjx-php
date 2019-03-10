@@ -363,6 +363,7 @@ class DynamoDbEventStore implements EventStore
             if ($event instanceof Indexed) {
                 $item[EventStoreTable::INDEXED_KEY_NAME] = ['BOOL' => true];
             }
+            $this->beforePutItem($item, $streamId, $event, $context);
             $batch->put($item);
         }
 
@@ -594,6 +595,20 @@ class DynamoDbEventStore implements EventStore
     protected function getTableNameForWrite(array $context): string
     {
         return $context['table_name'] ?? $this->tableName;
+    }
+
+    /**
+     * Add derived/virtual fields to the item before pushing to DynamoDb.
+     * Typically used to create indices or set ttl field, etc.
+     *
+     * @param array    $item
+     * @param StreamId $streamId
+     * @param Event    $event
+     * @param array    $context
+     */
+    protected function beforePutItem(array &$item, StreamId $streamId, Event $event, array $context): void
+    {
+        // override to customize
     }
 
     /**
