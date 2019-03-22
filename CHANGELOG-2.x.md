@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 2.x versions.
 
 
+## v2.3.6
+* BUG fix in `DynamoDbEventStore::optimisticCheck` to cast event id to string in both checks. 
+
+
 ## v2.3.5
 * Add `DynamoDbEventStore::beforePutItem` hook so item can be customized, e.g. setting ttl field so DynamoDb automatically deletes it.
 

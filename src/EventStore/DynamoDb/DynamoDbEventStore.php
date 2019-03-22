@@ -703,14 +703,16 @@ class DynamoDbEventStore implements EventStore
         $event = $slice->getIterator()->current();
 
         // todo: review this etag strategy (need to make this more explicit/obvious)
-        if ((string)$event->get('event_id') === $expectedEtag || md5($event->get('event_id')) === $expectedEtag) {
+        $eventId = (string)$event->get('event_id');
+        if ($eventId === $expectedEtag || md5($eventId) === $expectedEtag) {
             return;
         }
 
         throw new OptimisticCheckFailed(
             sprintf(
-                'The last event [%s] in DynamoDb table [%s] from stream [%s] doesn\'t match expected etag [%s].',
-                $event->get('event_id'),
+                'The last event [%s:%s] in DynamoDb table [%s] from stream [%s] doesn\'t match expected etag [%s].',
+                $eventId,
+                md5($eventId),
                 $this->getTableNameForRead($context),
                 $streamId,
                 $expectedEtag
