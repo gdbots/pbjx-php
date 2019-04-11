@@ -142,7 +142,7 @@ class IndexManager
 
         do {
             $indices[$this->indexPrefix . $this->getIndexIntervalSuffix($start)] = true;
-            $start->modify('+1 week');
+            $start = $start->modify('+1 week');
         } while ($start < $end);
         $indices[$this->indexPrefix . $this->getIndexIntervalSuffix($start)] = true;
 
@@ -151,7 +151,7 @@ class IndexManager
             $indices = [];
             do {
                 $indices[$this->indexPrefix . $start->format('Y') . '*'] = true;
-                $start->modify('+1 year');
+                $start = $start->modify('+1 year');
             } while ($start < $end);
         }
 

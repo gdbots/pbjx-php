@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 2.x versions.
 
 
+## v2.3.7
+* In `Gdbots\Pbjx\EventSearch\Elastica\IndexManager` assume date is an immutable object.
+
+
 ## v2.3.6
 * BUG fix in `DynamoDbEventStore::optimisticCheck` to cast event id to string in both checks. 
 
