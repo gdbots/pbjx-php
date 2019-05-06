@@ -87,10 +87,31 @@ class ElasticaEventSearch implements EventSearch
 
         $templateName = $context['template_name'] ?? $this->indexManager->getIndexPrefix();
 
+        static $created = [];
+
         foreach ($clusters as $cluster) {
             $client = $this->clientManager->getClient((string)$cluster);
             $this->indexManager->updateTemplate($client, $templateName);
-            $this->indexManager->updateIndex($client, $indexName);
+            
+            // destroy and recreate index
+            if (isset($context['destroy']) && $context['destroy'])) {
+                $index = $client->getIndex($indexName);
+                try {
+                    $index->delete();
+                } catch (\Throwable $e) {
+                    throw new SearchOperationFailed(
+                        sprintf(
+                            '%s while deleting index [%s].',
+                            ClassUtils::getShortName($e),
+                            $indexName
+                        ),
+                        Code::INTERNAL,
+                        $e
+                    );
+                }
+            } else {
+                $this->indexManager->updateIndex($client, $indexName);
+            }
         }
     }
 
