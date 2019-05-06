@@ -94,7 +94,7 @@ class ElasticaEventSearch implements EventSearch
             $this->indexManager->updateTemplate($client, $templateName);
             
             // destroy and recreate index
-            if (isset($context['destroy']) && $context['destroy'])) {
+            if (isset($context['destroy']) && $context['destroy']) {
                 $index = $client->getIndex($indexName);
                 try {
                     $index->delete();
