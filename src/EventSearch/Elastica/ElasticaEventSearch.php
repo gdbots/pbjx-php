@@ -90,7 +90,25 @@ class ElasticaEventSearch implements EventSearch
         foreach ($clusters as $cluster) {
             $client = $this->clientManager->getClient((string)$cluster);
             $this->indexManager->updateTemplate($client, $templateName);
-            $this->indexManager->updateIndex($client, $indexName);
+
+            if (true === ($context['destroy'] ?? false)) {
+                $index = $client->getIndex($indexName);
+                try {
+                    $index->delete();
+                } catch (\Throwable $e) {
+                    throw new EventSearchOperationFailed(
+                        sprintf(
+                            '%s while deleting index [%s].',
+                            ClassUtils::getShortName($e),
+                            $indexName
+                        ),
+                        Code::INTERNAL,
+                        $e
+                    );
+                }
+            } else {
+                $this->indexManager->updateIndex($client, $indexName);
+            }
         }
     }
 

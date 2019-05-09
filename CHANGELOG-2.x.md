@@ -2,6 +2,11 @@
 This changelog references the relevant changes done in 2.x versions.
 
 
+## v2.3.8
+* Remove use of `Limit` in `DynamoDbEventStore` so fewer queries are made to scan the table.
+* Add check for destroy in context in `ElasticaEventSearch::createStorage` to delete index before creating it.
+
+
 ## v2.3.7
 * In `Gdbots\Pbjx\EventSearch\Elastica\IndexManager` assume date is an immutable object.
 
