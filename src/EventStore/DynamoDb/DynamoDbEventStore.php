@@ -267,6 +267,7 @@ class DynamoDbEventStore implements EventStore
 
         if (!empty($filterExpressions)) {
             $params['FilterExpression'] = implode(' AND ', $filterExpressions);
+            unset($params['Limit']);
         }
 
         try {
@@ -403,7 +404,6 @@ class DynamoDbEventStore implements EventStore
         $tableName = $this->getTableNameForRead($context);
         $skipErrors = filter_var($context['skip_errors'] ?? false, FILTER_VALIDATE_BOOLEAN);
         $reindexing = filter_var($context['reindexing'] ?? false, FILTER_VALIDATE_BOOLEAN);
-        $limit = NumberUtils::bound($context['limit'] ?? 100, 1, 500);
         $totalSegments = NumberUtils::bound($context['total_segments'] ?? 16, 1, 64);
         $poolDelay = NumberUtils::bound($context['pool_delay'] ?? 500, 100, 10000);
 
@@ -454,7 +454,6 @@ class DynamoDbEventStore implements EventStore
         }
 
         $params['TableName'] = $tableName;
-        $params['Limit'] = $limit;
         $params['TotalSegments'] = $totalSegments;
 
         $pending = [];
