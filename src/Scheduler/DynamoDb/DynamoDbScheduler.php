@@ -115,6 +115,7 @@ final class DynamoDbScheduler implements Scheduler
             unset($payload['ctx_app']);
             unset($payload['ctx_cloud']);
             unset($payload['ctx_ip']);
+            unset($payload['ctx_ipv6']);
             unset($payload['ctx_ua']);
 
             $params = [

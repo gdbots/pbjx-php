@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 2.x versions.
 
 
+## v2.3.9
+* In `SimplePbjx::copyContext` copy the `ctx_ipv6` field when present.
+
+
 ## v2.3.8
 * Remove use of `Limit` in `DynamoDbEventStore` so fewer queries are made to scan the table.
 * Add check for destroy in context in `ElasticaEventSearch::createStorage` to delete index before creating it.
