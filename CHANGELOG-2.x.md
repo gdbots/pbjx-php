@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 2.x versions.
 
 
+## v2.3.10
+* Update composer constraint for `gdbots/query-parser` to `~0.2 || ^1.0`.
+
+
 ## v2.3.9
 * In `SimplePbjx::copyContext` copy the `ctx_ipv6` field when present.
 
