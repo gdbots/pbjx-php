@@ -405,7 +405,8 @@ class DynamoDbEventStore implements EventStore
         $skipErrors = filter_var($context['skip_errors'] ?? false, FILTER_VALIDATE_BOOLEAN);
         $reindexing = filter_var($context['reindexing'] ?? false, FILTER_VALIDATE_BOOLEAN);
         $totalSegments = NumberUtils::bound($context['total_segments'] ?? 16, 1, 64);
-        $poolDelay = NumberUtils::bound($context['pool_delay'] ?? 500, 100, 10000);
+        $poolDelay = NumberUtils::bound($context['pool_delay'] ?? 500, 10, 10000);
+        $poolSize = NumberUtils::bound($context['pool_size'] ?? 25, 1, 100);
 
         $params = ['ExpressionAttributeNames' => [], 'ExpressionAttributeValues' => []];
         $filterExpressions = [];
@@ -555,17 +556,22 @@ class DynamoDbEventStore implements EventStore
             );
         };
 
-        while (count($pending) > 0) {
-            $commands = $pending;
-            $pending = [];
-            $pool = new CommandPool($this->client, $commands, ['fulfilled' => $fulfilled, 'rejected' => $rejected]);
-            $pool->promise()->wait();
-            $iter2seg['prev'] = $iter2seg['next'];
-            $iter2seg['next'] = [];
+        var $allCommands = $pending;
+        for ($i = 0; $i < count($allCommands); $i + $poolSize) {
+            $pending[] = array_slice($allCommands, $i, $poolSize);a
 
-            if (count($pending) > 0) {
-                $this->logger->info(sprintf('Pausing for %d milliseconds.', $poolDelay));
-                usleep($poolDelay * 1000);
+            while (count($pending) > 0) {
+                $commands = $pending;
+                $pending = [];
+                $pool = new CommandPool($this->client, $commands, ['fulfilled' => $fulfilled, 'rejected' => $rejected]);
+                $pool->promise()->wait();
+                $iter2seg['prev'] = $iter2seg['next'];
+                $iter2seg['next'] = [];
+
+                if (count($pending) > 0) {
+                    $this->logger->info(sprintf('Pausing for %d milliseconds.', $poolDelay));
+                    usleep($poolDelay * 1000);
+                }
             }
         }
     }
