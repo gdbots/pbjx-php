@@ -407,7 +407,6 @@ class DynamoDbEventStore implements EventStore
         $totalSegments = NumberUtils::bound($context['total_segments'] ?? 16, 1, 64);
         $poolDelay = NumberUtils::bound($context['pool_delay'] ?? 500, 10, 10000);
         $poolSize = NumberUtils::bound($context['pool_size'] ?? 25, 1, 100);
-        print("poolSize: $poolSize");
 
         $params = ['ExpressionAttributeNames' => [], 'ExpressionAttributeValues' => []];
         $filterExpressions = [];
