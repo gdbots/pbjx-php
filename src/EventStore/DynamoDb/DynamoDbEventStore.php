@@ -559,15 +559,11 @@ class DynamoDbEventStore implements EventStore
         while (count($pending) > 0) {
             $commands = $pending;
             $pending = [];
-            $pool = new CommandPool(
-                $this->client,
-                $commands,
-                [
-                    'fulfilled' => $fulfilled,
-                    'rejected' => $rejected,
-                    'concurrency' => $concurrency
-                ]
-            );
+            $pool = new CommandPool($this->client, $commands, [
+                'fulfilled'   => $fulfilled,
+                'rejected'    => $rejected,
+                'concurrency' => $concurrency,
+            ]);
             $pool->promise()->wait();
             $iter2seg['prev'] = $iter2seg['next'];
             $iter2seg['next'] = [];

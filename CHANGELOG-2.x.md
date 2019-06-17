@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 2.x versions.
 
 
+## v2.3.11
+* Add `$context['concurrency']` check in `DynamoDbEventStore::pipeAllEvents` so that can be configured. Defaults to 25.
+
+
 ## v2.3.10
 * Update composer constraint for `gdbots/query-parser` to `~0.2 || ^1.0`.
 
