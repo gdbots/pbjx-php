@@ -407,6 +407,7 @@ class DynamoDbEventStore implements EventStore
         $totalSegments = NumberUtils::bound($context['total_segments'] ?? 16, 1, 64);
         $poolDelay = NumberUtils::bound($context['pool_delay'] ?? 500, 10, 10000);
         $poolSize = NumberUtils::bound($context['pool_size'] ?? 25, 1, 100);
+        print("poolSize: $poolSize");
 
         $params = ['ExpressionAttributeNames' => [], 'ExpressionAttributeValues' => []];
         $filterExpressions = [];
@@ -556,22 +557,17 @@ class DynamoDbEventStore implements EventStore
             );
         };
 
-        var $allCommands = $pending;
-        for ($i = 0; $i < count($allCommands); $i + $poolSize) {
-            $pending[] = array_slice($allCommands, $i, $poolSize);a
+        while (count($pending) > 0) {
+            $commands = $pending;
+            $pending = [];
+            $pool = new CommandPool($this->client, $commands, ['fulfilled' => $fulfilled, 'rejected' => $rejected, 'concurrency' => $poolSize]);
+            $pool->promise()->wait();
+            $iter2seg['prev'] = $iter2seg['next'];
+            $iter2seg['next'] = [];
 
-            while (count($pending) > 0) {
-                $commands = $pending;
-                $pending = [];
-                $pool = new CommandPool($this->client, $commands, ['fulfilled' => $fulfilled, 'rejected' => $rejected]);
-                $pool->promise()->wait();
-                $iter2seg['prev'] = $iter2seg['next'];
-                $iter2seg['next'] = [];
-
-                if (count($pending) > 0) {
-                    $this->logger->info(sprintf('Pausing for %d milliseconds.', $poolDelay));
-                    usleep($poolDelay * 1000);
-                }
+            if (count($pending) > 0) {
+                $this->logger->info(sprintf('Pausing for %d milliseconds.', $poolDelay));
+                usleep($poolDelay * 1000);
             }
         }
     }
