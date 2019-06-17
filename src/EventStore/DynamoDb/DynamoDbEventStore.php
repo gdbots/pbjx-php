@@ -406,7 +406,7 @@ class DynamoDbEventStore implements EventStore
         $reindexing = filter_var($context['reindexing'] ?? false, FILTER_VALIDATE_BOOLEAN);
         $totalSegments = NumberUtils::bound($context['total_segments'] ?? 16, 1, 64);
         $poolDelay = NumberUtils::bound($context['pool_delay'] ?? 500, 10, 10000);
-        $poolSize = NumberUtils::bound($context['pool_size'] ?? 25, 1, 100);
+        $concurrency = NumberUtils::bound($context['concurrency'] ?? 25, 1, 100);
 
         $params = ['ExpressionAttributeNames' => [], 'ExpressionAttributeValues' => []];
         $filterExpressions = [];
@@ -559,7 +559,7 @@ class DynamoDbEventStore implements EventStore
         while (count($pending) > 0) {
             $commands = $pending;
             $pending = [];
-            $pool = new CommandPool($this->client, $commands, ['fulfilled' => $fulfilled, 'rejected' => $rejected, 'concurrency' => $poolSize]);
+            $pool = new CommandPool($this->client, $commands, ['fulfilled' => $fulfilled, 'rejected' => $rejected, 'concurrency' => $concurrency]);
             $pool->promise()->wait();
             $iter2seg['prev'] = $iter2seg['next'];
             $iter2seg['next'] = [];
