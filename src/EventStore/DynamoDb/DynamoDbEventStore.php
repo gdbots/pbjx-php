@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace Gdbots\Pbjx\EventStore\DynamoDb;
 
-use Aws\CommandInterface;
 use Aws\CommandPool;
 use Aws\DynamoDb\DynamoDbClient;
 use Aws\DynamoDb\WriteRequestBatch;
@@ -560,13 +559,8 @@ class DynamoDbEventStore implements EventStore
             $commands = $pending;
             $pending = [];
             $pool = new CommandPool($this->client, $commands, [
-                'before' => function (CommandInterface $cmd, $iterKey) {
-                    $this->logger->info(
-                        sprintf(
-                            'GC collected %d cycle(s).',
-                            gc_collect_cycles()
-                        )
-                    );
+                'before'      => function () {
+                    gc_collect_cycles();
                 },
                 'fulfilled'   => $fulfilled,
                 'rejected'    => $rejected,
