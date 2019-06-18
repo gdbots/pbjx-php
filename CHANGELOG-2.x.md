@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 2.x versions.
 
 
+## v2.3.12
+* Remove pool delay from `DynamoDbEventStore::pipeAllEvents` altogether since concurrency and batching with symfony commands does the trick.
+
+
 ## v2.3.11
 * Add `$context['concurrency']` check in `DynamoDbEventStore::pipeAllEvents` so that can be configured. Defaults to 25.
 
