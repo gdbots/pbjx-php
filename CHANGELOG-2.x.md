@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 2.x versions.
 
 
+## v2.3.13
+* Do not unset the `ctx_retries` field in `DynamoDbScheduler`.
+
+
 ## v2.3.12
 * Remove pool delay from `DynamoDbEventStore::pipeAllEvents` altogether since concurrency and batching with symfony commands does the trick.
 

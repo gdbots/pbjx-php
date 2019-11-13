@@ -110,7 +110,7 @@ final class DynamoDbScheduler implements Scheduler
             unset($payload['command_id']);
             unset($payload['occurred_at']);
             unset($payload['expected_etag']);
-            unset($payload['ctx_retries']);
+            // unset($payload['ctx_retries']);
             unset($payload['ctx_correlator_ref']);
             unset($payload['ctx_app']);
             unset($payload['ctx_cloud']);
