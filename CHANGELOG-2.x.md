@@ -2,6 +2,11 @@
 This changelog references the relevant changes done in 2.x versions.
 
 
+## v2.3.14
+* Ignore `ExecutionDoesNotExist` in `DynamoDbScheduler`.
+* Do not log exceptions in `LogAndDispatchExceptionHandler::onRequestBusException` since the exception is rethrown in `Pbjx::request` anyways.
+
+
 ## v2.3.13
 * Do not unset the `ctx_retries` field in `DynamoDbScheduler`.
 
@@ -32,7 +37,7 @@ This changelog references the relevant changes done in 2.x versions.
 
 
 ## v2.3.6
-* BUG fix in `DynamoDbEventStore::optimisticCheck` to cast event id to string in both checks. 
+* BUG fix in `DynamoDbEventStore::optimisticCheck` to cast event id to string in both checks.
 
 
 ## v2.3.5
@@ -45,7 +50,7 @@ This changelog references the relevant changes done in 2.x versions.
 
 
 ## v2.3.3
-* In `Gdbots\Pbjx\EventSearch\Elastica\IndexManager` add custom normalizers from `MappingFactory::getCustomNormalizers` if available, otherwise hardcoded. 
+* In `Gdbots\Pbjx\EventSearch\Elastica\IndexManager` add custom normalizers from `MappingFactory::getCustomNormalizers` if available, otherwise hardcoded.
 
 
 ## v2.3.2
@@ -62,8 +67,8 @@ __POSSIBLE BREAKING CHANGE__
 If you are not using an `EventStore` or `EventSearch` implementation from this library then you'll need to add the `getEvent`, `getEvents`, `deleteEvent` and `deleteEvents` methods to your implementation.
 
 * Add `getEvent`, `getEvents` and `deleteEvent` methods to `EventStore`.
-* Add `deleteEvents` methods to `EventSearch`. 
- 
+* Add `deleteEvents` methods to `EventSearch`.
+
 
 ## v2.2.5
 * issue #15: Increase offset max from 1000 to 10,000 in `ElasticaEventSearch::searchEvents`.

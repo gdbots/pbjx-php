@@ -15,7 +15,7 @@ use Psr\Log\LogLevel;
 use Psr\Log\NullLogger;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
-final class LogAndDispatchExceptionHandler implements ExceptionHandler
+class LogAndDispatchExceptionHandler implements ExceptionHandler
 {
     /** @var EventDispatcherInterface */
     private $dispatcher;
@@ -64,8 +64,12 @@ final class LogAndDispatchExceptionHandler implements ExceptionHandler
      */
     public function onRequestBusException(BusExceptionEvent $event): void
     {
+        // because we throw the exception in Pbjx::request
+        // we don't need to log it, something up the chain will.
+        /*
         $this->logBusException($event, LogLevel::ERROR);
         $this->dispatcher->dispatch(PbjxEvents::REQUEST_BUS_EXCEPTION, $event);
+        */
     }
 
     /**

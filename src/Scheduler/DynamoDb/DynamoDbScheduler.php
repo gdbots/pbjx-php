@@ -329,6 +329,10 @@ final class DynamoDbScheduler implements Scheduler
                 'cause'        => 'canceled',
             ]);
         } catch (\Throwable $t) {
+            if (false !== strpos($t->getMessage(), 'ExecutionDoesNotExist')) {
+                return;
+            }
+
             $this->logger->error(
                 'Failed to stopExecution of [{execution_arn}] for [{job_id}].',
                 [
