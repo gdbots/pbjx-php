@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Gdbots\Tests\Pbjx;
 
+use Gdbots\Pbj\Util\StringUtil;
 use Gdbots\Pbjx\PbjxToken;
 use PHPUnit\Framework\TestCase;
 
@@ -35,7 +36,7 @@ class PbjxTokenTest extends TestCase
         $this->assertSame($iat, $token->getIat());
         $this->assertSame($expectedJti, $token->getJti());
         $this->assertSame($kid, $token->getKid());
-        $this->assertSame(PbjxToken::urlsafeB64Decode($signature), $token->getSignature());
+        $this->assertSame(StringUtil::urlsafeB64Decode($signature), $token->getSignature());
 
         $this->assertTrue($token->verify($secret), 'should verify with correct secret');
         $this->assertFalse($token->verify('invalid'), 'should NOT verify with incorrect secret');

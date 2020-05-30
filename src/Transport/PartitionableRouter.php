@@ -3,9 +3,7 @@ declare(strict_types=1);
 
 namespace Gdbots\Pbjx\Transport;
 
-use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
-use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
-use Gdbots\Schemas\Pbjx\Mixin\Request\Request;
+use Gdbots\Pbj\Message;
 
 /**
  * A transport that supports partitioning will route messages
@@ -17,24 +15,9 @@ use Gdbots\Schemas\Pbjx\Mixin\Request\Request;
  */
 interface PartitionableRouter extends Router
 {
-    /**
-     * @param Command $command
-     *
-     * @return string
-     */
-    public function partitionForCommand(Command $command): string;
+    public function partitionForCommand(Message $command): string;
 
-    /**
-     * @param Event $event
-     *
-     * @return string
-     */
-    public function partitionForEvent(Event $event): string;
+    public function partitionForEvent(Message $event): string;
 
-    /**
-     * @param Request $request
-     *
-     * @return string
-     */
-    public function partitionForRequest(Request $request): string;
+    public function partitionForRequest(Message $request): string;
 }

@@ -3,19 +3,18 @@ declare(strict_types=1);
 
 namespace Gdbots\Tests\Pbjx;
 
+use Gdbots\Pbj\Message;
 use Gdbots\Pbjx\Scheduler\Scheduler;
-use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
 use Gdbots\Tests\Pbjx\Fixtures\FakeCommand;
 
 class PbjxSendAtTest extends AbstractBusTestCase
 {
-    protected function setup()
+    protected function setUp(): void
     {
-        parent::setup();
-        $scheduler = new class implements Scheduler
-        {
-            public $lastSendAt;
-            public $lastCancelJobs;
+        parent::setUp();
+        $scheduler = new class implements Scheduler {
+            public array $lastSendAt = [];
+            public array $lastCancelJobs = [];
 
             public function createStorage(): void
             {
@@ -26,7 +25,7 @@ class PbjxSendAtTest extends AbstractBusTestCase
                 return '';
             }
 
-            public function sendAt(Command $command, int $timestamp, ?string $jobId = null): string
+            public function sendAt(Message $command, int $timestamp, ?string $jobId = null): string
             {
                 $this->lastSendAt = [
                     'command'   => $command,

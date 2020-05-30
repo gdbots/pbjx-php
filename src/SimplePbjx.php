@@ -81,12 +81,8 @@ final class SimplePbjx implements Pbjx
 
         $this->dispatcher->dispatch('gdbots_pbjx.message' . $suffix, $event);
 
-        foreach ($schema->getMixinIds() as $mixinId) {
+        foreach ($schema->getMixins() as $mixinId) {
             $this->dispatcher->dispatch($mixinId . $suffix, $event);
-        }
-
-        foreach ($schema->getMixinCuries() as $mixinCurie) {
-            $this->dispatcher->dispatch($mixinCurie . $suffix, $event);
         }
 
         $this->dispatcher->dispatch($schema->getCurieMajor() . $suffix, $event);

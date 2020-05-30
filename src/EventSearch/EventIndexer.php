@@ -19,6 +19,13 @@ final class EventIndexer implements EventSubscriber
      */
     private $tenantIdField = null;
 
+    public static function getSubscribedEvents()
+    {
+        return [
+            'gdbots:pbjx:mixin:indexed' => 'onIndexed',
+        ];
+    }
+
     /**
      * @param string $tenantIdField
      */
@@ -43,15 +50,5 @@ final class EventIndexer implements EventSubscriber
         }
 
         $pbjx->getEventSearch()->indexEvents([$event], $context);
-    }
-
-    /**
-     * @return array
-     */
-    public static function getSubscribedEvents()
-    {
-        return [
-            'gdbots:pbjx:mixin:indexed' => 'onIndexed',
-        ];
     }
 }

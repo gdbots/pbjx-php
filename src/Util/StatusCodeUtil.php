@@ -10,14 +10,9 @@ use Gdbots\Schemas\Pbjx\Enum\HttpCode;
  * Simple conversions from our "Code" aka vendor codes
  * to http status codes and back.
  */
-final class StatusCodeConverter
+final class StatusCodeUtil
 {
-    /**
-     * @param int $code
-     *
-     * @return int
-     */
-    public static function vendorToHttp($code = Code::OK): int
+    public static function vendorToHttp(int $code = Code::OK): int
     {
         if (Code::OK === $code) {
             return HttpCode::HTTP_OK;
@@ -28,9 +23,12 @@ final class StatusCodeConverter
                 return HttpCode::HTTP_CLIENT_CLOSED_REQUEST;
 
             case Code::UNKNOWN:
+            case Code::DATA_LOSS:
+            case Code::INTERNAL:
                 return HttpCode::HTTP_INTERNAL_SERVER_ERROR;
 
             case Code::INVALID_ARGUMENT:
+            case Code::OUT_OF_RANGE:
                 return HttpCode::HTTP_BAD_REQUEST;
 
             case Code::DEADLINE_EXCEEDED:
@@ -39,6 +37,7 @@ final class StatusCodeConverter
             case Code::NOT_FOUND:
                 return HttpCode::HTTP_NOT_FOUND;
 
+            case Code::ABORTED:
             case Code::ALREADY_EXISTS:
                 return HttpCode::HTTP_CONFLICT;
 
@@ -55,35 +54,18 @@ final class StatusCodeConverter
             case Code::FAILED_PRECONDITION:
                 return HttpCode::HTTP_PRECONDITION_FAILED;
 
-            case Code::ABORTED:
-                return HttpCode::HTTP_CONFLICT;
-
-            case Code::OUT_OF_RANGE:
-                return HttpCode::HTTP_BAD_REQUEST;
-
             case Code::UNIMPLEMENTED:
                 return HttpCode::HTTP_NOT_IMPLEMENTED;
 
-            case Code::INTERNAL:
-                return HttpCode::HTTP_INTERNAL_SERVER_ERROR;
-
             case Code::UNAVAILABLE:
                 return HttpCode::HTTP_SERVICE_UNAVAILABLE;
-
-            case Code::DATA_LOSS:
-                return HttpCode::HTTP_INTERNAL_SERVER_ERROR;
 
             default:
                 return HttpCode::HTTP_UNPROCESSABLE_ENTITY;
         }
     }
 
-    /**
-     * @param int $httpCode
-     *
-     * @return int
-     */
-    public static function httpToVendor($httpCode = HttpCode::HTTP_OK): int
+    public static function httpToVendor(int $httpCode = HttpCode::HTTP_OK): int
     {
         if ($httpCode < 400) {
             return Code::OK;

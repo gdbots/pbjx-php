@@ -3,9 +3,7 @@ declare(strict_types=1);
 
 namespace Gdbots\Pbjx\Transport;
 
-use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
-use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
-use Gdbots\Schemas\Pbjx\Mixin\Request\Request;
+use Gdbots\Pbj\Message;
 
 /**
  * A router is used by transports to determine which channel a message
@@ -15,24 +13,9 @@ use Gdbots\Schemas\Pbjx\Mixin\Request\Request;
  */
 interface Router
 {
-    /**
-     * @param Command $command
-     *
-     * @return string
-     */
-    public function forCommand(Command $command): string;
+    public function forCommand(Message $command): string;
 
-    /**
-     * @param Event $event
-     *
-     * @return string
-     */
-    public function forEvent(Event $event): string;
+    public function forEvent(Message $event): string;
 
-    /**
-     * @param Request $request
-     *
-     * @return string
-     */
-    public function forRequest(Request $request): string;
+    public function forRequest(Message $request): string;
 }

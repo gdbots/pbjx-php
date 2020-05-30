@@ -3,36 +3,23 @@ declare(strict_types=1);
 
 namespace Gdbots\Pbjx;
 
+use Gdbots\Pbj\Message;
 use Gdbots\Pbjx\Event\BusExceptionEvent;
 use Gdbots\Pbjx\Event\PbjxEvent;
 use Gdbots\Pbjx\Transport\Transport;
-use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
 
 final class SimpleCommandBus implements CommandBus
 {
-    /** @var ServiceLocator */
-    private $locator;
+    private ServiceLocator $locator;
+    private Transport $transport;
 
-    /** @var Transport */
-    private $transport;
-
-    /** @var CommandHandler[] */
-    private $handlers = [];
-
-    /**
-     * @param ServiceLocator $locator
-     * @param Transport      $transport
-     */
     public function __construct(ServiceLocator $locator, Transport $transport)
     {
         $this->locator = $locator;
         $this->transport = $transport;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function send(Command $command): void
+    public function send(Message $command): void
     {
         $this->transport->sendCommand($command->freeze());
     }
@@ -49,26 +36,11 @@ final class SimpleCommandBus implements CommandBus
      *
      * {@inheritdoc}
      */
-    public function receiveCommand(Command $command): void
+    public function receiveCommand(Message $command): void
     {
-        $curie = $command::schema()->getCurie();
-        $curieStr = $curie->toString();
-
-        if (isset($this->handlers[$curieStr])) {
-            $handler = $this->handlers[$curieStr];
-        } else {
-            try {
-                $handler = $this->locator->getCommandHandler($curie);
-            } catch (\Throwable $e) {
-                $this->locator->getExceptionHandler()->onCommandBusException(new BusExceptionEvent($command, $e));
-                return;
-            }
-
-            $this->handlers[$curieStr] = $handler;
-        }
-
         try {
             $command->freeze();
+            $handler = $this->locator->getCommandHandler($command::schema()->getCurie());
             $pbjx = $this->locator->getPbjx();
             $event = new PbjxEvent($command);
             $pbjx->trigger($command, PbjxEvents::SUFFIX_BEFORE_HANDLE, $event, false);

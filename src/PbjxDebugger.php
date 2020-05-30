@@ -3,28 +3,29 @@ declare(strict_types=1);
 
 namespace Gdbots\Pbjx;
 
+use Gdbots\Pbj\Message;
 use Gdbots\Pbjx\Event\TransportEvent;
-use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
 use Psr\Log\LoggerInterface;
 
 final class PbjxDebugger implements EventSubscriber
 {
-    /** @var LoggerInterface */
-    private $logger;
+    private LoggerInterface $logger;
 
-    /**
-     * @param LoggerInterface $logger
-     */
+    public static function getSubscribedEvents()
+    {
+        return [
+            '*'                               => 'onEvent',
+            PbjxEvents::TRANSPORT_BEFORE_SEND => 'onTransportEvent',
+            PbjxEvents::TRANSPORT_AFTER_SEND  => 'onTransportEvent',
+        ];
+    }
+
     public function __construct(LoggerInterface $logger)
     {
         $this->logger = $logger;
     }
 
-    /**
-     * @param Event $event
-     * @param Pbjx  $pbjx
-     */
-    public function onEvent(Event $event, Pbjx $pbjx): void
+    public function onEvent(Message $event, Pbjx $pbjx): void
     {
         $this->logger->debug('PbjxDebugger event [{pbj_schema}] published.', [
             'pbj_schema' => $event::schema()->getId()->toString(),
@@ -32,10 +33,6 @@ final class PbjxDebugger implements EventSubscriber
         ]);
     }
 
-    /**
-     * @param TransportEvent $event
-     * @param string         $eventName
-     */
     public function onTransportEvent(TransportEvent $event, ?string $eventName = null): void
     {
         $message = $event->getMessage();
@@ -45,17 +42,5 @@ final class PbjxDebugger implements EventSubscriber
             'pbj_schema' => $message::schema()->getId()->toString(),
             'pbj'        => $message->toArray(),
         ]);
-    }
-
-    /**
-     * @return array
-     */
-    public static function getSubscribedEvents()
-    {
-        return [
-            '*'                               => 'onEvent',
-            PbjxEvents::TRANSPORT_BEFORE_SEND => 'onTransportEvent',
-            PbjxEvents::TRANSPORT_AFTER_SEND  => 'onTransportEvent',
-        ];
     }
 }

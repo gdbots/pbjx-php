@@ -8,23 +8,11 @@ use Gdbots\Pbjx\Event\TransportExceptionEvent;
 
 interface ExceptionHandler
 {
-    /**
-     * @param BusExceptionEvent $event
-     */
     public function onCommandBusException(BusExceptionEvent $event): void;
 
-    /**
-     * @param BusExceptionEvent $event
-     */
     public function onEventBusException(BusExceptionEvent $event): void;
 
-    /**
-     * @param BusExceptionEvent $event
-     */
     public function onRequestBusException(BusExceptionEvent $event): void;
 
-    /**
-     * @param TransportExceptionEvent $event
-     */
     public function onTransportException(TransportExceptionEvent $event): void;
 }

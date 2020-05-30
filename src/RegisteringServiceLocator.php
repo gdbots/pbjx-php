@@ -19,11 +19,8 @@ use Gdbots\Pbjx\Transport\Transport;
  */
 final class RegisteringServiceLocator extends AbstractServiceLocator
 {
-    private $handlers = [];
+    private array $handlers = [];
 
-    /**
-     * {@inheritdoc}
-     */
     public function getCommandHandler(SchemaCurie $curie): CommandHandler
     {
         if (isset($this->handlers[$curie->toString()])) {
@@ -33,9 +30,6 @@ final class RegisteringServiceLocator extends AbstractServiceLocator
         throw new HandlerNotFound($curie);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getRequestHandler(SchemaCurie $curie): RequestHandler
     {
         if (isset($this->handlers[$curie->toString()])) {
@@ -45,51 +39,31 @@ final class RegisteringServiceLocator extends AbstractServiceLocator
         throw new HandlerNotFound($curie);
     }
 
-    /**
-     * @param SchemaCurie    $curie
-     * @param CommandHandler $handler
-     */
     public function registerCommandHandler(SchemaCurie $curie, CommandHandler $handler): void
     {
         $this->handlers[$curie->toString()] = $handler;
     }
 
-    /**
-     * @param SchemaCurie    $curie
-     * @param RequestHandler $handler
-     */
     public function registerRequestHandler(SchemaCurie $curie, RequestHandler $handler): void
     {
         $this->handlers[$curie->toString()] = $handler;
     }
 
-    /**
-     * @param Transport $transport
-     */
     public function setDefaultTransport(Transport $transport): void
     {
         $this->defaultTransport = $transport;
     }
 
-    /**
-     * @param EventStore $eventStore
-     */
     public function setEventStore(EventStore $eventStore): void
     {
         $this->eventStore = $eventStore;
     }
 
-    /**
-     * @param EventSearch $eventSearch
-     */
     public function setEventSearch(EventSearch $eventSearch): void
     {
         $this->eventSearch = $eventSearch;
     }
 
-    /**
-     * @param Scheduler $scheduler
-     */
     public function setScheduler(Scheduler $scheduler): void
     {
         $this->scheduler = $scheduler;

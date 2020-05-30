@@ -15,39 +15,18 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 abstract class AbstractServiceLocator implements ServiceLocator
 {
-    /** @var EventStore */
-    protected $eventStore;
+    protected ?EventStore $eventStore = null;
+    protected ?EventSearch $eventSearch = null;
+    protected ?Scheduler $scheduler = null;
+    protected ?Transport $defaultTransport = null;
 
-    /** @var EventSearch */
-    protected $eventSearch;
+    private ?Pbjx $pbjx = null;
+    private ?EventDispatcherInterface $dispatcher = null;
+    private ?CommandBus $commandBus = null;
+    private ?EventBus $eventBus = null;
+    private ?RequestBus $requestBus = null;
+    private ?ExceptionHandler $exceptionHandler = null;
 
-    /** @var Scheduler */
-    protected $scheduler;
-
-    /** @var Transport */
-    protected $defaultTransport;
-
-    /** @var Pbjx */
-    private $pbjx;
-
-    /** @var EventDispatcherInterface */
-    private $dispatcher;
-
-    /** @var CommandBus */
-    private $commandBus;
-
-    /** @var EventBus */
-    private $eventBus;
-
-    /** @var RequestBus */
-    private $requestBus;
-
-    /** @var ExceptionHandler */
-    private $exceptionHandler;
-
-    /**
-     * {@inheritdoc}
-     */
     final public function getPbjx(): Pbjx
     {
         if (null === $this->pbjx) {
@@ -57,17 +36,11 @@ abstract class AbstractServiceLocator implements ServiceLocator
         return $this->pbjx;
     }
 
-    /**
-     * @return Pbjx
-     */
     protected function doGetPbjx(): Pbjx
     {
         return new SimplePbjx($this);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     final public function getDispatcher(): EventDispatcherInterface
     {
         if (null === $this->dispatcher) {
@@ -77,17 +50,11 @@ abstract class AbstractServiceLocator implements ServiceLocator
         return $this->dispatcher;
     }
 
-    /**
-     * @return EventDispatcherInterface
-     */
     protected function doGetDispatcher(): EventDispatcherInterface
     {
         return new EventDispatcher();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     final public function getCommandBus(): CommandBus
     {
         if (null === $this->commandBus) {
@@ -97,17 +64,11 @@ abstract class AbstractServiceLocator implements ServiceLocator
         return $this->commandBus;
     }
 
-    /**
-     * @return CommandBus
-     */
     protected function doGetCommandBus(): CommandBus
     {
         return new SimpleCommandBus($this, $this->getDefaultTransport());
     }
 
-    /**
-     * {@inheritdoc}
-     */
     final public function getEventBus(): EventBus
     {
         if (null === $this->eventBus) {
@@ -117,17 +78,11 @@ abstract class AbstractServiceLocator implements ServiceLocator
         return $this->eventBus;
     }
 
-    /**
-     * @return EventBus
-     */
     protected function doGetEventBus(): EventBus
     {
         return new SimpleEventBus($this, $this->getDefaultTransport());
     }
 
-    /**
-     * {@inheritdoc}
-     */
     final public function getRequestBus(): RequestBus
     {
         if (null === $this->requestBus) {
@@ -137,17 +92,11 @@ abstract class AbstractServiceLocator implements ServiceLocator
         return $this->requestBus;
     }
 
-    /**
-     * @return RequestBus
-     */
     protected function doGetRequestBus(): RequestBus
     {
         return new SimpleRequestBus($this, $this->getDefaultTransport());
     }
 
-    /**
-     * {@inheritdoc}
-     */
     final public function getExceptionHandler(): ExceptionHandler
     {
         if (null === $this->exceptionHandler) {
@@ -157,17 +106,11 @@ abstract class AbstractServiceLocator implements ServiceLocator
         return $this->exceptionHandler;
     }
 
-    /**
-     * @return ExceptionHandler
-     */
     protected function doGetExceptionHandler(): ExceptionHandler
     {
         return new LogAndDispatchExceptionHandler($this);
     }
 
-    /**
-     * @return EventStore
-     */
     final public function getEventStore(): EventStore
     {
         if (null === $this->eventStore) {
@@ -177,17 +120,11 @@ abstract class AbstractServiceLocator implements ServiceLocator
         return $this->eventStore;
     }
 
-    /**
-     * @return EventStore
-     */
     protected function doGetEventStore(): EventStore
     {
         throw new LogicException('No EventStore has been configured.', Code::UNIMPLEMENTED);
     }
 
-    /**
-     * @return EventSearch
-     */
     final public function getEventSearch(): EventSearch
     {
         if (null === $this->eventSearch) {
@@ -197,17 +134,11 @@ abstract class AbstractServiceLocator implements ServiceLocator
         return $this->eventSearch;
     }
 
-    /**
-     * @return EventSearch
-     */
     protected function doGetEventSearch(): EventSearch
     {
         throw new LogicException('No EventSearch has been configured.', Code::UNIMPLEMENTED);
     }
 
-    /**
-     * @return Scheduler
-     */
     final public function getScheduler(): Scheduler
     {
         if (null === $this->scheduler) {
@@ -217,17 +148,11 @@ abstract class AbstractServiceLocator implements ServiceLocator
         return $this->scheduler;
     }
 
-    /**
-     * @return Scheduler
-     */
     protected function doGetScheduler(): Scheduler
     {
         throw new LogicException('No Scheduler has been configured.', Code::UNIMPLEMENTED);
     }
 
-    /**
-     * @return Transport
-     */
     final protected function getDefaultTransport(): Transport
     {
         if (null === $this->defaultTransport) {
@@ -237,9 +162,6 @@ abstract class AbstractServiceLocator implements ServiceLocator
         return $this->defaultTransport;
     }
 
-    /**
-     * @return Transport
-     */
     protected function doGetDefaultTransport(): Transport
     {
         return new InMemoryTransport($this);

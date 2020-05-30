@@ -3,46 +3,29 @@ declare(strict_types=1);
 
 namespace Gdbots\Pbjx\Event;
 
-use Gdbots\Schemas\Pbjx\Mixin\Request\Request;
-use Gdbots\Schemas\Pbjx\Mixin\Response\Response;
+use Gdbots\Pbj\Message;
 
 class ResponseCreatedEvent extends PbjxEvent
 {
-    /** @var Request */
-    protected $message;
+    protected Message $message;
+    protected Message $response;
 
-    /** @var Response */
-    protected $response;
-
-    /**
-     * @param Request  $request
-     * @param Response $response
-     */
-    public function __construct(Request $request, Response $response)
+    public function __construct(Message $request, Message $response)
     {
         parent::__construct($request);
         $this->response = $response;
     }
 
-    /**
-     * @return Request
-     */
-    public function getRequest(): Request
+    public function getRequest(): Message
     {
         return $this->message;
     }
 
-    /**
-     * @return Response
-     */
-    public function getResponse(): Response
+    public function getResponse(): Message
     {
         return $this->response;
     }
 
-    /**
-     * @return bool
-     */
     public function supportsRecursion(): bool
     {
         return false;

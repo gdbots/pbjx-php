@@ -7,48 +7,33 @@ use Gdbots\Pbj\Message;
 use Gdbots\Pbj\Serializer\JsonSerializer;
 use Gdbots\Pbj\Serializer\PhpSerializer;
 use Gdbots\Pbj\Serializer\Serializer;
-use Gdbots\Pbj\Serializer\YamlSerializer;
 
 final class TransportEnvelope implements \JsonSerializable
 {
+    const SERIALIZER_JSON = 'json';
+    const SERIALIZER_PHP = 'php';
+
     /** @var Serializer[] */
-    private static $serializers = [];
+    private static array $serializers = [];
+    private Message $message;
+    private string $serializer;
 
-    /** @var Message */
-    private $message;
-
-    /** @var string */
-    private $serializer;
-
-    /**
-     * @param Message $message
-     * @param string  $serializer
-     */
     public function __construct(Message $message, string $serializer)
     {
         $this->message = $message;
         $this->serializer = $serializer;
     }
 
-    /**
-     * @param string $serializer
-     *
-     * @return Serializer
-     */
     public static function getSerializer(string $serializer): Serializer
     {
         if (!isset(self::$serializers[$serializer])) {
             switch ($serializer) {
-                case 'php':
+                case self::SERIALIZER_PHP:
                     self::$serializers[$serializer] = new PhpSerializer();
                     break;
 
-                case 'json':
+                case self::SERIALIZER_JSON:
                     self::$serializers[$serializer] = new JsonSerializer();
-                    break;
-
-                case 'yaml':
-                    self::$serializers[$serializer] = new YamlSerializer();
                     break;
 
                 default:
@@ -76,41 +61,21 @@ final class TransportEnvelope implements \JsonSerializable
         $serializer = isset($envelope['serializer']) ? $envelope['serializer'] : 'php';
         $isReplay = isset($envelope['is_replay']) ? filter_var($envelope['is_replay'], FILTER_VALIDATE_BOOLEAN) : false;
         $message = self::getSerializer($serializer)->deserialize(isset($envelope['message']) ? $envelope['message'] : '');
-
-        /*
-         * don't attempt to set replay if it's the php serializer because it already knows
-         * if it's a replay as the entire object is serialized with its internal state.
-         *
-         * this is a PHP feature only, all other serializers have no notion of the
-         * language specific in memory object.  we use php serializer because it's
-         * very fast to un/de-serialize the objects.
-         */
-        if ($isReplay && 'php' !== $serializer) {
-            $message->isReplay(true);
-        }
+        $message->isReplay($isReplay);
 
         return new self($message, $serializer);
     }
 
-    /**
-     * @return Message
-     */
     public function getMessage(): Message
     {
         return $this->message;
     }
 
-    /**
-     * @return bool
-     */
     public function isReplay(): bool
     {
         return $this->message->isReplay();
     }
 
-    /**
-     * @return string
-     */
     public function getSerializerUsed(): string
     {
         return $this->serializer;
@@ -126,17 +91,11 @@ final class TransportEnvelope implements \JsonSerializable
         return json_encode($this);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function __toString()
     {
         return $this->toString();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function jsonSerialize()
     {
         return [

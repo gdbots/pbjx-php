@@ -18,7 +18,7 @@ interface PbjxHandler
      * a mixin would never be able to be handled as instances of mixins
      * cannot be created.
      *
-     * @return SchemaCurie[]
+     * @return SchemaCurie|string[]
      */
     public static function handlesCuries(): array;
 }

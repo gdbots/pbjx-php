@@ -3,50 +3,36 @@ declare(strict_types=1);
 
 namespace Gdbots\Pbjx\Transport;
 
-use Gdbots\Common\Util\ClassUtils;
-use Gdbots\Common\Util\StringUtils;
+use Gdbots\Pbj\Message;
+use Gdbots\Pbj\Util\ClassUtil;
+use Gdbots\Pbj\Util\StringUtil;
 use Gdbots\Pbjx\Event\TransportEvent;
 use Gdbots\Pbjx\Event\TransportExceptionEvent;
 use Gdbots\Pbjx\PbjxEvents;
 use Gdbots\Pbjx\ServiceLocator;
 use Gdbots\Schemas\Pbjx\Enum\Code;
-use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
-use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
-use Gdbots\Schemas\Pbjx\Mixin\Request\Request;
-use Gdbots\Schemas\Pbjx\Mixin\Response\Response;
 use Gdbots\Schemas\Pbjx\Request\RequestFailedResponseV1;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 abstract class AbstractTransport implements Transport
 {
-    /** @var EventDispatcherInterface */
-    protected $dispatcher;
+    protected EventDispatcherInterface $dispatcher;
+    protected ServiceLocator $locator;
+    protected string $transportName;
 
-    /** @var ServiceLocator */
-    protected $locator;
-
-    /* @var string */
-    protected $transportName;
-
-    /**
-     * @param ServiceLocator $locator
-     */
     public function __construct(ServiceLocator $locator)
     {
         $this->locator = $locator;
         $this->dispatcher = $this->locator->getDispatcher();
-        $this->transportName = StringUtils::toSnakeFromCamel(
-            str_replace('Transport', '', ClassUtils::getShortName($this))
+        $this->transportName = StringUtil::toSnakeFromCamel(
+            str_replace('Transport', '', ClassUtil::getShortName($this))
         );
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function sendCommand(Command $command): void
+    public function sendCommand(Message $command): void
     {
         $transportEvent = new TransportEvent($this->transportName, $command);
-        $this->dispatcher->dispatch(PbjxEvents::TRANSPORT_BEFORE_SEND, $transportEvent);
+        $this->dispatcher->dispatch($transportEvent, PbjxEvents::TRANSPORT_BEFORE_SEND);
 
         try {
             $this->doSendCommand($command);
@@ -57,28 +43,25 @@ abstract class AbstractTransport implements Transport
             throw $e;
         }
 
-        $this->dispatcher->dispatch(PbjxEvents::TRANSPORT_AFTER_SEND, $transportEvent);
+        $this->dispatcher->dispatch($transportEvent, PbjxEvents::TRANSPORT_AFTER_SEND);
     }
 
     /**
      * Override in the transport to handle the actual send.
      *
-     * @param Command $command
+     * @param Message $command
      *
-     * @throws \Exception
+     * @throws \Throwable
      */
-    protected function doSendCommand(Command $command): void
+    protected function doSendCommand(Message $command): void
     {
         $this->locator->getCommandBus()->receiveCommand($command);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function sendEvent(Event $event): void
+    public function sendEvent(Message $event): void
     {
         $transportEvent = new TransportEvent($this->transportName, $event);
-        $this->dispatcher->dispatch(PbjxEvents::TRANSPORT_BEFORE_SEND, $transportEvent);
+        $this->dispatcher->dispatch($transportEvent, PbjxEvents::TRANSPORT_BEFORE_SEND);
 
         try {
             $this->doSendEvent($event);
@@ -89,28 +72,25 @@ abstract class AbstractTransport implements Transport
             throw $e;
         }
 
-        $this->dispatcher->dispatch(PbjxEvents::TRANSPORT_AFTER_SEND, $transportEvent);
+        $this->dispatcher->dispatch($transportEvent, PbjxEvents::TRANSPORT_AFTER_SEND);
     }
 
     /**
      * Override in the transport to handle the actual send.
      *
-     * @param Event $event
+     * @param Message $event
      *
-     * @throws \Exception
+     * @throws \Throwable
      */
-    protected function doSendEvent(Event $event): void
+    protected function doSendEvent(Message $event): void
     {
         $this->locator->getEventBus()->receiveEvent($event);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function sendRequest(Request $request): Response
+    public function sendRequest(Message $request): Message
     {
         $transportEvent = new TransportEvent($this->transportName, $request);
-        $this->dispatcher->dispatch(PbjxEvents::TRANSPORT_BEFORE_SEND, $transportEvent);
+        $this->dispatcher->dispatch($transportEvent, PbjxEvents::TRANSPORT_BEFORE_SEND);
 
         try {
             $response = $this->doSendRequest($request);
@@ -132,47 +112,55 @@ abstract class AbstractTransport implements Transport
         }
 
         $transportEvent = new TransportEvent($this->transportName, $response);
-        $this->dispatcher->dispatch(PbjxEvents::TRANSPORT_AFTER_SEND, $transportEvent);
+        $this->dispatcher->dispatch($transportEvent, PbjxEvents::TRANSPORT_AFTER_SEND);
         return $response;
     }
 
     /**
      * Override in the transport to handle the actual send.
      *
-     * @param Request $request
+     * @param Message $request
      *
-     * @return Response
-     * @throws \Exception
+     * @return Message
+     *
+     * @throws \Throwable
      */
-    protected function doSendRequest(Request $request): Response
+    protected function doSendRequest(Message $request): Message
     {
         return $this->locator->getRequestBus()->receiveRequest($request);
     }
 
-    /**
-     * @param Request    $request
-     * @param \Throwable $exception
-     *
-     * @return Response
-     */
-    protected function createResponseForFailedRequest(Request $request, \Throwable $exception): Response
+    protected function createResponseForFailedRequest(Message $request, \Throwable $exception): Message
     {
         $code = $exception->getCode() > 0 ? $exception->getCode() : Code::UNKNOWN;
 
         $response = RequestFailedResponseV1::create()
-            ->set('ctx_request_ref', $request->generateMessageRef())
-            ->set('ctx_request', $request)
-            ->set('error_code', $code)
-            ->set('error_name', ClassUtils::getShortName($exception))
-            ->set('error_message', substr($exception->getMessage(), 0, 2048))
-            ->set('stack_trace', $exception->getTraceAsString());
+            ->set(RequestFailedResponseV1::CTX_REQUEST_REF_FIELD, $request->generateMessageRef())
+            ->set(RequestFailedResponseV1::CTX_REQUEST_FIELD, $request)
+            ->set(RequestFailedResponseV1::ERROR_CODE_FIELD, $code)
+            ->set(RequestFailedResponseV1::ERROR_NAME_FIELD, ClassUtil::getShortName($exception))
+            ->set(RequestFailedResponseV1::ERROR_MESSAGE_FIELD, substr($exception->getMessage(), 0, 2048))
+            ->set(RequestFailedResponseV1::STACK_TRACE_FIELD, $exception->getTraceAsString());
 
         if ($exception->getPrevious()) {
-            $response->set('prev_error_message', substr($exception->getPrevious()->getMessage(), 0, 2048));
+            $response->set(
+                RequestFailedResponseV1::PREV_ERROR_MESSAGE_FIELD,
+                substr($exception->getPrevious()->getMessage(), 0, 2048)
+            );
         }
 
-        if ($request->has('ctx_correlator_ref')) {
-            $response->set('ctx_correlator_ref', $request->get('ctx_correlator_ref'));
+        if ($request->has(RequestFailedResponseV1::CTX_CORRELATOR_REF_FIELD)) {
+            $response->set(
+                RequestFailedResponseV1::CTX_CORRELATOR_REF_FIELD,
+                $request->get(RequestFailedResponseV1::CTX_CORRELATOR_REF_FIELD)
+            );
+        }
+
+        if ($request->has(RequestFailedResponseV1::CTX_TENANT_ID_FIELD)) {
+            $response->set(
+                RequestFailedResponseV1::CTX_TENANT_ID_FIELD,
+                $request->get(RequestFailedResponseV1::CTX_TENANT_ID_FIELD)
+            );
         }
 
         return $response;

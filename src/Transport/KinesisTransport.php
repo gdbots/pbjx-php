@@ -4,23 +4,14 @@ declare(strict_types=1);
 namespace Gdbots\Pbjx\Transport;
 
 use Aws\Kinesis\KinesisClient;
+use Gdbots\Pbj\Message;
 use Gdbots\Pbjx\ServiceLocator;
-use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
-use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
 
 final class KinesisTransport extends AbstractTransport
 {
-    /** @var KinesisClient */
-    private $client;
+    private KinesisClient $client;
+    private PartitionableRouter $router;
 
-    /** @var PartitionableRouter */
-    private $router;
-
-    /**
-     * @param ServiceLocator      $locator
-     * @param KinesisClient       $client
-     * @param PartitionableRouter $router
-     */
     public function __construct(ServiceLocator $locator, KinesisClient $client, PartitionableRouter $router)
     {
         parent::__construct($locator);
@@ -28,38 +19,31 @@ final class KinesisTransport extends AbstractTransport
         $this->router = $router;
     }
 
-    /**
-     * @see PartitionableRouter::forCommand
-     * @see KinesisClient::putRecord
-     *
-     * @param Command $command
-     *
-     * @throws \Exception
-     */
-    protected function doSendCommand(Command $command): void
+    protected function doSendCommand(Message $command): void
     {
-        $envelope = new TransportEnvelope($command, 'json');
-        $this->client->putRecord([
-            'StreamName'   => $this->router->forCommand($command),
-            'PartitionKey' => $this->router->partitionForCommand($command),
-            'Data'         => $envelope->toString(),
-        ]);
+        $this->putRecord($command, $this->router->forCommand($command), $this->router->partitionForCommand($command));
+    }
+
+    protected function doSendEvent(Message $event): void
+    {
+        $this->putRecord($event, $this->router->forEvent($event), $this->router->partitionForEvent($event));
     }
 
     /**
-     * @see PartitionableRouter::forEvent
+     * @param Message $message
+     * @param string  $streamName
+     * @param string  $partitionKey
+     *
+     * @throws \Throwable
+     *
      * @see KinesisClient::putRecord
-     *
-     * @param Event $event
-     *
-     * @throws \Exception
      */
-    protected function doSendEvent(Event $event): void
+    protected function putRecord(Message $message, string $streamName, string $partitionKey): void
     {
-        $envelope = new TransportEnvelope($event, 'json');
+        $envelope = new TransportEnvelope($message, TransportEnvelope::SERIALIZER_JSON);
         $this->client->putRecord([
-            'StreamName'   => $this->router->forEvent($event),
-            'PartitionKey' => $this->router->partitionForEvent($event),
+            'StreamName'   => $streamName,
+            'PartitionKey' => $partitionKey,
             'Data'         => $envelope->toString(),
         ]);
     }
