@@ -3,23 +3,18 @@ declare(strict_types=1);
 
 namespace Gdbots\Tests\Pbjx\Fixtures;
 
+use Gdbots\Pbj\Message;
 use Gdbots\Pbjx\Pbjx;
 use Gdbots\Pbjx\RequestHandler;
-use Gdbots\Pbjx\RequestHandlerTrait;
 
 class GetTimeRequestHandler implements RequestHandler
 {
-    use RequestHandlerTrait;
+    public static function handlesCuries(): array
+    {
+        return ['gdbots:tests.pbjx:fixtures:get-time-request'];
+    }
 
-    /**
-     * @param GetTimeRequest $request
-     * @param Pbjx           $pbjx
-     *
-     * @return GetTimeResponse
-     *
-     * @throws \Exception
-     */
-    protected function handle(GetTimeRequest $request, Pbjx $pbjx): GetTimeResponse
+    public function handleRequest(Message $request, Pbjx $pbjx): Message
     {
         if ($request->get('test_fail')) {
             throw new \Exception('test fail');

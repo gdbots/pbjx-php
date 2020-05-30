@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 class PbjxTokenTest extends TestCase
 {
-    public function testCreate()
+    public function testCreate(): void
     {
         $content = 'content';
         $aud = 'https://local.dev/pbjx';
@@ -49,7 +49,7 @@ class PbjxTokenTest extends TestCase
         $this->assertFalse($token->equals(PbjxToken::create('different', $aud, $kid, $secret)));
     }
 
-    public function testExpiredToken()
+    public function testExpiredToken(): void
     {
         $content = 'content';
         $aud = 'https://local.dev/pbjx';
@@ -70,7 +70,7 @@ class PbjxTokenTest extends TestCase
         $this->fail('able to create expired token');
     }
 
-    public function testEarlyIat()
+    public function testEarlyIat(): void
     {
         $content = 'content';
         $aud = 'https://local.dev/pbjx';
@@ -96,7 +96,7 @@ class PbjxTokenTest extends TestCase
      *
      * @param string $token
      */
-    public function testInvalidSamples(string $token)
+    public function testInvalidSamples(string $token): void
     {
         try {
             PbjxToken::fromString($token);
@@ -108,9 +108,6 @@ class PbjxTokenTest extends TestCase
         $this->fail("Created invalid token from: {$token}");
     }
 
-    /**
-     * @return array
-     */
     public function getInvalidSamples(): array
     {
         return [

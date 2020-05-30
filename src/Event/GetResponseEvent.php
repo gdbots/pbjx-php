@@ -6,11 +6,13 @@ namespace Gdbots\Pbjx\Event;
 use Gdbots\Pbj\Message;
 use Gdbots\Pbjx\Exception\LogicException;
 use Gdbots\Schemas\Pbjx\Mixin\Response\ResponseV1Mixin;
+use Psr\EventDispatcher\StoppableEventInterface;
 
-class GetResponseEvent extends PbjxEvent
+class GetResponseEvent extends PbjxEvent implements StoppableEventInterface
 {
     protected Message $message;
     protected ?Message $response = null;
+    protected bool $propagationStopped = false;
 
     public function __construct(Message $request)
     {
@@ -71,5 +73,15 @@ class GetResponseEvent extends PbjxEvent
     public function supportsRecursion(): bool
     {
         return false;
+    }
+
+    public function isPropagationStopped(): bool
+    {
+        return $this->propagationStopped;
+    }
+
+    public function stopPropagation(): void
+    {
+        $this->propagationStopped = true;
     }
 }

@@ -9,9 +9,9 @@ use Gdbots\Tests\Pbjx\Fixtures\GetTimeResponse;
 
 class SimpleRequestBusTest extends AbstractBusTestCase
 {
-    protected function setup()
+    protected function setUp(): void
     {
-        parent::setup();
+        parent::setUp();
         $this->locator->registerRequestHandler(
             GetTimeRequest::schema()->getCurie(),
             new GetTimeRequestHandler()
@@ -21,11 +21,11 @@ class SimpleRequestBusTest extends AbstractBusTestCase
     public function testRequest()
     {
         $request = GetTimeRequest::create();
-        /** @var \DateTime $expected */
+        /** @var \DateTimeInterface $expected */
         $expected = $request->get('occurred_at')->toDateTime();
         /** @var GetTimeResponse $response */
         $response = $this->pbjx->request($request);
-        $this->assertInstanceOf('Gdbots\Tests\Pbjx\Fixtures\GetTimeResponse', $response);
+        $this->assertInstanceOf(GetTimeResponse::class, $response);
         $this->assertSame($expected->format('U.u'), $response->get('time')->format('U.u'));
     }
 

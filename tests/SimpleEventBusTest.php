@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Gdbots\Tests\Pbjx;
 
+use Gdbots\Pbj\Message;
 use Gdbots\Pbjx\Event\BusExceptionEvent;
 use Gdbots\Pbjx\PbjxEvents;
 use Gdbots\Schemas\Pbjx\Event\EventExecutionFailedV1;
@@ -11,7 +12,7 @@ use Gdbots\Tests\Pbjx\Fixtures\SimpleEvent;
 
 class SimpleEventBusTest extends AbstractBusTestCase
 {
-    public function testPublish()
+    public function testPublish(): void
     {
         $event = SimpleEvent::create()->set('name', 'homer');
         $that = $this;
@@ -19,27 +20,23 @@ class SimpleEventBusTest extends AbstractBusTestCase
 
         $schemaId = $event::schema()->getId();
         $curie = $schemaId->getCurie();
-        $vendor = $curie->getVendor();
-        $package = $curie->getPackage();
-        $category = $curie->getCategory();
         $called = 0;
 
-        $func = function (SimpleEvent $publishedEvent) use ($that, $event, &$called) {
+        $func = function (Message $publishedEvent) use ($that, $event, &$called) {
             $called++;
             $that->assertSame($publishedEvent, $event);
         };
 
         $dispatcher->addListener($schemaId->getCurieMajor(), $func);
         $dispatcher->addListener($curie->toString(), $func);
-        $dispatcher->addListener(sprintf('%s:%s:%s:*', $vendor, $package, $category), $func);
-        $dispatcher->addListener(sprintf('%s:%s:*', $vendor, $package), $func);
-        $dispatcher->addListener(sprintf('%s:*', $vendor), $func);
+        $dispatcher->addListener("{$curie->getVendor()}:{$curie->getPackage()}:*", $func);
+        $dispatcher->addListener('*', $func);
         $this->pbjx->publish($event);
 
-        $this->assertEquals(5, $called);
+        $this->assertEquals(4, $called);
     }
 
-    public function testEventExecutionFailed()
+    public function testEventExecutionFailed(): void
     {
         $event = FailingEvent::create()->set('name', 'homer');
         $dispatcher = $this->locator->getDispatcher();

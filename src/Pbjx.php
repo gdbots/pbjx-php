@@ -17,10 +17,10 @@ interface Pbjx
      * Triggers lifecycle events using the dispatcher which will announce an event for each of:
      *
      * gdbots_pbjx.message.suffix
+     * mixin:v[MAJOR VERSION].suffix
+     * mixin.suffix
      * curie:v[MAJOR VERSION].suffix
      * curie.suffix
-     * mixinId.suffix (mixinId is the mixin with the major rev)
-     * mixinCurie.suffix (mixinCurie is the curie ONLY)
      *
      * When the recursive option is used, any fields with MessageType will also be run through
      * the trigger process.  The PbjxEvent object will have a reference to the parent event

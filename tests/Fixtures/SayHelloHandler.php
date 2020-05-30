@@ -3,32 +3,25 @@ declare(strict_types=1);
 
 namespace Gdbots\Tests\Pbjx\Fixtures;
 
+use Gdbots\Pbj\Message;
 use Gdbots\Pbjx\CommandHandler;
-use Gdbots\Pbjx\CommandHandlerTrait;
 use Gdbots\Pbjx\Pbjx;
 
 class SayHelloHandler implements CommandHandler
 {
-    use CommandHandlerTrait;
+    private ?Message $handled = null;
 
-    /** @var SayHello */
-    private $handled;
+    public static function handlesCuries(): array
+    {
+        return ['gdbots:tests.pbjx:fixtures:say-hello'];
+    }
 
-    /**
-     * @param SayHello $command
-     * @param Pbjx     $pbjx
-     */
-    protected function handle(SayHello $command, Pbjx $pbjx): void
+    public function handleCommand(Message $command, Pbjx $pbjx): void
     {
         $this->handled = $command;
     }
 
-    /**
-     * @param SayHello $command
-     *
-     * @return bool
-     */
-    public function hasHandled(SayHello $command): bool
+    public function hasHandled(Message $command): bool
     {
         return $this->handled === $command;
     }

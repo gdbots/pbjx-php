@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Gdbots\Tests\Pbjx;
 
 use Gdbots\Pbj\Message;
+use Gdbots\Pbjx\Exception\LogicException;
 use Gdbots\Pbjx\Scheduler\Scheduler;
 use Gdbots\Tests\Pbjx\Fixtures\FakeCommand;
 
@@ -45,7 +46,7 @@ class PbjxSendAtTest extends AbstractBusTestCase
         $this->locator->setScheduler($scheduler);
     }
 
-    public function testWithValidInput()
+    public function testWithValidInput(): void
     {
         $command = FakeCommand::create();
         $timestamp = strtotime('+1 month');
@@ -66,11 +67,9 @@ class PbjxSendAtTest extends AbstractBusTestCase
         );
     }
 
-    /**
-     * @expectedException \Gdbots\Pbjx\Exception\LogicException
-     */
-    public function testWithTimestampInPast()
+    public function testWithTimestampInPast(): void
     {
+        $this->expectException(LogicException::class);
         $command = FakeCommand::create();
         $this->pbjx->sendAt($command, strtotime('-1 second'), 'mcfly');
     }

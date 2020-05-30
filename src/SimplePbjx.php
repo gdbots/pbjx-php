@@ -3,9 +3,9 @@ declare(strict_types=1);
 
 namespace Gdbots\Pbjx;
 
-use Gdbots\Common\Util\NumberUtils;
 use Gdbots\Pbj\Message;
 use Gdbots\Pbj\Schema;
+use Gdbots\Pbj\Util\NumberUtil;
 use Gdbots\Pbjx\Event\BusExceptionEvent;
 use Gdbots\Pbjx\Event\GetResponseEvent;
 use Gdbots\Pbjx\Event\PbjxEvent;
@@ -16,40 +16,27 @@ use Gdbots\Pbjx\Exception\InvalidArgumentException;
 use Gdbots\Pbjx\Exception\LogicException;
 use Gdbots\Pbjx\Exception\RequestHandlingFailed;
 use Gdbots\Pbjx\Exception\TooMuchRecursion;
-use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
-use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
-use Gdbots\Schemas\Pbjx\Mixin\Request\Request;
-use Gdbots\Schemas\Pbjx\Mixin\Response\Response;
-use Gdbots\Schemas\Pbjx\Request\RequestFailedResponse;
+use Gdbots\Schemas\Pbjx\Mixin\Command\CommandV1Mixin;
+use Gdbots\Schemas\Pbjx\Mixin\Event\EventV1Mixin;
+use Gdbots\Schemas\Pbjx\Mixin\Request\RequestV1Mixin;
+use Gdbots\Schemas\Pbjx\Request\RequestFailedResponseV1;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 final class SimplePbjx implements Pbjx
 {
-    /** @var EventDispatcherInterface */
-    private $dispatcher;
+    private EventDispatcherInterface $dispatcher;
+    private ServiceLocator $locator;
+    private int $maxRecursion;
 
-    /** @var ServiceLocator */
-    private $locator;
-
-    /** @var int */
-    private $maxRecursion = 10;
-
-    /**
-     * @param ServiceLocator $locator
-     * @param int            $maxRecursion
-     */
     public function __construct(ServiceLocator $locator, int $maxRecursion = 10)
     {
         $this->locator = $locator;
         $this->dispatcher = $this->locator->getDispatcher();
-        $this->maxRecursion = NumberUtils::bound($maxRecursion, 2, 10);
+        $this->maxRecursion = NumberUtil::bound($maxRecursion, 2, 10);
         PbjxEvent::setPbjx($this);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function trigger(Message $message, string $suffix, ?PbjxEvent $event = null, bool $recursive = true): Pbjx
+    public function trigger(Message $message, string $suffix, ?PbjxEvent $event = null, bool $recursive = true): self
     {
         $suffix = '.' . trim($suffix, '.');
         if ('.' === $suffix) {
@@ -79,22 +66,19 @@ final class SimplePbjx implements Pbjx
             }
         }
 
-        $this->dispatcher->dispatch('gdbots_pbjx.message' . $suffix, $event);
+        $this->dispatcher->dispatch($event, 'gdbots_pbjx.message' . $suffix);
 
-        foreach ($schema->getMixins() as $mixinId) {
-            $this->dispatcher->dispatch($mixinId . $suffix, $event);
+        foreach ($schema->getMixins() as $mixin) {
+            $this->dispatcher->dispatch($event, $mixin . $suffix);
         }
 
-        $this->dispatcher->dispatch($schema->getCurieMajor() . $suffix, $event);
-        $this->dispatcher->dispatch($schema->getCurie()->toString() . $suffix, $event);
+        $this->dispatcher->dispatch($event, $schema->getCurieMajor() . $suffix);
+        $this->dispatcher->dispatch($event, $schema->getCurie()->toString() . $suffix);
 
         return $this;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function triggerLifecycle(Message $message, bool $recursive = true): Pbjx
+    public function triggerLifecycle(Message $message, bool $recursive = true): self
     {
         if ($message->isFrozen()) {
             return $this;
@@ -107,52 +91,68 @@ final class SimplePbjx implements Pbjx
         return $this;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function copyContext(Message $from, Message $to): Pbjx
+    public function copyContext(Message $from, Message $to): self
     {
         if ($to->isFrozen()) {
             return $this;
         }
 
-        if (!$to->has('ctx_causator_ref')) {
-            $to->set('ctx_causator_ref', $from->generateMessageRef());
+        $schema = $to::schema();
+
+        if (!$to->has(CommandV1Mixin::CTX_CAUSATOR_REF_FIELD)
+            && $schema->hasField(CommandV1Mixin::CTX_CAUSATOR_REF_FIELD)
+        ) {
+            $to->set(CommandV1Mixin::CTX_CAUSATOR_REF_FIELD, $from->generateMessageRef());
         }
 
-        if (!$to->has('ctx_app') && $from->has('ctx_app')) {
-            $to->set('ctx_app', clone $from->get('ctx_app'));
+        $clone = [
+            CommandV1Mixin::CTX_APP_FIELD,
+            CommandV1Mixin::CTX_CLOUD_FIELD,
+        ];
+
+        foreach ($clone as $field) {
+            if (!$to->has($field) && $from->has($field) && $schema->hasField($field)) {
+                $to->set($field, clone $from->get($field));
+            }
         }
 
-        if (!$to->has('ctx_cloud') && $from->has('ctx_cloud')) {
-            $to->set('ctx_cloud', clone $from->get('ctx_cloud'));
-        }
+        $simple = [
+            CommandV1Mixin::CTX_TENANT_ID_FIELD,
+            CommandV1Mixin::CTX_CORRELATOR_REF_FIELD,
+            CommandV1Mixin::CTX_USER_REF_FIELD,
+            CommandV1Mixin::CTX_IP_FIELD,
+            CommandV1Mixin::CTX_IPV6_FIELD,
+            CommandV1Mixin::CTX_UA_FIELD,
+            CommandV1Mixin::CTX_MSG_FIELD,
+        ];
 
-        foreach (['ctx_correlator_ref', 'ctx_user_ref', 'ctx_ip', 'ctx_ipv6', 'ctx_ua'] as $ctx) {
-            if (!$to->has($ctx) && $from->has($ctx)) {
-                $to->set($ctx, $from->get($ctx));
+        foreach ($simple as $field) {
+            if (!$to->has($field) && $from->has($field) && $schema->hasField($field)) {
+                $to->set($field, $from->get($field));
             }
         }
 
         return $this;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function send(Command $command): void
+    public function send(Message $command): void
     {
+        if (!$command::schema()->usesCurie(CommandV1Mixin::SCHEMA_CURIE)) {
+            throw new LogicException('Pbjx->send requires a message using "' . CommandV1Mixin::SCHEMA_CURIE . '".');
+        }
+
         $this->triggerLifecycle($command);
         $this->locator->getCommandBus()->send($command);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function sendAt(Command $command, int $timestamp, ?string $jobId = null): string
+    public function sendAt(Message $command, int $timestamp, ?string $jobId = null): string
     {
         if ($timestamp <= time()) {
-            throw new LogicException('SendAt requires a timestamp in the future.');
+            throw new LogicException('Pbjx->sendAt requires a timestamp in the future.');
+        }
+
+        if (!$command::schema()->usesCurie(CommandV1Mixin::SCHEMA_CURIE)) {
+            throw new LogicException('Pbjx->sendAt requires a message using "' . CommandV1Mixin::SCHEMA_CURIE . '".');
         }
 
         $this->triggerLifecycle($command);
@@ -160,28 +160,27 @@ final class SimplePbjx implements Pbjx
         return $this->locator->getScheduler()->sendAt($command, $timestamp, $jobId);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function cancelJobs(array $jobIds): void
     {
         $this->locator->getScheduler()->cancelJobs($jobIds);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function publish(Event $event): void
+    public function publish(Message $event): void
     {
+        if (!$event::schema()->usesCurie(EventV1Mixin::SCHEMA_CURIE)) {
+            throw new LogicException('Pbjx->publish requires a message using "' . EventV1Mixin::SCHEMA_CURIE . '".');
+        }
+
         $this->triggerLifecycle($event);
         $this->locator->getEventBus()->publish($event);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function request(Request $request): Response
+    public function request(Message $request): Message
     {
+        if (!$request::schema()->usesCurie(RequestV1Mixin::SCHEMA_CURIE)) {
+            throw new LogicException('Pbjx->request requires a message using "' . RequestV1Mixin::SCHEMA_CURIE . '".');
+        }
+
         $this->triggerLifecycle($request);
         $event = new GetResponseEvent($request);
         $this->trigger($request, PbjxEvents::SUFFIX_BEFORE_HANDLE, $event, false);
@@ -193,7 +192,7 @@ final class SimplePbjx implements Pbjx
         $response = $this->locator->getRequestBus()->request($request);
         $event->setResponse($response);
 
-        if ($response instanceof RequestFailedResponse) {
+        if ($response instanceof RequestFailedResponseV1) {
             throw new RequestHandlingFailed($response);
         }
 
@@ -209,17 +208,11 @@ final class SimplePbjx implements Pbjx
         return $response;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getEventStore(): EventStore
     {
         return $this->locator->getEventStore();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getEventSearch(): EventSearch
     {
         return $this->locator->getEventSearch();
@@ -245,9 +238,9 @@ final class SimplePbjx implements Pbjx
             }
 
             if ($field->isASingleValue()) {
-                $messages[] = $message->get($field->getName());
+                $messages[] = $message->fget($field->getName());
             } else {
-                $messages = array_merge($messages, array_values($message->get($field->getName())));
+                $messages = array_merge($messages, $message->fget($field->getName()));
             }
         }
 

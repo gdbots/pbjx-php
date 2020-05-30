@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Gdbots\Tests\Pbjx;
 
 use Gdbots\Pbjx\Event\BusExceptionEvent;
+use Gdbots\Pbjx\Exception\HandlerNotFound;
 use Gdbots\Pbjx\PbjxEvents;
 use Gdbots\Tests\Pbjx\Fixtures\FakeCommand;
 use Gdbots\Tests\Pbjx\Fixtures\SayHello;
@@ -20,11 +21,9 @@ class SimpleCommandBusTest extends AbstractBusTestCase
         $this->assertTrue($handler->hasHandled($command));
     }
 
-    /**
-     * @expectedException \Gdbots\Pbjx\Exception\HandlerNotFound
-     */
     public function testReceiveCommandWithNoHandler()
     {
+        $this->expectException(HandlerNotFound::class);
         $command = FakeCommand::create();
         $this->locator->getDispatcher()->addListener(
             PbjxEvents::COMMAND_BUS_EXCEPTION,

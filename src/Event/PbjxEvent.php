@@ -5,9 +5,8 @@ namespace Gdbots\Pbjx\Event;
 
 use Gdbots\Pbj\Message;
 use Gdbots\Pbjx\Pbjx;
-use Symfony\Contracts\EventDispatcher\Event;
 
-class PbjxEvent extends Event
+class PbjxEvent
 {
     private static ?Pbjx $pbjx = null;
     protected Message $message;
