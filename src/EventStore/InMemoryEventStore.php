@@ -187,7 +187,7 @@ TEXT;
                     return;
                 }
 
-                if ($reindexing && !$event::schema()->usesCurie(IndexedV1Mixin::SCHEMA_CURIE)) {
+                if ($reindexing && !$event::schema()->hasMixin(IndexedV1Mixin::SCHEMA_CURIE)) {
                     continue;
                 }
 

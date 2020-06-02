@@ -346,7 +346,7 @@ class DynamoDbEventStore implements EventStore
             $this->pbjx->triggerLifecycle($event);
             $item = $this->marshaler->marshal($event);
             $item[EventStoreTable::HASH_KEY_NAME] = ['S' => $hashKey];
-            if ($event::schema()->usesCurie(IndexedV1Mixin::SCHEMA_CURIE)) {
+            if ($event::schema()->hasMixin(IndexedV1Mixin::SCHEMA_CURIE)) {
                 $item[EventStoreTable::INDEXED_KEY_NAME] = ['BOOL' => true];
             }
             $this->beforePutItem($item, $streamId, $event, $context);
@@ -371,7 +371,7 @@ class DynamoDbEventStore implements EventStore
                     return;
                 }
 
-                if ($reindexing && !$event::schema()->usesCurie(IndexedV1Mixin::SCHEMA_CURIE)) {
+                if ($reindexing && !$event::schema()->hasMixin(IndexedV1Mixin::SCHEMA_CURIE)) {
                     continue;
                 }
 

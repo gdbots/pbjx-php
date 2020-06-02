@@ -137,7 +137,7 @@ final class SimplePbjx implements Pbjx
 
     public function send(Message $command): void
     {
-        if (!$command::schema()->usesCurie(CommandV1Mixin::SCHEMA_CURIE)) {
+        if (!$command::schema()->hasMixin(CommandV1Mixin::SCHEMA_CURIE)) {
             throw new LogicException('Pbjx->send requires a message using "' . CommandV1Mixin::SCHEMA_CURIE . '".');
         }
 
@@ -151,7 +151,7 @@ final class SimplePbjx implements Pbjx
             throw new LogicException('Pbjx->sendAt requires a timestamp in the future.');
         }
 
-        if (!$command::schema()->usesCurie(CommandV1Mixin::SCHEMA_CURIE)) {
+        if (!$command::schema()->hasMixin(CommandV1Mixin::SCHEMA_CURIE)) {
             throw new LogicException('Pbjx->sendAt requires a message using "' . CommandV1Mixin::SCHEMA_CURIE . '".');
         }
 
@@ -167,7 +167,7 @@ final class SimplePbjx implements Pbjx
 
     public function publish(Message $event): void
     {
-        if (!$event::schema()->usesCurie(EventV1Mixin::SCHEMA_CURIE)) {
+        if (!$event::schema()->hasMixin(EventV1Mixin::SCHEMA_CURIE)) {
             throw new LogicException('Pbjx->publish requires a message using "' . EventV1Mixin::SCHEMA_CURIE . '".');
         }
 
@@ -177,7 +177,7 @@ final class SimplePbjx implements Pbjx
 
     public function request(Message $request): Message
     {
-        if (!$request::schema()->usesCurie(RequestV1Mixin::SCHEMA_CURIE)) {
+        if (!$request::schema()->hasMixin(RequestV1Mixin::SCHEMA_CURIE)) {
             throw new LogicException('Pbjx->request requires a message using "' . RequestV1Mixin::SCHEMA_CURIE . '".');
         }
 
