@@ -47,7 +47,7 @@ final class EnrichContextEvent
 
     public function getCausator(): ?Message
     {
-        return $this->causator ?? null;
+        return $this->causator;
     }
 
     public function hasTenantId(): bool
