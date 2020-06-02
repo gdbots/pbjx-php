@@ -3,13 +3,13 @@ declare(strict_types=1);
 
 namespace Gdbots\Pbjx\EventStore;
 
+use Gdbots\Pbj\Message;
 use Gdbots\Pbj\Serializer\PhpArraySerializer;
 use Gdbots\Pbj\WellKnown\Identifier;
 use Gdbots\Pbj\WellKnown\Microtime;
 use Gdbots\Pbjx\Exception\EventNotFound;
 use Gdbots\Pbjx\Pbjx;
-use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
-use Gdbots\Schemas\Pbjx\Mixin\Indexed\Indexed;
+use Gdbots\Schemas\Ncr\Mixin\Indexed\IndexedV1Mixin;
 use Gdbots\Schemas\Pbjx\StreamId;
 
 /**
@@ -17,30 +17,23 @@ use Gdbots\Schemas\Pbjx\StreamId;
  */
 final class InMemoryEventStore implements EventStore
 {
-    /** @var PhpArraySerializer */
-    private $serializer;
-
-    /** @var Pbjx */
-    private $pbjx;
+    private ?PhpArraySerializer $serializer = null;
+    private Pbjx $pbjx;
 
     /**
      * Array of events keyed by their StreamId.
      *
      * @var array
      */
-    private $streams = [];
+    private array $streams = [];
 
     /**
      * Array of events keyed by their eventId.
      *
-     * @var Event[]
+     * @var Message[]
      */
-    private $events = [];
+    private array $events = [];
 
-    /**
-     * @param Pbjx  $pbjx
-     * @param array $streams
-     */
     public function __construct(Pbjx $pbjx, array $streams = [])
     {
         $this->pbjx = $pbjx;
@@ -50,7 +43,7 @@ final class InMemoryEventStore implements EventStore
 
             foreach ($events as $event) {
                 try {
-                    if (!$event instanceof Event) {
+                    if (!$event instanceof Message) {
                         $event = $this->createEventFromArray($event);
                     }
 
@@ -63,16 +56,10 @@ final class InMemoryEventStore implements EventStore
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function createStorage(array $context = []): void
     {
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function describeStorage(array $context = []): string
     {
         $scount = count($this->streams);
@@ -89,10 +76,7 @@ Streams:
 TEXT;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getEvent(Identifier $eventId, array $context = []): Event
+    public function getEvent(Identifier $eventId, array $context = []): Message
     {
         $key = (string)$eventId;
         if (isset($this->events[$key])) {
@@ -102,23 +86,17 @@ TEXT;
         throw new EventNotFound();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getEvents(array $eventIds, array $context = []): array
     {
         $keys = array_map('strval', $eventIds);
         return array_intersect_key($this->events, array_flip($keys));
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function deleteEvent(Identifier $eventId, array $context = []): void
     {
         unset($this->events[(string)$eventId]);
         foreach ($this->streams as $streamId => $stream) {
-            /** @var Event $event */
+            /** @var Message $event */
             foreach ($stream as $key => $event) {
                 if ($eventId->equals($event->get('event_id'))) {
                     unset($this->streams[$streamId][$key]);
@@ -127,9 +105,6 @@ TEXT;
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getStreamSlice(StreamId $streamId, ?Microtime $since = null, int $count = 25, bool $forward = true, bool $consistent = false, array $context = []): StreamSlice
     {
         $key = $streamId->toString();
@@ -148,7 +123,7 @@ TEXT;
             $since = null !== $since ? $since->toString() : Microtime::create()->toString();
         }
 
-        /** @var Event $event */
+        /** @var Message $event */
         foreach ($events as $event) {
             if ($i >= $count) {
                 break;
@@ -171,9 +146,6 @@ TEXT;
         return new StreamSlice($matched, $streamId, $forward, $consistent, $i >= $count);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function putEvents(StreamId $streamId, array $events, ?string $expectedEtag = null, array $context = []): void
     {
         if (!count($events)) {
@@ -181,17 +153,18 @@ TEXT;
             return;
         }
 
+        // todo: implement check for in memory
+        /*
         if (null !== $expectedEtag) {
-            //todo: implement check for in memory
             //$this->optimisticCheck($streamId, $expectedEtag, $context);
         }
+        */
 
         $key = $streamId->toString();
         if (!isset($this->streams[$key])) {
             $this->streams[$key] = [];
         }
 
-        /** @var Event[] $events */
         foreach ($events as $event) {
             $this->pbjx->triggerLifecycle($event);
             $this->streams[$key][(string)$event->get('occurred_at')] = $event;
@@ -201,10 +174,7 @@ TEXT;
         ksort($this->streams[$key]);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function pipeEvents(StreamId $streamId, callable $receiver, ?Microtime $since = null, ?Microtime $until = null, array $context = []): void
+    public function pipeEvents(StreamId $streamId, ?Microtime $since = null, ?Microtime $until = null, array $context = []): \Generator
     {
         $reindexing = filter_var($context['reindexing'] ?? false, FILTER_VALIDATE_BOOLEAN);
 
@@ -217,22 +187,22 @@ TEXT;
                     return;
                 }
 
-                if ($reindexing && !$event instanceof Indexed) {
+                if ($reindexing && !$event::schema()->usesCurie(IndexedV1Mixin::SCHEMA_CURIE)) {
                     continue;
                 }
 
-                $receiver($event, $streamId);
+                yield $event;
             }
         } while ($slice->hasMore());
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function pipeAllEvents(callable $receiver, ?Microtime $since = null, ?Microtime $until = null, array $context = []): void
+    public function pipeAllEvents(?Microtime $since = null, ?Microtime $until = null, array $context = []): \Generator
     {
-        foreach (array_keys($this->streams) as $streamId) {
-            $this->pipeEvents(StreamId::fromString($streamId), $receiver, $since, $until, $context);
+        foreach (array_keys($this->streams) as $id) {
+            $streamId = StreamId::fromString($id);
+            foreach ($this->pipeEvents($streamId, $since, $until, $context) as $event) {
+                yield [$event, $streamId];
+            }
         }
     }
 
@@ -245,19 +215,12 @@ TEXT;
         $this->events = [];
     }
 
-    /**
-     * @param array $data
-     *
-     * @return Event
-     */
-    private function createEventFromArray(array $data = []): Event
+    private function createEventFromArray(array $data = []): Message
     {
         if (null === $this->serializer) {
             $this->serializer = new PhpArraySerializer();
         }
 
-        /** @var Event $event */
-        $event = $this->serializer->deserialize($data);
-        return $event;
+        return $this->serializer->deserialize($data);
     }
 }

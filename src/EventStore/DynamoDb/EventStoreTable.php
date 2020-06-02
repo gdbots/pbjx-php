@@ -5,7 +5,7 @@ namespace Gdbots\Pbjx\EventStore\DynamoDb;
 
 use Aws\DynamoDb\DynamoDbClient;
 use Aws\DynamoDb\Exception\DynamoDbException;
-use Gdbots\Common\Util\ClassUtils;
+use Gdbots\Pbj\Util\ClassUtil;
 use Gdbots\Pbjx\Exception\EventStoreOperationFailed;
 use Gdbots\Schemas\Pbjx\Enum\Code;
 
@@ -49,16 +49,12 @@ final class EventStoreTable
                 ],
                 'GlobalSecondaryIndexes' => [
                     [
-                        'IndexName'             => self::GSI_EVENT_ID_NAME,
-                        'KeySchema'             => [
+                        'IndexName'  => self::GSI_EVENT_ID_NAME,
+                        'KeySchema'  => [
                             ['AttributeName' => self::GSI_EVENT_ID_HASH_KEY_NAME, 'KeyType' => 'HASH'],
                         ],
-                        'Projection'            => [
+                        'Projection' => [
                             'ProjectionType' => 'KEYS_ONLY',
-                        ],
-                        'ProvisionedThroughput' => [
-                            'ReadCapacityUnits'  => 2,
-                            'WriteCapacityUnits' => 2,
                         ],
                     ],
                 ],
@@ -66,10 +62,7 @@ final class EventStoreTable
                     'StreamEnabled'  => true,
                     'StreamViewType' => 'NEW_IMAGE',
                 ],
-                'ProvisionedThroughput'  => [
-                    'ReadCapacityUnits'  => 2,
-                    'WriteCapacityUnits' => 2,
-                ],
+                'BillingMode'            => 'PAY_PER_REQUEST',
             ]);
 
             $client->waitUntil('TableExists', ['TableName' => $tableName]);
@@ -77,7 +70,7 @@ final class EventStoreTable
             throw new EventStoreOperationFailed(
                 sprintf(
                     '%s::Unable to create table [%s] in region [%s].',
-                    ClassUtils::getShortName($this),
+                    ClassUtil::getShortName($this),
                     $tableName,
                     $client->getRegion()
                 ),
@@ -106,7 +99,7 @@ final class EventStoreTable
             throw new EventStoreOperationFailed(
                 sprintf(
                     '%s::Unable to describe table [%s] in region [%s].',
-                    ClassUtils::getShortName($this),
+                    ClassUtil::getShortName($this),
                     $tableName,
                     $client->getRegion()
                 ),

@@ -113,4 +113,12 @@ final class PbjxEvents
      * @var string
      */
     const CONSUMER_AFTER_TEARDOWN = 'gdbots_pbjx.consumer.after_teardown';
+
+    /**
+     * Occurs after the consumer has stopped and finished its teardown.
+     *
+     * @see \Gdbots\Pbjx\Event\EnrichContextEvent
+     * @var string
+     */
+    const ENRICH_CONTEXT = 'gdbots_pbjx.enrich_context';
 }

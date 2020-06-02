@@ -21,7 +21,6 @@ class InMemoryEventStoreTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->markTestSkipped();
         $this->locator = new RegisteringServiceLocator();
         $this->pbjx = $this->locator->getPbjx();
         $this->store = new InMemoryEventStore($this->pbjx);
@@ -30,7 +29,7 @@ class InMemoryEventStoreTest extends TestCase
 
     public function testGetStreamSlice(): void
     {
-        $streamId = StreamId::fromString('test');
+        $streamId = StreamId::fromString('acme:test');
         $store = $this->pbjx->getEventStore();
         $since = Microtime::create();
 
@@ -61,7 +60,7 @@ class InMemoryEventStoreTest extends TestCase
 
     public function testGetEvent(): void
     {
-        $streamId = StreamId::fromString('test');
+        $streamId = StreamId::fromString('acme:test');
         $store = $this->pbjx->getEventStore();
 
         $expectedEvents = [
@@ -86,7 +85,7 @@ class InMemoryEventStoreTest extends TestCase
 
     public function testGetEvent2(): void
     {
-        $streamId = StreamId::fromString('test');
+        $streamId = StreamId::fromString('acme:test');
         $store = $this->pbjx->getEventStore();
 
         $expectedEvents = [
@@ -115,7 +114,7 @@ class InMemoryEventStoreTest extends TestCase
     public function testDeleteEvent(): void
     {
         $this->expectException(EventNotFound::class);
-        $streamId = StreamId::fromString('test');
+        $streamId = StreamId::fromString('acme:test');
         $store = $this->pbjx->getEventStore();
 
         $expectedEvent = SimpleEvent::fromArray([
@@ -130,7 +129,7 @@ class InMemoryEventStoreTest extends TestCase
 
     public function testPutEvents(): void
     {
-        $streamId = StreamId::fromString('test.put');
+        $streamId = StreamId::fromString('acme:test.put');
         $start = Microtime::create();
         $events = [];
 
@@ -160,19 +159,17 @@ class InMemoryEventStoreTest extends TestCase
 
     public function testPipeEvents(): void
     {
-        $streamId = StreamId::fromString('test.pipe');
+        $streamId = StreamId::fromString('acme:test.pipe');
         $events = [];
 
         for ($i = 0; $i < 100; $i++) {
             $events['iter' . $i] = SimpleEvent::create()->set('name', 'iter' . $i);
         }
 
-        $receiver = function (Message $event, StreamId $streamId) use (&$events) {
+        $this->store->putEvents($streamId, $events);
+        foreach ($this->store->pipeEvents($streamId) as $event) {
             unset($events[$event->get('name')]);
         };
-
-        $this->store->putEvents($streamId, $events);
-        $this->store->pipeEvents($streamId, $receiver);
         $this->assertEmpty($events);
     }
 
@@ -182,7 +179,7 @@ class InMemoryEventStoreTest extends TestCase
         $expected = 0;
 
         for ($i = 0; $i < 10; $i++) {
-            $streamId = StreamId::fromString('test.pipe-all:' . $i);
+            $streamId = StreamId::fromString('acme:test.pipe-all:' . $i);
             $events = [];
 
             for ($j = 0; $j < 100; $j++) {
@@ -197,7 +194,11 @@ class InMemoryEventStoreTest extends TestCase
         $lastStreamId = null;
         $lastIter = 0;
 
-        $receiver = function (Message $event, StreamId $streamId) use (&$actual, &$lastStreamId, &$lastIter) {
+        /**
+         * @var Message  $event
+         * @var StreamId $streamId
+         */
+        foreach ($this->store->pipeAllEvents() as [$event, $streamId]) {
             if ($lastStreamId !== $streamId) {
                 $lastStreamId = $streamId;
                 $lastIter = 0;
@@ -206,9 +207,8 @@ class InMemoryEventStoreTest extends TestCase
             $this->assertSame('iter' . $lastIter, $event->get('name'));
             $actual++;
             $lastIter++;
-        };
+        }
 
-        $this->store->pipeAllEvents($receiver);
         $this->assertSame($expected, $actual);
     }
 }

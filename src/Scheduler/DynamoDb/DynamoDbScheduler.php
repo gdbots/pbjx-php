@@ -6,13 +6,13 @@ namespace Gdbots\Pbjx\Scheduler\DynamoDb;
 use Aws\DynamoDb\DynamoDbClient;
 use Aws\Exception\AwsException;
 use Aws\Sfn\SfnClient;
-use Gdbots\Common\Util\ClassUtils;
 use Gdbots\Pbj\Marshaler\DynamoDb\ItemMarshaler;
+use Gdbots\Pbj\Message;
+use Gdbots\Pbj\Util\ClassUtil;
 use Gdbots\Pbj\WellKnown\TimeUuidIdentifier;
 use Gdbots\Pbjx\Exception\SchedulerOperationFailed;
 use Gdbots\Pbjx\Scheduler\Scheduler;
 use Gdbots\Schemas\Pbjx\Enum\Code;
-use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
@@ -24,18 +24,15 @@ final class DynamoDbScheduler implements Scheduler
      */
     const DATE_FORMAT = 'Y-m-d\TH:i:s\Z';
 
-    /** @var DynamoDbClient */
-    private $dynamoDbClient;
+    private DynamoDbClient $dynamoDbClient;
 
     /**
      * The name of the DynamoDb table where jobs are stored.
      *
      * @var string
      */
-    private $tableName;
-
-    /** @var SfnClient */
-    private $sfnClient;
+    private string $tableName;
+    private SfnClient $sfnClient;
 
     /**
      * The Arn of the state machine where jobs are scheduled.
@@ -43,21 +40,10 @@ final class DynamoDbScheduler implements Scheduler
      *
      * @var string
      */
-    private $stateMachineArn;
+    private string $stateMachineArn;
+    private LoggerInterface $logger;
+    private ItemMarshaler $marshaler;
 
-    /** @var LoggerInterface */
-    private $logger;
-
-    /** @var ItemMarshaler */
-    private $marshaler;
-
-    /**
-     * @param DynamoDbClient  $dynamoDbClient
-     * @param string          $tableName
-     * @param SfnClient       $sfnClient
-     * @param string          $stateMachineArn
-     * @param LoggerInterface $logger
-     */
     public function __construct(
         DynamoDbClient $dynamoDbClient,
         string $tableName,
@@ -71,30 +57,22 @@ final class DynamoDbScheduler implements Scheduler
         $this->stateMachineArn = $stateMachineArn;
         $this->logger = $logger ?: new NullLogger();
         $this->marshaler = new ItemMarshaler();
+        $this->marshaler->skipValidation(true);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function createStorage(): void
     {
         $table = new SchedulerTable();
         $table->create($this->dynamoDbClient, $this->tableName);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function describeStorage(): string
     {
         $table = new SchedulerTable();
         return $table->describe($this->dynamoDbClient, $this->tableName);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function sendAt(Command $command, int $timestamp, ?string $jobId = null): string
+    public function sendAt(Message $command, int $timestamp, ?string $jobId = null): string
     {
         $ttl = strtotime('+7 days', $timestamp);
         $jobId = $jobId ?: TimeUuidIdentifier::generate()->toString();
@@ -143,14 +121,14 @@ final class DynamoDbScheduler implements Scheduler
             }
         } catch (\Throwable $t) {
             if ($t instanceof AwsException) {
-                $errorName = $t->getAwsErrorCode() ?: ClassUtils::getShortName($t);
+                $errorName = $t->getAwsErrorCode() ?: ClassUtil::getShortName($t);
                 if ('ProvisionedThroughputExceededException' === $errorName) {
                     $code = Code::RESOURCE_EXHAUSTED;
                 } else {
                     $code = Code::UNAVAILABLE;
                 }
             } else {
-                $errorName = ClassUtils::getShortName($t);
+                $errorName = ClassUtil::getShortName($t);
                 $code = Code::INTERNAL;
             }
 
@@ -169,9 +147,6 @@ final class DynamoDbScheduler implements Scheduler
         return $jobId;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function cancelJobs(array $jobIds): void
     {
         foreach ($jobIds as $jobId) {
@@ -191,7 +166,7 @@ final class DynamoDbScheduler implements Scheduler
                 }
             } catch (\Throwable $t) {
                 if ($t instanceof AwsException) {
-                    $errorName = $t->getAwsErrorCode() ?: ClassUtils::getShortName($t);
+                    $errorName = $t->getAwsErrorCode() ?: ClassUtil::getShortName($t);
                     if ('ResourceNotFoundException' === $errorName) {
                         // if it's already deleted/canceled, it's fine
                         continue;
@@ -201,7 +176,7 @@ final class DynamoDbScheduler implements Scheduler
                         $code = Code::UNAVAILABLE;
                     }
                 } else {
-                    $errorName = ClassUtils::getShortName($t);
+                    $errorName = ClassUtil::getShortName($t);
                     $code = Code::INTERNAL;
                 }
 
@@ -270,7 +245,7 @@ final class DynamoDbScheduler implements Scheduler
             return $result['executionArn'];
         } catch (\Throwable $t) {
             if ($t instanceof AwsException) {
-                $errorName = $t->getAwsErrorCode() ?: ClassUtils::getShortName($t);
+                $errorName = $t->getAwsErrorCode() ?: ClassUtil::getShortName($t);
                 switch ($errorName) {
                     case 'ExecutionLimitExceeded':
                         $code = Code::RESOURCE_EXHAUSTED;
@@ -296,7 +271,7 @@ final class DynamoDbScheduler implements Scheduler
                         break;
                 }
             } else {
-                $errorName = ClassUtils::getShortName($t);
+                $errorName = ClassUtil::getShortName($t);
                 $code = Code::INTERNAL;
             }
 

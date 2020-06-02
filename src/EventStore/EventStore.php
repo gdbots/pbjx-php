@@ -3,12 +3,12 @@ declare(strict_types=1);
 
 namespace Gdbots\Pbjx\EventStore;
 
+use Gdbots\Pbj\Message;
 use Gdbots\Pbj\WellKnown\Identifier;
 use Gdbots\Pbj\WellKnown\Microtime;
 use Gdbots\Pbjx\Exception\EventNotFound;
 use Gdbots\Pbjx\Exception\GdbotsPbjxException;
 use Gdbots\Pbjx\Exception\OptimisticCheckFailed;
-use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
 use Gdbots\Schemas\Pbjx\StreamId;
 
 interface EventStore
@@ -35,12 +35,12 @@ interface EventStore
      * @param Identifier $eventId The id of the event to retrieve from the event store.
      * @param array      $context Data that helps the EventStore decide where to read/write data from.
      *
-     * @return Event
+     * @return Message
      *
      * @throws EventNotFound
      * @throws GdbotsPbjxException
      */
-    public function getEvent(Identifier $eventId, array $context = []): Event;
+    public function getEvent(Identifier $eventId, array $context = []): Message;
 
     /**
      * Returns an array of events by their identifier (the "event_id" field on the event).
@@ -48,7 +48,7 @@ interface EventStore
      * @param Identifier[] $eventIds The ids of the events to retrieve from the EventStore.
      * @param array        $context  Data that helps the EventStore decide where to read/write data from.
      *
-     * @return Event[]
+     * @return Message[]
      *
      * @throws GdbotsPbjxException
      */
@@ -73,7 +73,7 @@ interface EventStore
      *
      * A StreamSlice will always be returned, even when empty or when the stream doesn't exist.
      *
-     * @param StreamId  $streamId   The id of the stream to read from, e.g. "article:1234"
+     * @param StreamId  $streamId   The id of the stream to read from, e.g. "acme:article:1234"
      * @param Microtime $since      Return events since this time (exclusive greater than if forward=true, less than if forward=false)
      * @param int       $count      The number of events to return.
      * @param bool      $forward    When true, the events are read from oldest to newest, otherwise newest to oldest.
@@ -89,10 +89,10 @@ interface EventStore
     /**
      * Appends an array of events to a stream.
      *
-     * @param StreamId $streamId     The id of the stream to append to, e.g. "article:1234"
-     * @param Event[]  $events       An array of events to append to the stream.
-     * @param string   $expectedEtag Used to perform optimistic concurrency check.
-     * @param array    $context      Data that helps the EventStore decide where to read/write data from.
+     * @param StreamId  $streamId     The id of the stream to append to, e.g. "acme:article:1234"
+     * @param Message[] $events       An array of events to append to the stream.
+     * @param string    $expectedEtag Used to perform optimistic concurrency check.
+     * @param array     $context      Data that helps the EventStore decide where to read/write data from.
      *
      * @throws OptimisticCheckFailed
      * @throws GdbotsPbjxException
@@ -100,32 +100,33 @@ interface EventStore
     public function putEvents(StreamId $streamId, array $events, ?string $expectedEtag = null, array $context = []): void;
 
     /**
-     * Reads events (forward only) from a stream and executes the $receiver for
-     * every event returned, e.g. "$receiver($event, $streamId);".
+     * Reads events (forward only) from a stream.
      *
-     * @param StreamId  $streamId The id of the stream to read from, e.g. "article:1234"
-     * @param callable  $receiver The callable that will receive the event. "function f(Event $event, StreamId $streamId)".
+     * @param StreamId  $streamId The id of the stream to read from, e.g. "acme:article:1234"
      * @param Microtime $since    Return events greater than this time (exclusive).
      * @param Microtime $until    Return events less than this time (exclusive).
      * @param array     $context  Data that helps the EventStore decide where to read/write data from.
      *
+     * @return \Generator
+     *
      * @throws GdbotsPbjxException
      */
-    public function pipeEvents(StreamId $streamId, callable $receiver, ?Microtime $since = null, ?Microtime $until = null, array $context = []): void;
+    public function pipeEvents(StreamId $streamId, ?Microtime $since = null, ?Microtime $until = null, array $context = []): \Generator;
 
     /**
-     * Reads events (forward only) from ALL streams and executes the $receiver for
-     * every event returned, e.g. "$receiver($event, $streamId);".
+     * Reads events (forward only) from ALL streams and yields an array
+     * of [$event, $streamId] for each item.
      *
      * IMPORTANT! The order of events returned will be ordered per stream
      * but not necessarily globally ordered.
      *
-     * @param callable  $receiver The callable that will receive the event. "function f(Event $event, StreamId $streamId)".
-     * @param Microtime $since    Return events greater than this time (exclusive).
-     * @param Microtime $until    Return events less than this time (exclusive).
-     * @param array     $context  Data that helps the EventStore decide where to read/write data from.
+     * @param Microtime $since   Return events greater than this time (exclusive).
+     * @param Microtime $until   Return events less than this time (exclusive).
+     * @param array     $context Data that helps the EventStore decide where to read/write data from.
+     *
+     * @return \Generator
      *
      * @throws GdbotsPbjxException
      */
-    public function pipeAllEvents(callable $receiver, ?Microtime $since = null, ?Microtime $until = null, array $context = []): void;
+    public function pipeAllEvents(?Microtime $since = null, ?Microtime $until = null, array $context = []): \Generator;
 }

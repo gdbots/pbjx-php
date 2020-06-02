@@ -48,10 +48,7 @@ final class SchedulerTable
                     'Enabled'       => true,
                     'AttributeName' => self::TTL_KEY_NAME,
                 ],
-                'ProvisionedThroughput'   => [
-                    'ReadCapacityUnits'  => 2,
-                    'WriteCapacityUnits' => 2,
-                ],
+                'BillingMode'             => 'PAY_PER_REQUEST',
             ]);
 
             $client->waitUntil('TableExists', ['TableName' => $tableName]);
