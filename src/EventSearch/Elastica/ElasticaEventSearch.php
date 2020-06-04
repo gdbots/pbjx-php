@@ -11,6 +11,7 @@ use Gdbots\Common\Util\ClassUtils;
 use Gdbots\Common\Util\DateUtils;
 use Gdbots\Common\Util\NumberUtils;
 use Gdbots\Pbj\Marshaler\Elastica\DocumentMarshaler;
+use Gdbots\Pbj\Message;
 use Gdbots\Pbj\SchemaCurie;
 use Gdbots\Pbjx\EventSearch\EventSearch;
 use Gdbots\Pbjx\Exception\EventSearchOperationFailed;
@@ -47,12 +48,6 @@ class ElasticaEventSearch implements EventSearch
      */
     protected $timeout;
 
-    /**
-     * @param ClientManager   $clientManager
-     * @param IndexManager    $indexManager
-     * @param LoggerInterface $logger
-     * @param string          $timeout
-     */
     public function __construct(
         ClientManager $clientManager,
         IndexManager $indexManager,
@@ -66,9 +61,6 @@ class ElasticaEventSearch implements EventSearch
         $this->marshaler = new DocumentMarshaler();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     final public function createStorage(array $context = []): void
     {
         if (isset($context['cluster'])) {
@@ -112,9 +104,6 @@ class ElasticaEventSearch implements EventSearch
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     final public function describeStorage(array $context = []): string
     {
         if (isset($context['cluster'])) {
@@ -160,9 +149,6 @@ TEXT;
         return $result;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     final public function indexEvents(array $events, array $context = []): void
     {
         if (empty($events)) {
@@ -170,6 +156,7 @@ TEXT;
         }
 
         $client = $this->getClientForWrite($context);
+        $this->marshaler->skipValidation(false);
         $documents = [];
 
         /** @var Indexed $event */
@@ -231,9 +218,6 @@ TEXT;
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     final public function deleteEvents(array $eventIds, array $context = []): void
     {
         if (empty($eventIds)) {
@@ -245,7 +229,6 @@ TEXT;
 
         foreach ($eventIds as $eventId) {
             $indexName = null;
-            $typeName = $context['_type'] ?? '_all';
 
             try {
                 // this will be correct *most* of the time.
@@ -253,19 +236,17 @@ TEXT;
                 $indexName = $this->indexManager->getIndexNameFromContext($timeUuid->getDateTime(), $context);
                 $documents[] = (new Document())
                     ->setId((string)$eventId)
-                    ->setType($typeName)
                     ->setIndex($indexName);
             } catch (\Throwable $e) {
                 $message = sprintf(
                     '%s while adding event [{event_id}] to batch delete request ' .
-                    'from ElasticSearch [{index_name}/{type_name}].',
+                    'from ElasticSearch [{index_name}].',
                     ClassUtils::getShortName($e)
                 );
 
                 $this->logger->error($message, [
                     'exception'  => $e,
                     'index_name' => $indexName,
-                    'type_name'  => $typeName,
                     'event_id'   => (string)$eventId,
                 ]);
             }
@@ -293,11 +274,10 @@ TEXT;
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    final public function searchEvents(SearchEventsRequest $request, ParsedQuery $parsedQuery, SearchEventsResponse $response, array $curies = [], array $context = []): void
+    final public function searchEvents(Message $request, ParsedQuery $parsedQuery, Message $response, array $curies = [], array $context = []): void
     {
+
+        $skipValidation = filter_var($context['skip_validation'] ?? true, FILTER_VALIDATE_BOOLEAN);
         $search = new Search($this->getClientForRead($context));
         $search->addIndices($this->indexManager->getIndexNamesForSearch($request));
         /** @var SchemaCurie $curie */
@@ -343,8 +323,10 @@ TEXT;
         }
 
         $events = [];
+        $this->marshaler->skipValidation($skipValidation);
         foreach ($results->getResults() as $result) {
             try {
+                // remove __type and fix id?
                 $events[] = $this->marshaler->unmarshal($result->getSource());
             } catch (\Throwable $e) {
                 $this->logger->error(
@@ -390,9 +372,6 @@ TEXT;
         return $this->clientManager->getClient($context['cluster'] ?? 'default');
     }
 
-    /**
-     * @return QueryFactory
-     */
     final protected function getQueryFactory(): QueryFactory
     {
         if (null === $this->queryFactory) {
@@ -402,9 +381,6 @@ TEXT;
         return $this->queryFactory;
     }
 
-    /**
-     * @return QueryFactory
-     */
     protected function doGetQueryFactory(): QueryFactory
     {
         return new QueryFactory();
