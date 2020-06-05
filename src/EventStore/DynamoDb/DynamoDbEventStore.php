@@ -382,6 +382,21 @@ class DynamoDbEventStore implements EventStore
 
     final public function pipeAllEvents(?Microtime $since = null, ?Microtime $until = null, array $context = []): \Generator
     {
+        $generator = $this->doPipeAllEvents($since, $until, $context);
+
+        /** @var \SplQueue $queue */
+        $queue = $generator->current();
+
+        do {
+            $generator->next();
+            while (!$queue->isEmpty()) {
+                yield $queue->dequeue();
+            }
+        } while ($generator->valid());
+    }
+
+    protected function doPipeAllEvents(?Microtime $since = null, ?Microtime $until = null, array $context = []): \Generator
+    {
         $context = $this->enrichContext(__FUNCTION__, $context);
         $tableName = $this->getTableNameForRead($context);
         $reindexing = filter_var($context['reindexing'] ?? false, FILTER_VALIDATE_BOOLEAN);
@@ -448,16 +463,13 @@ class DynamoDbEventStore implements EventStore
         }
 
         $this->marshaler->skipValidation($skipValidation);
-
-        $receiver = function (Message $event, StreamId $streamId) {
-            yield [$event, $streamId];
-        };
+        $queue = new \SplQueue();
+        yield $queue;
 
         $fulfilled = function (ResultInterface $result, string $iterKey) use (
-            $receiver, $tableName, $context, $params, &$pending, &$iter2seg
+            $queue, $tableName, $context, $params, &$pending, &$iter2seg
         ) {
             $segment = $iter2seg['prev'][$iterKey];
-
             foreach ($result['Items'] as $item) {
                 $streamId = null;
 
@@ -481,7 +493,7 @@ class DynamoDbEventStore implements EventStore
                     continue;
                 }
 
-                $receiver($event, $streamId);
+                $queue->enqueue([$event, $streamId]);
             }
 
             if ($result['LastEvaluatedKey']) {
@@ -559,8 +571,10 @@ class DynamoDbEventStore implements EventStore
             $pool->promise()->wait();
             $iter2seg['prev'] = $iter2seg['next'];
             $iter2seg['next'] = [];
+            yield;
         }
 
+        yield;
         $this->marshaler->skipValidation(false);
     }
 
