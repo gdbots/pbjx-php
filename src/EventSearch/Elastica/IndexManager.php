@@ -6,16 +6,13 @@ namespace Gdbots\Pbjx\EventSearch\Elastica;
 use Elastica\Client;
 use Elastica\Index;
 use Elastica\IndexTemplate;
-use Elastica\Type;
-use Elastica\Type\Mapping;
-use Gdbots\Pbj\Marshaler\Elastica\MappingFactory;
+use Elastica\Mapping;
+use Gdbots\Pbj\Message;
 use Gdbots\Pbj\MessageResolver;
 use Gdbots\Pbj\Schema;
 use Gdbots\Pbjx\Exception\EventSearchOperationFailed;
 use Gdbots\Schemas\Pbjx\Enum\Code;
-use Gdbots\Schemas\Pbjx\Mixin\Indexed\Indexed;
 use Gdbots\Schemas\Pbjx\Mixin\Indexed\IndexedV1Mixin;
-use Gdbots\Schemas\Pbjx\Mixin\SearchEventsRequest\SearchEventsRequest;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
@@ -50,15 +47,10 @@ class IndexManager
      *
      * @var string
      */
-    protected $indexPrefix;
+    protected string $indexPrefix;
 
-    /** @var LoggerInterface */
-    protected $logger;
+    protected ?LoggerInterface $logger;
 
-    /**
-     * @param string          $indexPrefix
-     * @param LoggerInterface $logger
-     */
     public function __construct(string $indexPrefix, ?LoggerInterface $logger = null)
     {
         $this->indexPrefix = rtrim($indexPrefix, '-') . '-';
@@ -82,12 +74,12 @@ class IndexManager
      * deleting events and you don't have a search request or
      * an event and can't derive the index from the usual methods.
      *
-     * @param \DateTime $date
-     * @param array     $context
+     * @param \DateTimeInterface $date
+     * @param array              $context
      *
      * @return string
      */
-    public function getIndexNameFromContext(\DateTime $date, array $context): string
+    public function getIndexNameFromContext(\DateTimeInterface $date, array $context): string
     {
         return $context['index_name'] ?? $this->indexPrefix . $this->getIndexIntervalSuffix($date);
     }
@@ -95,13 +87,13 @@ class IndexManager
     /**
      * Returns the name of the index that the event should be written to.
      *
-     * @param Indexed $event
+     * @param Message $event
      *
      * @return string
      */
-    public function getIndexNameForWrite(Indexed $event): string
+    public function getIndexNameForWrite(Message $event): string
     {
-        /** @var \DateTime $occurredAt */
+        /** @var \DateTimeInterface $occurredAt */
         $occurredAt = $event->get('occurred_at')->toDateTime();
         return $this->indexPrefix . $this->getIndexIntervalSuffix($occurredAt);
     }
@@ -110,11 +102,11 @@ class IndexManager
      * Returns an array of index names (or patterns) that should be
      * queried for the given search request.
      *
-     * @param SearchEventsRequest $request
+     * @param Message $request
      *
      * @return string[]
      */
-    public function getIndexNamesForSearch(SearchEventsRequest $request): array
+    public function getIndexNamesForSearch(Message $request): array
     {
         /** @var \DateTime $after */
         /** @var \DateTime $before */
@@ -164,11 +156,11 @@ class IndexManager
      *
      * todo: make this configureable, right now we're using quarterly by default
      *
-     * @param \DateTime $date
+     * @param \DateTimeInterface $date
      *
      * @return string
      */
-    public function getIndexIntervalSuffix(\DateTime $date): string
+    public function getIndexIntervalSuffix(\DateTimeInterface $date): string
     {
         $quarter = ceil($date->format('n') / 3);
         return $date->format('Y') . 'q' . $quarter;

@@ -6,7 +6,8 @@ namespace Gdbots\Pbjx\EventSearch\Elastica;
 use Elastica\Query;
 use Elastica\Query\AbstractQuery;
 use Elastica\Query\FunctionScore;
-use Gdbots\Common\Util\DateUtils;
+use Gdbots\Pbj\Message;
+use Gdbots\Pbj\Util\DateUtil;
 use Gdbots\Pbj\WellKnown\Microtime;
 use Gdbots\QueryParser\Builder\ElasticaQueryBuilder;
 use Gdbots\QueryParser\Enum\BoolOperator;
@@ -15,21 +16,14 @@ use Gdbots\QueryParser\Node\Field;
 use Gdbots\QueryParser\Node\Numbr;
 use Gdbots\QueryParser\ParsedQuery;
 use Gdbots\Schemas\Pbjx\Enum\SearchEventsSort;
-use Gdbots\Schemas\Pbjx\Mixin\SearchEventsRequest\SearchEventsRequest;
 
 class QueryFactory
 {
-    /**
-     * @param SearchEventsRequest $request
-     * @param ParsedQuery         $parsedQuery
-     *
-     * @return Query
-     */
-    final public function create(SearchEventsRequest $request, ParsedQuery $parsedQuery): Query
+    final public function create(Message $request, ParsedQuery $parsedQuery): Query
     {
         $this->applyDateFilters($request, $parsedQuery);
 
-        $method = 'for' . ucfirst($request::schema()->getHandlerMethodName(false));
+        $method = $request::schema()->getHandlerMethodName(false, 'for');
         if (is_callable([$this, $method])) {
             $query = $this->$method($request, $parsedQuery);
         } else {
@@ -39,11 +33,7 @@ class QueryFactory
         return Query::create($query);
     }
 
-    /**
-     * @param SearchEventsRequest $request
-     * @param ParsedQuery         $parsedQuery
-     */
-    protected function applyDateFilters(SearchEventsRequest $request, ParsedQuery $parsedQuery): void
+    protected function applyDateFilters(Message $request, ParsedQuery $parsedQuery): void
     {
         $required = BoolOperator::REQUIRED();
 
@@ -72,12 +62,12 @@ class QueryFactory
      * Applies sorting and scoring to the query and returns the final query object
      * which will be sent to elastic search.
      *
-     * @param AbstractQuery       $query
-     * @param SearchEventsRequest $request
+     * @param AbstractQuery $query
+     * @param Message       $request
      *
      * @return Query
      */
-    protected function createSortedQuery(AbstractQuery $query, SearchEventsRequest $request): Query
+    protected function createSortedQuery(AbstractQuery $query, Message $request): Query
     {
         switch ($request->get('sort')->getValue()) {
             case SearchEventsSort::DATE_DESC:
@@ -98,7 +88,7 @@ class QueryFactory
                     ->setQuery($query)
                     ->addFunction(FunctionScore::DECAY_EXPONENTIAL, [
                         IndexManager::OCCURRED_AT_ISO_FIELD_NAME => [
-                            'origin' => $before->format(DateUtils::ISO8601_ZULU),
+                            'origin' => $before->format(DateUtil::ISO8601_ZULU),
                             'scale'  => '1w',
                             'offset' => '2m',
                             'decay'  => 0.1,
@@ -111,13 +101,7 @@ class QueryFactory
         return $query;
     }
 
-    /**
-     * @param SearchEventsRequest $request
-     * @param ParsedQuery         $parsedQuery
-     *
-     * @return Query
-     */
-    protected function forSearchEventsRequest(SearchEventsRequest $request, ParsedQuery $parsedQuery): Query
+    protected function forSearchEventsRequest(Message $request, ParsedQuery $parsedQuery): Query
     {
         $builder = new ElasticaQueryBuilder();
         $builder->setDefaultFieldName('_all')->addParsedQuery($parsedQuery);
