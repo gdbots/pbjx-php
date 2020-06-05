@@ -6,7 +6,9 @@ namespace Gdbots\Pbjx\EventSearch\Elastica;
 use Elastica\Query;
 use Elastica\Query\AbstractQuery;
 use Elastica\Query\FunctionScore;
+use Gdbots\Pbj\Marshaler\Elastica\MappingBuilder;
 use Gdbots\Pbj\Message;
+use Gdbots\Pbj\SchemaCurie;
 use Gdbots\Pbj\Util\DateUtil;
 use Gdbots\Pbj\WellKnown\Microtime;
 use Gdbots\QueryParser\Builder\ElasticaQueryBuilder;
@@ -19,15 +21,22 @@ use Gdbots\Schemas\Pbjx\Enum\SearchEventsSort;
 
 class QueryFactory
 {
-    final public function create(Message $request, ParsedQuery $parsedQuery): Query
+    /**
+     * @param Message       $request     Search request containing pagination, date filters, etc.
+     * @param ParsedQuery   $parsedQuery Parsed version of the search query (the "q" field of the request).
+     * @param SchemaCurie[] $curies      An array of curies that the search should limit its search to.
+     *
+     * @return Query
+     */
+    final public function create(Message $request, ParsedQuery $parsedQuery, array $curies = []): Query
     {
         $this->applyDateFilters($request, $parsedQuery);
 
         $method = $request::schema()->getHandlerMethodName(false, 'for');
         if (is_callable([$this, $method])) {
-            $query = $this->$method($request, $parsedQuery);
+            $query = $this->$method($request, $parsedQuery, $curies);
         } else {
-            $query = $this->forSearchEventsRequest($request, $parsedQuery);
+            $query = $this->forSearchEventsRequest($request, $parsedQuery, $curies);
         }
 
         return Query::create($query);
@@ -56,6 +65,25 @@ class QueryFactory
                 );
             }
         }
+    }
+
+    /**
+     * Add the "types" into one terms query as it's more efficient.
+     *
+     * @link https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-terms-query.html
+     *
+     * @param Message         $request
+     * @param Query\BoolQuery $query
+     * @param SchemaCurie[]   $curies
+     */
+    protected function filterCuries(Message $request, Query\BoolQuery $query, array $curies): void
+    {
+        if (empty($curies)) {
+            return;
+        }
+
+        $types = array_map(fn(SchemaCurie $curie) => $curie->getMessage(), $curies);
+        $query->addFilter(new Query\Terms(MappingBuilder::TYPE_FIELD, $types));
     }
 
     /**
@@ -101,11 +129,12 @@ class QueryFactory
         return $query;
     }
 
-    protected function forSearchEventsRequest(Message $request, ParsedQuery $parsedQuery): Query
+    protected function forSearchEventsRequest(Message $request, ParsedQuery $parsedQuery, array $curies): Query
     {
         $builder = new ElasticaQueryBuilder();
-        $builder->setDefaultFieldName('_all')->addParsedQuery($parsedQuery);
+        $builder->setDefaultFieldName(MappingBuilder::ALL_FIELD)->addParsedQuery($parsedQuery);
         $query = $builder->getBoolQuery();
+        $this->filterCuries($request, $query, $curies);
         return Query::create($this->createSortedQuery($query, $request));
     }
 }

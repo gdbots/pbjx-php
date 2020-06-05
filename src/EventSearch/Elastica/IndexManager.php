@@ -7,11 +7,12 @@ use Elastica\Client;
 use Elastica\Index;
 use Elastica\IndexTemplate;
 use Elastica\Mapping;
+use Gdbots\Pbj\Marshaler\Elastica\MappingBuilder;
 use Gdbots\Pbj\Message;
 use Gdbots\Pbj\MessageResolver;
-use Gdbots\Pbj\Schema;
 use Gdbots\Pbjx\Exception\EventSearchOperationFailed;
 use Gdbots\Schemas\Pbjx\Enum\Code;
+use Gdbots\Schemas\Pbjx\Mixin\Event\EventV1Mixin;
 use Gdbots\Schemas\Pbjx\Mixin\Indexed\IndexedV1Mixin;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -176,13 +177,6 @@ class IndexManager
      */
     final public function updateTemplate(Client $client, string $name): void
     {
-        $fakeIndex = new Index($client, $name);
-        $mappings = [];
-        foreach ($this->createMappings() as $typeName => $mapping) {
-            $mapping->setType(new Type($fakeIndex, $typeName));
-            $mappings[$typeName] = $mapping->toArray();
-        }
-
         $params = [
             'template' => '*' . $name . '*',
             'settings' => [
@@ -195,7 +189,7 @@ class IndexManager
                     ],
                 ],
             ],
-            'mappings' => $mappings,
+            'mappings' => $this->createMapping()->toArray(),
         ];
 
         $this->beforeUpdateTemplate($params);
@@ -222,28 +216,22 @@ class IndexManager
     {
         $index = new Index($client, $name);
 
-        foreach ($this->createMappings() as $typeName => $mapping) {
-            try {
-                $mapping->setType(new Type($index, $typeName));
-                $mapping->send();
-            } catch (\Throwable $e) {
-                if (false !== strpos($e->getMessage(), 'no such index')) {
-                    $this->logger->info(
-                        sprintf('No index exists yet [%s/%s] in ElasticSearch.  Ignoring.', $name, $typeName)
-                    );
-                    return;
-                }
-
-                throw new EventSearchOperationFailed(
-                    sprintf('Failed to put mapping for type [%s/%s] into ElasticSearch.', $name, $typeName),
-                    Code::INTERNAL,
-                    $e
-                );
+        try {
+            $index->setMapping($this->createMapping());
+        } catch (\Throwable $e) {
+            if (false !== strpos($e->getMessage(), 'no such index')) {
+                $this->logger->info(sprintf('No index exists yet [%s] in ElasticSearch. Ignoring.', $name));
+                return;
             }
 
-            $this->logger->info(sprintf('Successfully put mapping for type [%s/%s]', $name, $typeName));
+            throw new EventSearchOperationFailed(
+                sprintf('Failed to put mapping for index [%s] into ElasticSearch.', $name),
+                Code::INTERNAL,
+                $e
+            );
         }
 
+        $this->logger->info(sprintf('Successfully put mapping for index [%s]', $name));
         $this->updateAnalyzers($index, $name);
         $this->updateNormalizers($index, $name);
     }
@@ -255,7 +243,7 @@ class IndexManager
      * @param Index  $index
      * @param string $name
      */
-    protected function updateAnalyzers(Index $index, string $name)
+    protected function updateAnalyzers(Index $index, string $name): void
     {
         $settings = $index->getSettings();
         $customAnalyzers = $this->getCustomAnalyzers();
@@ -319,7 +307,7 @@ class IndexManager
      * @param Index  $index
      * @param string $name
      */
-    protected function updateNormalizers(Index $index, string $name)
+    protected function updateNormalizers(Index $index, string $name): void
     {
         $settings = $index->getSettings();
         $customNormalizers = $this->getCustomNormalizers();
@@ -376,65 +364,30 @@ class IndexManager
         $this->logger->info(sprintf('Successfully added missing normalizers to index [%s]', $name));
     }
 
-    /**
-     * @param array $params
-     */
     protected function beforeUpdateTemplate(array &$params): void
     {
         // Override to customize the template params before it's pushed to elastic search.
     }
 
-    /**
-     * @param Mapping $mapping
-     * @param Schema  $schema
-     */
-    protected function filterMapping(Mapping $mapping, Schema $schema): void
+    protected function createMapping(): Mapping
     {
-        /*
-         * Override to customize the mapping before it's pushed to elastic search.
-         *
-         * If a method "filterMappingFor$CamelizedSchemaName" exists, it will
-         * also be called with the same signature.
-         *
-         */
-    }
-
-    /**
-     * @return Mapping[]
-     */
-    protected function createMappings(): array
-    {
-        $schemas = MessageResolver::findAllUsingMixin(IndexedV1Mixin::create());
-        $mappingFactory = new MappingFactory();
-        $mappings = [];
-
-        foreach ($schemas as $schema) {
-            $this->logger->info(sprintf('Creating mapping for [%s] => [%s]', $schema->getId(), $schema->getClassName()));
-
-            $mapping = $mappingFactory->create($schema, 'english');
-            $properties = $mapping->getProperties();
-            $properties[self::OCCURRED_AT_ISO_FIELD_NAME] = ['type' => 'date', 'include_in_all' => false];
-
-            // elastica >=5 uses boolean for "index" property and "text" for type
-            $properties['ctx_ua']['index'] = 'text' === $properties['ctx_ua']['type'] ? false : 'no';
-
-            $mapping->setAllField(['enabled' => true, 'analyzer' => 'english'])->setProperties($properties);
-
-            $dynamicTemplates = $mapping->getParam('dynamic_templates');
-            if (!empty($dynamicTemplates)) {
-                $mapping->setParam('dynamic_templates', $dynamicTemplates);
-            }
-
-            $this->filterMapping($mapping, $schema);
-            $method = 'filterMappingFor' . ucfirst($schema->getHandlerMethodName(false));
-            if (is_callable([$this, $method])) {
-                $this->$method($mapping, $schema);
-            }
-
-            $mappings[$schema->getCurie()->getMessage()] = $mapping;
+        $builder = $this->getMappingBuilder();
+        foreach (MessageResolver::findAllUsingMixin(IndexedV1Mixin::SCHEMA_CURIE_MAJOR) as $curie) {
+            $builder->addSchema(MessageResolver::resolveCurie($curie)::schema());
         }
 
-        return $mappings;
+        $mapping = $builder->build();
+        $properties = $mapping->getProperties();
+        $properties[self::OCCURRED_AT_ISO_FIELD_NAME] = MappingBuilder::TYPES['date'];
+        $properties[EventV1Mixin::CTX_UA_FIELD]['index'] = false;
+        $mapping->setProperties($properties);
+
+        return $mapping;
+    }
+
+    protected function getMappingBuilder(): MappingBuilder
+    {
+        return new MappingBuilder();
     }
 
     /**
@@ -444,7 +397,7 @@ class IndexManager
      */
     protected function getCustomAnalyzers(): array
     {
-        return MappingFactory::getCustomAnalyzers();
+        return MappingBuilder::getCustomAnalyzers();
     }
 
     /**
@@ -454,16 +407,6 @@ class IndexManager
      */
     protected function getCustomNormalizers(): array
     {
-        if (method_exists(MappingFactory::class, 'getCustomNormalizers')) {
-            return MappingFactory::getCustomNormalizers();
-        }
-
-        return [
-            'pbj_keyword' => [
-                'type'        => 'custom',
-                'char_filter' => [],
-                'filter'      => ['lowercase', 'asciifolding'],
-            ],
-        ];
+        return MappingBuilder::getCustomNormalizers();
     }
 }
