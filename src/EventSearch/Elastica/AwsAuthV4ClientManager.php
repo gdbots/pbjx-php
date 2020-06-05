@@ -25,8 +25,6 @@ class AwsAuthV4ClientManager extends ClientManager
         parent::__construct($clusters, $logger);
         $this->credentials = $credentials;
         $this->region = $region;
-
-        error_log(json_encode($clusters, JSON_PRETTY_PRINT));
     }
 
     /**

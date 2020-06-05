@@ -358,6 +358,7 @@ class DynamoDbEventStore implements EventStore
 
     final public function pipeEvents(StreamId $streamId, ?Microtime $since = null, ?Microtime $until = null, array $context = []): \Generator
     {
+        $context['stream_id'] = $streamId;
         $context = $this->enrichContext(__FUNCTION__, $context);
         $reindexing = filter_var($context['reindexing'] ?? false, FILTER_VALIDATE_BOOLEAN);
 
@@ -382,6 +383,7 @@ class DynamoDbEventStore implements EventStore
 
     final public function pipeAllEvents(?Microtime $since = null, ?Microtime $until = null, array $context = []): \Generator
     {
+        $context = $this->enrichContext(__FUNCTION__, $context);
         $generator = $this->doPipeAllEvents($since, $until, $context);
 
         /** @var \SplQueue $queue */
@@ -397,7 +399,6 @@ class DynamoDbEventStore implements EventStore
 
     protected function doPipeAllEvents(?Microtime $since = null, ?Microtime $until = null, array $context = []): \Generator
     {
-        $context = $this->enrichContext(__FUNCTION__, $context);
         $tableName = $this->getTableNameForRead($context);
         $reindexing = filter_var($context['reindexing'] ?? false, FILTER_VALIDATE_BOOLEAN);
         $skipErrors = filter_var($context['skip_errors'] ?? false, FILTER_VALIDATE_BOOLEAN);
