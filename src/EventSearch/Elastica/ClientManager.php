@@ -96,7 +96,6 @@ class ClientManager
         }
 
         $config['servers'] = $configuredServers;
-
         return $this->clients[$cluster] = new Client($config, null, $config['log'] ? $this->logger : null);
     }
 

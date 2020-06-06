@@ -7,7 +7,6 @@ use Elastica\Client;
 use Elastica\Index;
 use Elastica\IndexTemplate;
 use Elastica\Mapping;
-use Gdbots\Pbj\Marshaler\Elastica\MappingBuilder;
 use Gdbots\Pbj\Message;
 use Gdbots\Pbj\MessageResolver;
 use Gdbots\Pbjx\Exception\EventSearchOperationFailed;
@@ -379,7 +378,6 @@ class IndexManager
         $mapping = $builder->build();
         $properties = $mapping->getProperties();
         $properties[self::OCCURRED_AT_ISO_FIELD_NAME] = MappingBuilder::TYPES['date'];
-        $properties[EventV1Mixin::CTX_UA_FIELD]['index'] = false;
         $mapping->setProperties($properties);
 
         return $mapping;

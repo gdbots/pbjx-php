@@ -137,8 +137,8 @@ class ElasticaEventSearch implements EventSearch
 Service:     ElasticSearch ({$cluster})
 Index Name:  {$index->getName()}
 Documents:   {$index->count()}
-Index Stats: curl "{$url}/{$index->getName()}/_stats?pretty=1"
-Mappings:    curl "{$url}/{$index->getName()}/_mapping?pretty=1"
+Index Stats: curl "{$url}/{$index->getName()}/_stats?pretty=true"
+Mappings:    curl "{$url}/{$index->getName()}/_mapping?pretty=true"
 
 TEXT;
             }
