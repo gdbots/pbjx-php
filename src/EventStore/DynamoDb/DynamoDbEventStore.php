@@ -24,6 +24,7 @@ use Gdbots\Pbjx\Pbjx;
 use Gdbots\Pbjx\PbjxEvents;
 use Gdbots\Schemas\Ncr\Mixin\Indexed\IndexedV1Mixin;
 use Gdbots\Schemas\Pbjx\Enum\Code;
+use Gdbots\Schemas\Pbjx\Mixin\Event\EventV1Mixin;
 use Gdbots\Schemas\Pbjx\StreamId;
 use GuzzleHttp\Promise\PromiseInterface;
 use Psr\Log\LoggerInterface;
@@ -146,7 +147,7 @@ class DynamoDbEventStore implements EventStore
         foreach ($eventIds as $eventId) {
             try {
                 $event = $this->getEvent($eventId, $context);
-                $events[(string)$event->get('event_id')] = $event;
+                $events[(string)$event->get(EventV1Mixin::EVENT_ID_FIELD)] = $event;
             } catch (EventNotFound $nf) {
                 // missing events are not exception worthy at this time
             } catch (\Throwable $e) {
@@ -368,7 +369,7 @@ class DynamoDbEventStore implements EventStore
 
             /** @var Message $event */
             foreach ($slice as $event) {
-                if (null !== $until && $event->get('occurred_at')->toFloat() >= $until->toFloat()) {
+                if (null !== $until && $event->get(EventV1Mixin::OCCURRED_AT_FIELD)->toFloat() >= $until->toFloat()) {
                     return;
                 }
 
@@ -751,7 +752,7 @@ class DynamoDbEventStore implements EventStore
         $event = $slice->getIterator()->current();
 
         // todo: review this etag strategy (need to make this more explicit/obvious)
-        $eventId = (string)$event->get('event_id');
+        $eventId = (string)$event->get(EventV1Mixin::EVENT_ID_FIELD);
         if ($eventId === $expectedEtag || md5($eventId) === $expectedEtag) {
             return;
         }

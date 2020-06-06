@@ -5,6 +5,8 @@ namespace Gdbots\Pbjx\Exception;
 
 use Gdbots\Pbj\Message;
 use Gdbots\Schemas\Pbjx\Enum\Code;
+use Gdbots\Schemas\Pbjx\Mixin\Request\RequestV1Mixin;
+use Gdbots\Schemas\Pbjx\Request\RequestFailedResponseV1;
 
 final class RequestHandlingFailed extends \RuntimeException implements GdbotsPbjxException, \JsonSerializable
 {
@@ -13,16 +15,17 @@ final class RequestHandlingFailed extends \RuntimeException implements GdbotsPbj
     public function __construct(Message $response)
     {
         $this->response = $response;
-        $ref = $response->get('ctx_request_ref') ?: $response->get('ctx_request')->get('request_id');
+        $ref = $response->get(RequestFailedResponseV1::CTX_REQUEST_REF_FIELD)
+            ?: $response->get(RequestFailedResponseV1::CTX_REQUEST_FIELD)->get(RequestV1Mixin::REQUEST_ID_FIELD);
         parent::__construct(
             sprintf(
                 'Request [%s] could not be handled.  %s::%s::%s',
                 $ref,
-                $this->response->get('error_name'),
-                $this->response->get('error_code'),
-                $this->response->get('error_message')
+                $this->response->get(RequestFailedResponseV1::ERROR_NAME_FIELD),
+                $this->response->get(RequestFailedResponseV1::ERROR_CODE_FIELD),
+                $this->response->get(RequestFailedResponseV1::ERROR_MESSAGE_FIELD)
             ),
-            $this->response->get('error_code', Code::UNKNOWN)
+            $this->response->get(RequestFailedResponseV1::ERROR_CODE_FIELD, Code::UNKNOWN)
         );
     }
 
@@ -33,7 +36,7 @@ final class RequestHandlingFailed extends \RuntimeException implements GdbotsPbj
 
     public function getRequest(): ?Message
     {
-        return $this->response->get('ctx_request');
+        return $this->response->get(RequestFailedResponseV1::CTX_REQUEST_FIELD);
     }
 
     public function jsonSerialize()

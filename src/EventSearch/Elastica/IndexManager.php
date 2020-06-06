@@ -13,6 +13,7 @@ use Gdbots\Pbjx\Exception\EventSearchOperationFailed;
 use Gdbots\Schemas\Pbjx\Enum\Code;
 use Gdbots\Schemas\Pbjx\Mixin\Event\EventV1Mixin;
 use Gdbots\Schemas\Pbjx\Mixin\Indexed\IndexedV1Mixin;
+use Gdbots\Schemas\Pbjx\Mixin\SearchEventsRequest\SearchEventsRequestV1Mixin;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
@@ -94,7 +95,7 @@ class IndexManager
     public function getIndexNameForWrite(Message $event): string
     {
         /** @var \DateTimeInterface $occurredAt */
-        $occurredAt = $event->get('occurred_at')->toDateTime();
+        $occurredAt = $event->get(EventV1Mixin::OCCURRED_AT_FIELD)->toDateTime();
         return $this->indexPrefix . $this->getIndexIntervalSuffix($occurredAt);
     }
 
@@ -110,8 +111,8 @@ class IndexManager
     {
         /** @var \DateTime $after */
         /** @var \DateTime $before */
-        $after = $request->get('occurred_after');
-        $before = $request->get('occurred_before');
+        $after = $request->get(SearchEventsRequestV1Mixin::OCCURRED_AFTER_FIELD);
+        $before = $request->get(SearchEventsRequestV1Mixin::OCCURRED_BEFORE_FIELD);
 
         /*
          * when no lower bound is used, we must assume they meant to search

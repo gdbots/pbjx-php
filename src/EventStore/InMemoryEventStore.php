@@ -10,6 +10,7 @@ use Gdbots\Pbj\WellKnown\Microtime;
 use Gdbots\Pbjx\Exception\EventNotFound;
 use Gdbots\Pbjx\Pbjx;
 use Gdbots\Schemas\Ncr\Mixin\Indexed\IndexedV1Mixin;
+use Gdbots\Schemas\Pbjx\Mixin\Event\EventV1Mixin;
 use Gdbots\Schemas\Pbjx\StreamId;
 
 /**
@@ -47,7 +48,7 @@ final class InMemoryEventStore implements EventStore
                         $event = $this->createEventFromArray($event);
                     }
 
-                    $this->streams[$streamId][(string)$event->get('occurred_at')] = $event;
+                    $this->streams[$streamId][(string)$event->get(EventV1Mixin::OCCURRED_AT_FIELD)] = $event;
                 } catch (\Throwable $e) {
                 }
             }
@@ -98,7 +99,7 @@ TEXT;
         foreach ($this->streams as $streamId => $stream) {
             /** @var Message $event */
             foreach ($stream as $key => $event) {
-                if ($eventId->equals($event->get('event_id'))) {
+                if ($eventId->equals($event->get(EventV1Mixin::EVENT_ID_FIELD))) {
                     unset($this->streams[$streamId][$key]);
                 }
             }
@@ -129,7 +130,7 @@ TEXT;
                 break;
             }
 
-            $occurredAt = (string)$event->get('occurred_at');
+            $occurredAt = (string)$event->get(EventV1Mixin::OCCURRED_AT_FIELD);
 
             if ($forward && $occurredAt > $since) {
                 $matched[] = $event;
@@ -167,8 +168,8 @@ TEXT;
 
         foreach ($events as $event) {
             $this->pbjx->triggerLifecycle($event);
-            $this->streams[$key][(string)$event->get('occurred_at')] = $event;
-            $this->events[(string)$event->get('event_id')] = $event;
+            $this->streams[$key][(string)$event->get(EventV1Mixin::OCCURRED_AT_FIELD)] = $event;
+            $this->events[(string)$event->get(EventV1Mixin::EVENT_ID_FIELD)] = $event;
         }
 
         ksort($this->streams[$key]);
@@ -183,7 +184,7 @@ TEXT;
             $since = $slice->getLastOccurredAt();
 
             foreach ($slice as $event) {
-                if (null !== $until && $event->get('occurred_at')->toFloat() >= $until->toFloat()) {
+                if (null !== $until && $event->get(EventV1Mixin::OCCURRED_AT_FIELD)->toFloat() >= $until->toFloat()) {
                     return;
                 }
 
