@@ -52,11 +52,13 @@ class QueryFactory
             [
                 'query'    => SearchEventsRequestV1Mixin::OCCURRED_AFTER_FIELD,
                 'field'    => EventV1Mixin::OCCURRED_AT_FIELD,
-                'operator' => ComparisonOperator::GT()],
+                'operator' => ComparisonOperator::GT(),
+            ],
             [
                 'query'    => SearchEventsRequestV1Mixin::OCCURRED_BEFORE_FIELD,
                 'field'    => EventV1Mixin::OCCURRED_AT_FIELD,
-                'operator' => ComparisonOperator::LT()],
+                'operator' => ComparisonOperator::LT(),
+            ],
         ];
 
         foreach ($dateFilters as $f) {
