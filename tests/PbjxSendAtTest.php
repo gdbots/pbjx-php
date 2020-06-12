@@ -6,7 +6,7 @@ namespace Gdbots\Tests\Pbjx;
 use Gdbots\Pbj\Message;
 use Gdbots\Pbjx\Exception\LogicException;
 use Gdbots\Pbjx\Scheduler\Scheduler;
-use Gdbots\Tests\Pbjx\Fixtures\FakeCommand;
+use Gdbots\Schemas\Pbjx\Command\CheckHealthV1;
 
 class PbjxSendAtTest extends AbstractBusTestCase
 {
@@ -48,7 +48,7 @@ class PbjxSendAtTest extends AbstractBusTestCase
 
     public function testWithValidInput(): void
     {
-        $command = FakeCommand::create();
+        $command = CheckHealthV1::create();
         $timestamp = strtotime('+1 month');
         $jobId = 'next-month';
 
@@ -70,7 +70,7 @@ class PbjxSendAtTest extends AbstractBusTestCase
     public function testWithTimestampInPast(): void
     {
         $this->expectException(LogicException::class);
-        $command = FakeCommand::create();
+        $command = CheckHealthV1::create();
         $this->pbjx->sendAt($command, strtotime('-1 second'), 'mcfly');
     }
 }

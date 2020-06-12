@@ -6,14 +6,15 @@ namespace Gdbots\Tests\Pbjx\Fixtures;
 use Gdbots\Pbj\Message;
 use Gdbots\Pbjx\CommandHandler;
 use Gdbots\Pbjx\Pbjx;
+use Gdbots\Schemas\Pbjx\Command\CheckHealthV1;
 
-class SayHelloHandler implements CommandHandler
+class CheckHealthHandler implements CommandHandler
 {
     private ?Message $handled = null;
 
     public static function handlesCuries(): array
     {
-        return ['gdbots:tests.pbjx:fixtures:say-hello'];
+        return [CheckHealthV1::SCHEMA_CURIE];
     }
 
     public function handleCommand(Message $command, Pbjx $pbjx): void

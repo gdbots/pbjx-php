@@ -7,14 +7,13 @@ use Gdbots\Pbj\Message;
 use Gdbots\Pbjx\Event\BusExceptionEvent;
 use Gdbots\Pbjx\PbjxEvents;
 use Gdbots\Schemas\Pbjx\Event\EventExecutionFailedV1;
-use Gdbots\Tests\Pbjx\Fixtures\FailingEvent;
-use Gdbots\Tests\Pbjx\Fixtures\SimpleEvent;
+use Gdbots\Schemas\Pbjx\Event\HealthCheckedV1;
 
 class SimpleEventBusTest extends AbstractBusTestCase
 {
     public function testPublish(): void
     {
-        $event = SimpleEvent::create()->set('name', 'homer');
+        $event = HealthCheckedV1::create()->set(HealthCheckedV1::MSG_FIELD, 'homer');
         $that = $this;
         $dispatcher = $this->locator->getDispatcher();
 
@@ -38,7 +37,7 @@ class SimpleEventBusTest extends AbstractBusTestCase
 
     public function testEventExecutionFailed(): void
     {
-        $event = FailingEvent::create()->set('name', 'homer');
+        $event = HealthCheckedV1::create()->set(HealthCheckedV1::MSG_FIELD, 'homer');
         $dispatcher = $this->locator->getDispatcher();
         $schemaId = $event::schema()->getId();
         $handled = false;
@@ -70,7 +69,7 @@ class SimpleEventBusTest extends AbstractBusTestCase
 
     public function testEventBusExceptionEvent()
     {
-        $event = FailingEvent::create()->set('name', 'marge');
+        $event = HealthCheckedV1::create()->set(HealthCheckedV1::MSG_FIELD, 'marge');
         $that = $this;
         $dispatcher = $this->locator->getDispatcher();
         $schemaId = $event::schema()->getId();
@@ -92,11 +91,10 @@ class SimpleEventBusTest extends AbstractBusTestCase
         $dispatcher->addListener(
             PbjxEvents::EVENT_BUS_EXCEPTION,
             function (BusExceptionEvent $exceptionEvent) use ($that, $event) {
-                /** @var EventExecutionFailedV1 $domainEvent */
                 $domainEvent = $exceptionEvent->getMessage();
                 $that->assertSame(
-                    $domainEvent->get('event')->get('name'),
-                    $event->get('name')
+                    $domainEvent->get(EventExecutionFailedV1::EVENT_FIELD)->get(HealthCheckedV1::MSG_FIELD),
+                    $event->get(HealthCheckedV1::MSG_FIELD)
                 );
             }
         );

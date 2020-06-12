@@ -7,13 +7,14 @@
     "php": ">=7.4",
     "ext-json": "*",
     "gdbots/query-parser": "2.x-dev",
-    "gdbots/schemas": "2.x-dev",
+    "gdbots/schemas": "^2.0",
     "psr/log": "^1",
     "symfony/event-dispatcher": "^5.1"
   },
   "require-dev": {
     "phpunit/phpunit": "^9.1",
     "aws/aws-sdk-php": "^3.138",
+    "gdbots/acme-schemas": "^2.0",
     "ruflin/elastica": "^7.0"
   },
   "autoload": {
