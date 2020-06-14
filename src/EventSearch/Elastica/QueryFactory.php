@@ -127,8 +127,8 @@ class QueryFactory
                     ->addFunction(FunctionScore::DECAY_EXPONENTIAL, [
                         IndexManager::OCCURRED_AT_ISO_FIELD_NAME => [
                             'origin' => $before->format(DateUtil::ISO8601_ZULU),
-                            'scale'  => '1w',
-                            'offset' => '2m',
+                            'scale'  => '7d',
+                            'offset' => '60d',
                             'decay'  => 0.1,
                         ],
                     ]);
