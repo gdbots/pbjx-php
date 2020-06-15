@@ -3,43 +3,32 @@ declare(strict_types=1);
 
 namespace Gdbots\Pbjx\Consumer;
 
-use Gdbots\Common\Util\ClassUtils;
-use Gdbots\Common\Util\NumberUtils;
-use Gdbots\Common\Util\StringUtils;
 use Gdbots\Pbj\Message;
+use Gdbots\Pbj\Util\ClassUtil;
+use Gdbots\Pbj\Util\NumberUtil;
+use Gdbots\Pbj\Util\StringUtil;
 use Gdbots\Pbjx\PbjxEvents;
 use Gdbots\Pbjx\ServiceLocator;
-use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
-use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
-use Gdbots\Schemas\Pbjx\Mixin\Request\Request;
-use Gdbots\Schemas\Pbjx\Mixin\Response\Response;
+use Gdbots\Schemas\Pbjx\Mixin\Command\CommandV1Mixin;
+use Gdbots\Schemas\Pbjx\Mixin\Event\EventV1Mixin;
+use Gdbots\Schemas\Pbjx\Mixin\Request\RequestV1Mixin;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Symfony\Contracts\EventDispatcher\Event;
 
 abstract class AbstractConsumer
 {
-    /** @var ServiceLocator */
-    protected $locator;
+    protected ServiceLocator $locator;
+    protected LoggerInterface $logger;
+    protected string $consumerName;
+    private bool $isRunning = false;
 
-    /** @var LoggerInterface */
-    protected $logger;
-
-    /* @var string */
-    protected $consumerName;
-
-    /* @var bool */
-    private $isRunning = false;
-
-    /**
-     * @param ServiceLocator  $locator
-     * @param LoggerInterface $logger
-     */
     public function __construct(ServiceLocator $locator, ?LoggerInterface $logger = null)
     {
         $this->locator = $locator;
         $this->logger = $logger ?: new NullLogger();
-        $this->consumerName = StringUtils::toSnakeFromCamel(
-            str_replace('Consumer', '', ClassUtils::getShortName($this))
+        $this->consumerName = StringUtil::toSnakeFromCamel(
+            str_replace('Consumer', '', ClassUtil::getShortName($this))
         );
     }
 
@@ -66,7 +55,7 @@ abstract class AbstractConsumer
         usleep($jitter * 1000);
 
         $maxRuntime += mt_rand(0, 20);
-        $maxRuntime = NumberUtils::bound($maxRuntime, 10, 86400);
+        $maxRuntime = NumberUtil::bound($maxRuntime, 10, 86400);
         $start = time();
         $this->logger->notice(
             sprintf('Starting [%s] consumer, will run for up to [%d] seconds.', $this->consumerName, $maxRuntime)
@@ -90,7 +79,7 @@ abstract class AbstractConsumer
                 $this->logger->critical(
                     sprintf(
                         '%s::Consumer [%s] caught an exception, shutting down.',
-                        ClassUtils::getShortName($e),
+                        ClassUtil::getShortName($e),
                         $this->consumerName
                     ),
                     [
@@ -99,7 +88,7 @@ abstract class AbstractConsumer
                     ]
                 );
 
-                $dispatcher->dispatch(PbjxEvents::CONSUMER_HANDLING_EXCEPTION);
+                $dispatcher->dispatch(new Event(), PbjxEvents::CONSUMER_HANDLING_EXCEPTION);
                 break;
             }
 
@@ -117,7 +106,7 @@ abstract class AbstractConsumer
         } while ($this->isRunning());
 
         $this->teardown();
-        $dispatcher->dispatch(PbjxEvents::CONSUMER_AFTER_TEARDOWN);
+        $dispatcher->dispatch(new Event(), PbjxEvents::CONSUMER_AFTER_TEARDOWN);
         $this->stop();
     }
 
@@ -130,9 +119,6 @@ abstract class AbstractConsumer
         $this->isRunning = false;
     }
 
-    /**
-     * @return bool
-     */
     final public function isRunning(): bool
     {
         return $this->isRunning;
@@ -163,59 +149,39 @@ abstract class AbstractConsumer
         // override for custom teardown.
     }
 
-    /**
-     * @param Message $message
-     *
-     * @return Response
-     */
-    final protected function handleMessage(Message $message): ?Response
+    final protected function handleMessage(Message $message): ?Message
     {
-        if ($message instanceof Command) {
+        if ($message::schema()->hasMixin(CommandV1Mixin::SCHEMA_CURIE)) {
             $this->handleCommand($message);
             return null;
         }
 
-        if ($message instanceof Event) {
+        if ($message::schema()->hasMixin(EventV1Mixin::SCHEMA_CURIE)) {
             $this->handleEvent($message);
             return null;
         }
 
-        if ($message instanceof Request) {
+        if ($message::schema()->hasMixin(RequestV1Mixin::SCHEMA_CURIE)) {
             return $this->handleRequest($message);
         }
     }
 
-    /**
-     * @param Command $command
-     */
-    private function handleCommand(Command $command): void
+    private function handleCommand(Message $command): void
     {
         $this->locator->getCommandBus()->receiveCommand($command);
     }
 
-    /**
-     * @param Event $event
-     */
-    private function handleEvent(Event $event): void
+    private function handleEvent(Message $event): void
     {
         $this->locator->getEventBus()->receiveEvent($event);
     }
 
-    /**
-     * @param Request $request
-     *
-     * @return Response
-     */
-    private function handleRequest(Request $request): Response
+    private function handleRequest(Message $request): Message
     {
         return $this->locator->getRequestBus()->receiveRequest($request);
     }
 
-    /**
-     * @param int   $signo
-     * @param mixed $signinfo
-     */
-    final public function handleSignals(int $signo, $signinfo = null)
+    final public function handleSignals(int $signo, $signinfo = null): void
     {
         switch ($signo) {
             case SIGINT:

@@ -3,61 +3,47 @@ declare(strict_types=1);
 
 namespace Gdbots\Pbjx\Exception;
 
+use Gdbots\Pbj\Message;
 use Gdbots\Schemas\Pbjx\Enum\Code;
-use Gdbots\Schemas\Pbjx\Mixin\Request\Request;
-use Gdbots\Schemas\Pbjx\Request\RequestFailedResponse;
+use Gdbots\Schemas\Pbjx\Mixin\Request\RequestV1Mixin;
+use Gdbots\Schemas\Pbjx\Request\RequestFailedResponseV1;
 
 final class RequestHandlingFailed extends \RuntimeException implements GdbotsPbjxException, \JsonSerializable
 {
-    /** @var RequestFailedResponse */
-    private $response;
+    private Message $response;
 
-    /**
-     * @param RequestFailedResponse $response
-     */
-    public function __construct(RequestFailedResponse $response)
+    public function __construct(Message $response)
     {
         $this->response = $response;
-        $ref = $response->get('ctx_request_ref') ?: $response->get('ctx_request')->get('request_id');
+        $ref = $response->get(RequestFailedResponseV1::CTX_REQUEST_REF_FIELD)
+            ?: $response->get(RequestFailedResponseV1::CTX_REQUEST_FIELD)->get(RequestV1Mixin::REQUEST_ID_FIELD);
         parent::__construct(
             sprintf(
                 'Request [%s] could not be handled.  %s::%s::%s',
                 $ref,
-                $this->response->get('error_name'),
-                $this->response->get('error_code'),
-                $this->response->get('error_message')
+                $this->response->get(RequestFailedResponseV1::ERROR_NAME_FIELD),
+                $this->response->get(RequestFailedResponseV1::ERROR_CODE_FIELD),
+                $this->response->get(RequestFailedResponseV1::ERROR_MESSAGE_FIELD)
             ),
-            $this->response->get('error_code', Code::UNKNOWN)
+            $this->response->get(RequestFailedResponseV1::ERROR_CODE_FIELD, Code::UNKNOWN)
         );
     }
 
-    /**
-     * @return RequestFailedResponse
-     */
-    public function getResponse(): RequestFailedResponse
+    public function getResponse(): Message
     {
         return $this->response;
     }
 
-    /**
-     * @return Request
-     */
-    public function getRequest(): Request
+    public function getRequest(): ?Message
     {
-        return $this->response->get('ctx_request');
+        return $this->response->get(RequestFailedResponseV1::CTX_REQUEST_FIELD);
     }
 
-    /**
-     * @return array
-     */
     public function jsonSerialize()
     {
         return $this->response->toArray();
     }
 
-    /**
-     * @return string
-     */
     public function __toString()
     {
         return json_encode($this->response, JSON_PRETTY_PRINT);

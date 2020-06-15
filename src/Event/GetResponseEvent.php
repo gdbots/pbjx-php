@@ -3,82 +3,85 @@ declare(strict_types=1);
 
 namespace Gdbots\Pbjx\Event;
 
+use Gdbots\Pbj\Message;
 use Gdbots\Pbjx\Exception\LogicException;
-use Gdbots\Schemas\Pbjx\Mixin\Request\Request;
-use Gdbots\Schemas\Pbjx\Mixin\Response\Response;
+use Gdbots\Schemas\Pbjx\Mixin\Response\ResponseV1Mixin;
+use Psr\EventDispatcher\StoppableEventInterface;
 
-class GetResponseEvent extends PbjxEvent
+class GetResponseEvent extends PbjxEvent implements StoppableEventInterface
 {
-    /** @var Request */
-    protected $message;
+    protected Message $message;
+    protected ?Message $response = null;
+    protected bool $propagationStopped = false;
 
-    /** @var Response */
-    protected $response;
-
-    /**
-     * @param Request $request
-     */
-    public function __construct(Request $request)
+    public function __construct(Message $request)
     {
         parent::__construct($request);
     }
 
-    /**
-     * @return Request
-     */
-    public function getRequest(): Request
+    public function getRequest(): Message
     {
         return $this->message;
     }
 
-    /**
-     * @return bool
-     */
     public function hasResponse(): bool
     {
         return null !== $this->response;
     }
 
-    /**
-     * @return Response
-     */
-    public function getResponse(): Response
+    public function getResponse(): Message
     {
         return $this->response;
     }
 
-    /**
-     * @param Response $response
-     *
-     * @throws LogicException
-     */
-    public function setResponse(Response $response): void
+    public function setResponse(Message $response): void
     {
         if ($this->hasResponse()) {
             throw new LogicException('Response can only be set one time.');
         }
 
-        if (!$response->has('ctx_request')) {
-            $response->set('ctx_request', $this->message);
+        if (!$response->has(ResponseV1Mixin::CTX_REQUEST_FIELD)) {
+            $response->set(ResponseV1Mixin::CTX_REQUEST_FIELD, $this->message);
         }
 
-        if (!$response->has('ctx_request_ref')) {
-            $response->set('ctx_request_ref', $this->message->generateMessageRef());
+        if (!$response->has(ResponseV1Mixin::CTX_REQUEST_REF_FIELD)) {
+            $response->set(ResponseV1Mixin::CTX_REQUEST_REF_FIELD, $this->message->generateMessageRef());
         }
 
-        if (!$response->has('ctx_correlator_ref') && $this->message->has('ctx_correlator_ref')) {
-            $response->set('ctx_correlator_ref', $this->message->get('ctx_correlator_ref'));
+        if (!$response->has(ResponseV1Mixin::CTX_CORRELATOR_REF_FIELD)
+            && $this->message->has(ResponseV1Mixin::CTX_CORRELATOR_REF_FIELD)
+        ) {
+            $response->set(
+                ResponseV1Mixin::CTX_CORRELATOR_REF_FIELD,
+                $this->message->get(ResponseV1Mixin::CTX_CORRELATOR_REF_FIELD)
+            );
+        }
+
+        if (!$response->has(ResponseV1Mixin::CTX_TENANT_ID_FIELD)
+            && $this->message->has(ResponseV1Mixin::CTX_TENANT_ID_FIELD)
+        ) {
+            $response->set(
+                ResponseV1Mixin::CTX_TENANT_ID_FIELD,
+                $this->message->get(ResponseV1Mixin::CTX_TENANT_ID_FIELD)
+            );
         }
 
         $this->response = $response;
         $this->stopPropagation();
     }
 
-    /**
-     * @return bool
-     */
     public function supportsRecursion(): bool
     {
         return false;
+    }
+
+    public function isPropagationStopped(): bool
+    {
+        return $this->propagationStopped;
+    }
+
+    public function stopPropagation(): void
+    {
+        $this->propagationStopped = true;
     }
 }

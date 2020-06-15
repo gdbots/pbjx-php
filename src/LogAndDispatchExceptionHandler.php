@@ -3,13 +3,9 @@ declare(strict_types=1);
 
 namespace Gdbots\Pbjx;
 
-use Gdbots\Common\Util\ClassUtils;
+use Gdbots\Pbj\Util\ClassUtil;
 use Gdbots\Pbjx\Event\BusExceptionEvent;
 use Gdbots\Pbjx\Event\TransportExceptionEvent;
-use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
-use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
-use Gdbots\Schemas\Pbjx\Mixin\Request\Request;
-use Gdbots\Schemas\Pbjx\Mixin\Response\Response;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use Psr\Log\NullLogger;
@@ -17,22 +13,11 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 class LogAndDispatchExceptionHandler implements ExceptionHandler
 {
-    /** @var EventDispatcherInterface */
-    private $dispatcher;
+    protected EventDispatcherInterface $dispatcher;
+    protected ServiceLocator $locator;
+    protected LoggerInterface $logger;
+    protected Pbjx $pbjx;
 
-    /** @var ServiceLocator */
-    private $locator;
-
-    /** @var LoggerInterface */
-    private $logger;
-
-    /** @var Pbjx */
-    private $pbjx;
-
-    /**
-     * @param ServiceLocator  $locator
-     * @param LoggerInterface $logger
-     */
     public function __construct(ServiceLocator $locator, ?LoggerInterface $logger = null)
     {
         $this->locator = $locator;
@@ -41,27 +26,18 @@ class LogAndDispatchExceptionHandler implements ExceptionHandler
         $this->pbjx = $this->locator->getPbjx();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function onCommandBusException(BusExceptionEvent $event): void
     {
         $this->logBusException($event);
-        $this->dispatcher->dispatch(PbjxEvents::COMMAND_BUS_EXCEPTION, $event);
+        $this->dispatcher->dispatch($event, PbjxEvents::COMMAND_BUS_EXCEPTION);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function onEventBusException(BusExceptionEvent $event): void
     {
         $this->logBusException($event);
-        $this->dispatcher->dispatch(PbjxEvents::EVENT_BUS_EXCEPTION, $event);
+        $this->dispatcher->dispatch($event, PbjxEvents::EVENT_BUS_EXCEPTION);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function onRequestBusException(BusExceptionEvent $event): void
     {
         // because we throw the exception in Pbjx::request
@@ -72,14 +48,11 @@ class LogAndDispatchExceptionHandler implements ExceptionHandler
         */
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function onTransportException(TransportExceptionEvent $event): void
     {
         $message = sprintf(
             '%s::Message [{pbj_schema}] could not be sent by [%s] transport.',
-            ClassUtils::getShortName($event->getException()),
+            ClassUtil::getShortName($event->getException()),
             $event->getTransportName()
         );
 
@@ -90,31 +63,15 @@ class LogAndDispatchExceptionHandler implements ExceptionHandler
             'transport'  => $event->getTransportName(),
         ]);
 
-        $this->dispatcher->dispatch(PbjxEvents::TRANSPORT_SEND_EXCEPTION, $event);
+        $this->dispatcher->dispatch($event, PbjxEvents::TRANSPORT_SEND_EXCEPTION);
     }
 
-    /**
-     * @param BusExceptionEvent $event
-     * @param string            $level
-     */
-    private function logBusException(BusExceptionEvent $event, $level = LogLevel::CRITICAL): void
+    private function logBusException(BusExceptionEvent $event, string $level = LogLevel::CRITICAL): void
     {
         $pbjMessage = $event->getMessage();
-        $exceptionShortName = ClassUtils::getShortName($event->getException());
+        $exceptionShortName = ClassUtil::getShortName($event->getException());
 
-        if ($pbjMessage instanceof Command) {
-            $type = 'Command';
-        } elseif ($pbjMessage instanceof Event) {
-            $type = 'Event';
-        } elseif ($pbjMessage instanceof Request) {
-            $type = 'Request';
-        } elseif ($pbjMessage instanceof Response) {
-            $type = 'Response';
-        } else {
-            $type = 'Message';
-        }
-
-        $message = sprintf('%s::%s [{pbj_schema}] could not be handled.', $exceptionShortName, $type);
+        $message = sprintf('%s [{pbj_schema}] could not be handled.', $exceptionShortName);
 
         $this->logger->log($level, $message, [
             'exception'  => $event->getException(),

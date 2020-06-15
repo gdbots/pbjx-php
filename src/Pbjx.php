@@ -10,10 +10,6 @@ use Gdbots\Pbjx\EventStore\EventStore;
 use Gdbots\Pbjx\Exception\GdbotsPbjxException;
 use Gdbots\Pbjx\Exception\InvalidArgumentException;
 use Gdbots\Pbjx\Exception\TooMuchRecursion;
-use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
-use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
-use Gdbots\Schemas\Pbjx\Mixin\Request\Request;
-use Gdbots\Schemas\Pbjx\Mixin\Response\Response;
 
 interface Pbjx
 {
@@ -21,10 +17,10 @@ interface Pbjx
      * Triggers lifecycle events using the dispatcher which will announce an event for each of:
      *
      * gdbots_pbjx.message.suffix
+     * mixin:v[MAJOR VERSION].suffix
+     * mixin.suffix
      * curie:v[MAJOR VERSION].suffix
      * curie.suffix
-     * mixinId.suffix (mixinId is the mixin with the major rev)
-     * mixinCurie.suffix (mixinCurie is the curie ONLY)
      *
      * When the recursive option is used, any fields with MessageType will also be run through
      * the trigger process.  The PbjxEvent object will have a reference to the parent event
@@ -35,14 +31,14 @@ interface Pbjx
      * @param PbjxEvent $event     An event object containing the message.
      * @param bool      $recursive If true, all field values with MessageType are also triggered.
      *
-     * @return Pbjx
+     * @return static
      *
      * @throws GdbotsPbjxException
      * @throws InvalidArgumentException
      * @throws TooMuchRecursion
      * @throws \Throwable
      */
-    public function trigger(Message $message, string $suffix, ?PbjxEvent $event = null, bool $recursive = true): Pbjx;
+    public function trigger(Message $message, string $suffix, ?PbjxEvent $event = null, bool $recursive = true): self;
 
     /**
      * Runs the "standard" lifecycle for a message prior to send, publish or request.
@@ -54,11 +50,11 @@ interface Pbjx
      * @param Message $message
      * @param bool    $recursive
      *
-     * @return Pbjx
+     * @return static
      *
      * @throws \Throwable
      */
-    public function triggerLifecycle(Message $message, bool $recursive = true): Pbjx;
+    public function triggerLifecycle(Message $message, bool $recursive = true): self;
 
     /**
      * Copies context fields (ip, user agent, correlator, etc.) from one message to another.
@@ -66,24 +62,24 @@ interface Pbjx
      * @param Message $from
      * @param Message $to
      *
-     * @return Pbjx
+     * @return static
      */
-    public function copyContext(Message $from, Message $to): Pbjx;
+    public function copyContext(Message $from, Message $to): self;
 
     /**
      * Processes a command asynchronously.
      *
-     * @param Command $command
+     * @param Message $command
      *
      * @throws GdbotsPbjxException
      * @throws \Throwable
      */
-    public function send(Command $command): void;
+    public function send(Message $command): void;
 
     /**
      * Schedules a command to send at a later time.
      *
-     * @param Command $command   The command to send.
+     * @param Message $command   The command to send.
      * @param int     $timestamp Unix timestamp (in the future) when the command should be sent.
      * @param string  $jobId     Optional identifier for the job (existing job with the same id will be canceled).
      *
@@ -92,7 +88,7 @@ interface Pbjx
      * @throws GdbotsPbjxException
      * @throws \Throwable
      */
-    public function sendAt(Command $command, int $timestamp, ?string $jobId = null): string;
+    public function sendAt(Message $command, int $timestamp, ?string $jobId = null): string;
 
     /**
      * Cancels previously scheduled commands by their job ids.
@@ -107,32 +103,26 @@ interface Pbjx
     /**
      * Publishes events to all subscribers.
      *
-     * @param Event $event
+     * @param Message $event
      *
      * @throws GdbotsPbjxException
      * @throws \Throwable
      */
-    public function publish(Event $event): void;
+    public function publish(Message $event): void;
 
     /**
      * Processes a request synchronously and returns the response.
      *
-     * @param Request $request
+     * @param Message $request
      *
-     * @return Response
+     * @return Message
      *
      * @throws GdbotsPbjxException
      * @throws \Throwable
      */
-    public function request(Request $request): Response;
+    public function request(Message $request): Message;
 
-    /**
-     * @return EventStore
-     */
     public function getEventStore(): EventStore;
 
-    /**
-     * @return EventSearch
-     */
     public function getEventSearch(): EventSearch;
 }

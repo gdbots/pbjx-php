@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Gdbots\Pbjx;
 
+use Gdbots\Pbj\Util\StringUtil;
 use Gdbots\Pbjx\Exception\InvalidArgumentException;
 
 /**
@@ -23,7 +24,7 @@ final class PbjxToken implements \JsonSerializable
      *
      * @var int
      */
-    public static $timestamp = null;
+    public static ?int $timestamp = null;
 
     /**
      * The algorithm and type of encryption scheme to use when signing
@@ -53,45 +54,13 @@ final class PbjxToken implements \JsonSerializable
      *
      * @var string
      */
-    private $token;
-
-    /** @var array */
-    private $header;
-
-    /** @var array */
-    private $payload;
-
-    /** @var string */
-    private $signature;
+    private string $token;
+    private array $header;
+    private array $payload;
+    private string $signature;
 
     private function __construct()
     {
-    }
-
-    /**
-     * @param string $input
-     *
-     * @return string
-     */
-    public static function urlsafeB64Decode(string $input): string
-    {
-        $remainder = strlen($input) % 4;
-        if ($remainder) {
-            $padlen = 4 - $remainder;
-            $input .= str_repeat('=', $padlen);
-        }
-
-        return base64_decode(strtr($input, '-_', '+/'));
-    }
-
-    /**
-     * @param string $input
-     *
-     * @return string
-     */
-    public static function urlsafeB64Encode(string $input): string
-    {
-        return str_replace('=', '', strtr(base64_encode($input), '+/', '-_'));
     }
 
     /**
@@ -125,12 +94,12 @@ final class PbjxToken implements \JsonSerializable
         ];
 
         $stringToSign = implode('.', [
-            self::urlsafeB64Encode(json_encode($header)),
-            self::urlsafeB64Encode(json_encode($payload, JSON_UNESCAPED_SLASHES)),
+            StringUtil::urlsafeB64Encode(json_encode($header)),
+            StringUtil::urlsafeB64Encode(json_encode($payload, JSON_UNESCAPED_SLASHES)),
         ]);
 
         $binarySignature = hash_hmac(self::HASH_HMAC_ALGO, $stringToSign, $secret, true);
-        $signature = self::urlsafeB64Encode($binarySignature);
+        $signature = StringUtil::urlsafeB64Encode($binarySignature);
         $instance = new self();
         $instance->token = "{$stringToSign}.{$signature}";
         $instance->header = $header;
@@ -141,13 +110,6 @@ final class PbjxToken implements \JsonSerializable
         return $instance;
     }
 
-    /**
-     * @param string $token
-     *
-     * @return self
-     *
-     * @throws InvalidArgumentException
-     */
     public static function fromString(string $token): self
     {
         $instance = new self();
@@ -158,9 +120,9 @@ final class PbjxToken implements \JsonSerializable
             throw new InvalidArgumentException('PbjxToken string is invalid.');
         }
 
-        $instance->header = json_decode(self::urlsafeB64Decode($parsed[0]), true);
-        $instance->payload = json_decode(self::urlsafeB64Decode($parsed[1]), true);
-        $instance->signature = self::urlsafeB64Decode($parsed[2]);
+        $instance->header = json_decode(StringUtil::urlsafeB64Decode($parsed[0]), true);
+        $instance->payload = json_decode(StringUtil::urlsafeB64Decode($parsed[1]), true);
+        $instance->signature = StringUtil::urlsafeB64Decode($parsed[2]);
         $instance->checkClaims();
 
         $instance->payload['exp'] = (int)$instance->payload['exp'];
@@ -169,33 +131,21 @@ final class PbjxToken implements \JsonSerializable
         return $instance;
     }
 
-    /**
-     * @return array
-     */
     public function getHeader(): array
     {
         return $this->header;
     }
 
-    /**
-     * @return array
-     */
     public function getPayload(): array
     {
         return $this->payload;
     }
 
-    /**
-     * @return string
-     */
     public function getSignature(): string
     {
         return $this->signature;
     }
 
-    /**
-     * @return string
-     */
     public function getKid(): string
     {
         return $this->header['kid'];
@@ -259,43 +209,26 @@ final class PbjxToken implements \JsonSerializable
         }
     }
 
-    /**
-     * @param PbjxToken $token
-     *
-     * @return bool
-     */
     public function equals(PbjxToken $token): bool
     {
         return $token->token === $this->token;
     }
 
-    /**
-     * @return string
-     */
     public function toString(): string
     {
         return $this->token;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function __toString()
     {
         return $this->toString();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function jsonSerialize()
     {
         return $this->toString();
     }
 
-    /**
-     * @throws InvalidArgumentException
-     */
     private function checkClaims(): void
     {
         if (!is_array($this->header)) {

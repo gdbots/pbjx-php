@@ -2,13 +2,11 @@ pbjx-php
 =============
 
 [![Build Status](https://api.travis-ci.org/gdbots/pbjx-php.svg)](https://travis-ci.org/gdbots/pbjx-php)
-[![Code Climate](https://codeclimate.com/github/gdbots/pbjx-php/badges/gpa.svg)](https://codeclimate.com/github/gdbots/pbjx-php)
-[![Test Coverage](https://codeclimate.com/github/gdbots/pbjx-php/badges/coverage.svg)](https://codeclimate.com/github/gdbots/pbjx-php/coverage)
 
 This library provides the messaging tools for [Pbj](https://github.com/gdbots/pbj-php).
 
-> __Pbj__ stands for "Private Business Json".  
-> __Pbjc__ stands for "Private Business Json Compiler", a tool that creates php classes from a schema configuration.  
+> __Pbj__ stands for "Private Business Json".
+> __Pbjc__ stands for "Private Business Json Compiler", a tool that creates php classes from a schema configuration.
 > __Pbjx__ stands for "Private Business Json Exchanger", a tool that exchanges pbj through various transports and storage engines.
 
 Using this library assumes that you've already created and compiled your own pbj classes using the
@@ -37,7 +35,6 @@ __Available transports:__
 
 + AWS Firehose
 + AWS Kinesis
-+ Gearman
 + In Memory
 
 ## Routers
@@ -47,12 +44,7 @@ For example:
 ```php
 interface Router
 {
-    /**
-     * @param Command $command
-     *
-     * @return string
-     */
-    public function forCommand(Command $command): string;
+    public function forCommand(Message $command): string;
 
     ...
 }
@@ -64,9 +56,9 @@ Processes a command (asynchronously if transport supports it).
 
 When using the send method it implies that there is a single handler for that command, stated another way... if a "PublishArticle" command exists, there __MUST__ be a service that handles that command.
 
-> In the __gdbots/pbjx-bundle-php__ the `SchemaCurie` is used to derive the service id.  If not found in the Container, a guesser is used to attempt to find the handler using PSR conventions.
+> In the __gdbots/pbjx-bundle-php__ the `SchemaCurie` is used to derive the service id.
 
-All command handlers MUST implement `Gdbots\Pbjx\CommandHandler`.  For convenience a `CommandHandlerTrait` is provided which implements the required method and internally calls your "handle" method which allows for explicit type hinting in your class.
+All command handlers MUST implement `Gdbots\Pbjx\CommandHandler`.
 
 __Example handler for a "PublishArticle" command:__
 
@@ -76,13 +68,7 @@ declare(strict_types = 1);
 
 final class PublishArticleHandler implements CommandHandler
 {
-    use CommandHandlerTrait;
-
-    /**
-     * @param PublishArticle $command
-     * @param Pbjx           $pbjx
-     */
-    protected function handle(PublishArticle $command, Pbjx $pbjx): void
+    protected function handleCommand(Message $command, Pbjx $pbjx): void
     {
         // handle the command here
     }
@@ -125,43 +111,15 @@ Pbjx published events are distinct from application or "lifecycle" events.  Thes
 
 Subscribing to a Pbjx published event requires that you know the `SchemaCurie` of the event or its mixins.
 
-Continuing the example above, let's imagine that `PublishArticleHandler`  created and published an event called `ArticlePublished` and its curie was __"acme:blog:event:article-published"__.  The pbjx SimpleEventBus (default implementation) would do this:
-
-```php
-$event->freeze();
-$schema = $event::schema();
-$curie = $schema->getCurie();
-
-$vendor = $curie->getVendor();
-$package = $curie->getPackage();
-$category = $curie->getCategory();
-
-foreach ($schema->getMixinIds() as $mixinId) {
-    $this->dispatch($mixinId, $event);
-}
-
-foreach ($schema->getMixinCuries() as $mixinCurie) {
-    $this->dispatch($mixinCurie, $event);
-}
-
-$this->dispatch($schema->getCurieMajor(), $event);
-$this->dispatch($curie->toString(), $event);
-
-$this->dispatch(sprintf('%s:%s:%s:*', $vendor, $package, $category), $event);
-$this->dispatch(sprintf('%s:%s:*', $vendor, $package), $event);
-$this->dispatch(sprintf('%s:*', $vendor), $event);
-$this->dispatch('*', $event);
-```
-In your subscriber you could listen to any of:
+Continuing the example above, let's imagine that `PublishArticleHandler`  created and published an event called `ArticlePublished` and its curie was __"acme:blog:event:article-published"__. In your subscriber you could listen to any of:
 
 - __acme:blog:event:article-published:v1__
 - __acme:blog:event:article-published__
-- __acme:blog:event:*__ _all events in "acme:blog:event" namespace_
 - __acme:blog:*__ _all events in "acme:blog" namespace_
-- __acme:*__ _all events in "acme" namespace_
 - __*__ _all events_
 
 > And any of its mixins:
+- vendor:package:mixin:some-event:v1
 - vendor:package:mixin:some-event
 
 __The method signature of all pbjx event subscribers should be the interface of the event and then the Pbjx service itself.__
@@ -176,18 +134,11 @@ use Gdbots\Pbjx\EventSubscriber;
 
 final class MyEventSubscriber implements EventSubscriber
 {
-    /**
-     * @param ArticlePublished $event
-     * @param Pbjx             $pbjx
-     */
-    public function onArticlePublished(ArticlePublished $event, Pbjx $pbjx): void
+    public function onArticlePublished(Message $event, Pbjx $pbjx): void
     {
         // do something with this event.
     }
 
-    /**
-     * @return array
-     */
     public static function getSubscribedEvents()
     {
         return [
@@ -202,7 +153,7 @@ When subscribing to multiple events you can use the convenient `EventSubscriberT
 # Pbjx::request
 Processes a request synchronously and returns the response.  If the transport supports it, it may not be running in the current process (gearman for example).  This is similar to "send" above but in this case, a response __MUST__ be returned.
 
-All request handlers MUST implement `Gdbots\Pbjx\RequestHandler`.  For convenience a `RequestHandlerTrait` is provided which implements the required method and internally calls your "handle" method which allows for explicit type hinting in your class.
+All request handlers MUST implement `Gdbots\Pbjx\RequestHandler`.
 
 __Example handler for a "GetArticleRequest":__
 
@@ -212,13 +163,7 @@ declare(strict_types = 1);
 
 final class GetArticleRequestHandler implements RequestHandler
 {
-    use RequestHandlerTrait;
-
-    /**
-     * @param GetArticleRequest $request
-     * @param Pbjx              $pbjx
-     */
-    protected function handle(GetArticleRequest $request, Pbjx $pbjx): GetArticleResponse
+    protected function handleRequest(Message $request, Pbjx $pbjx): Message
     {
         $response = GetArticleResponseV1::create();
         // imaginary repository
@@ -257,7 +202,7 @@ final class ArticleController extends Controller
 
 # Pbjx Lifecycle Events
 When a message is processed (send, publish, request) it goes through a lifecycle which allows for "in process"
-modification and validation.  The method of subscribing to these events is similar to how a Symfony event
+modification and validation. The method of subscribing to these events is similar to how a Symfony event
 subscriber/listener works and can stop propagation.
 
 The lifecycle event names (what your subscriber/listener must be bound to) all have a standard format, _e.g: "gdbots:pbjx:mixin:command.bind"_.  These are named in the same way that the `SimpleEventBus` names them.  See `SimplePbjx::trigger` method for insight into how this is done.
@@ -289,7 +234,7 @@ Once you've decided that a message is going to be processed you can perform addi
 # EventStore
 Publishing events and storing/retrieving them is such a common need that we added the `Pbjx::getEventStore` method to make the service available without any extra wiring of services to handlers, subscribers, etc.
 
-The service will not be instantiated until you call the method so there's no performance penalty for having this capability built into Pbjx.  At this time the only available implementation is DynamoDb.
+The service will not be instantiated until you call the method so there's no performance penalty for having this capability built into Pbjx. At this time the only available implementation is DynamoDb.
 
 ## Key concepts of the EventStore
 
@@ -316,27 +261,27 @@ It may also be desirable to only use parts of the stream id (e.g. topic) for bro
 
 Using a partition and optionally a sub-partition makes it possible to group all of those records together in storage and also guarantee their sequence is exactly in the order that they were added to the stream.
 
-> StreamId Format: topic:partition:sub-partition
+> StreamId Format: vendor:topic:partition:sub-partition
 
 __Examples:__
 
-"twitter.timeline" _(topic)_, "homer-simpson" _(partition)_, "yyyymm" _(sub-partition)_
+"twitter" _(vendor)_, "user.timeline" _(topic)_, "homer-simpson" _(partition)_, "yyyymm" _(sub-partition)_
 
-> twitter.timeline:homer-simpson:201501  
-> twitter.timeline:homer-simpson:201502  
-> twitter.timeline:homer-simpson:201503
+> twitter:user.timeline:homer-simpson:201501
+> twitter:user.timeline:homer-simpson:201502
+> twitter:user.timeline:homer-simpson:201503
 
-"bank-account" _(topic)_, "homer-simpson" _(partition)_
+"acme" _(vendor)_, "bank-account" _(topic)_, "homer-simpson" _(partition)_
 
-> bank-account:homer-simpson
+> acme:bank-account:homer-simpson
 
-"poll.votes" _(topic)_, "batman-vs-superman" _(partition)_, "yyyymm.[0-9a-f][0-9a-f]" _(sub-partition)_
+"acme" _(vendor)_, "poll.votes" _(topic)_, "batman-vs-superman" _(partition)_, "yyyymm.[0-9a-f][0-9a-f]" _(sub-partition)_
 
 Note the sub-partition here is two hexidecimal digits allowing for 256 separate stream ids.  Useful when you need to avoid hot keys and ordering in the overall partition isn't important.
 
-> poll.votes:batman-vs-superman:20160301.0a  
-> poll.votes:batman-vs-superman:20160301.1b  
-> poll.votes:batman-vs-superman:20160301.c2
+> acme:poll.votes:batman-vs-superman:20160301.0a
+> acme:poll.votes:batman-vs-superman:20160301.1b
+> acme:poll.votes:batman-vs-superman:20160301.c2
 
 ### StreamSlice
 Getting data out of the EventStore is done via piping from a single stream or ALL streams or by getting a slice of a stream.  Think of the StreamSlice as the php function [array_slice](http://php.net/manual/en/function.array-slice.php).  You can get slices forward and backward from a stream and the events are ordered by the `occurred_at` field.
@@ -350,20 +295,14 @@ declare(strict_types = 1);
 
 final class PublishArticleHandler implements CommandHandler
 {
-    use CommandHandlerTrait;
-
-    /**
-     * @param PublishArticle $command
-     * @param Pbjx           $pbjx
-     */
-    protected function handle(PublishArticle $command, Pbjx $pbjx): void
+    protected function handleCommand(Message $command, Pbjx $pbjx): void
     {
         // in this example it's ultra basic, create the event and push it to a stream
         $event = ArticlePublishedV1::create()->set('article_id', $command->get('article_id'));
         // copies contextual data from the previous message (ctx_* fields)
         $pbjx->copyContext($command, $event);
 
-        $streamId = StreamId::fromString(sprintf('article.history:%s', $command->get('article_id')));
+        $streamId = StreamId::fromString(sprintf('acme:article:%s', $command->get('article_id')));
         $pbjx->getEventStore()->putEvents($streamId, [$event]);
 
         // after the event is persisted it will be published either via a
@@ -372,7 +311,7 @@ final class PublishArticleHandler implements CommandHandler
     }
 }
 ```
-One thing to note is that the state of the article was not modified here, we just put an event on a stream.  An event subscriber would listen for those events and then update the article.  That is just one way to handle state updates.
+One thing to note is that the state of the article was not modified here, we just put an event on a stream.  An event subscriber would listen for those events and then update the article. That is just one way to handle state updates.
 
 > This design implies [eventual consistency](https://en.wikipedia.org/wiki/Eventual_consistency).
 
@@ -382,16 +321,10 @@ Storing and retrieving events are all handled by the EventStore but often times 
 
 Similar to the EventStore the EventSearch service is only instantiated if requested.  The only implementation we have right now is ElasticSearch.  To use this feature, the events you want to index must be using the __"gdbots:pbjx:mixin:indexed"__ mixin.  When using the __gdbots/pbjx-bundle-php__ you can enable the indexing with a simple configuration option.
 
-Searching events is generally done in a request handler.  Here is an example of searching events:
+Searching events is generally done in a request handler. Here is an example of searching events:
 
 ```php
-/**
- * @param SearchCommentsRequest $request
- * @param Pbjx                  $pbjx
- *
- * @return SearchCommentsResponse
- */
-protected function handle(SearchCommentsRequest $request, Pbjx $pbjx): SearchCommentsResponse
+protected function handleRequest(Message $request, Pbjx $pbjx): Message
 {
     $parsedQuery = ParsedQuery::fromArray(json_decode($request->get('parsed_query_json', '{}'), true));
 

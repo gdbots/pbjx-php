@@ -14,10 +14,6 @@ use Psr\Log\LoggerInterface;
  */
 final class KinesisConsumer extends AbstractConsumer
 {
-    /**
-     * @param ServiceLocator  $locator
-     * @param LoggerInterface $logger
-     */
     public function __construct(ServiceLocator $locator, ?LoggerInterface $logger = null)
     {
         parent::__construct($locator, $logger);

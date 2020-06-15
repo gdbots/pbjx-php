@@ -5,7 +5,7 @@ namespace Gdbots\Pbjx\Scheduler\DynamoDb;
 
 use Aws\DynamoDb\DynamoDbClient;
 use Aws\DynamoDb\Exception\DynamoDbException;
-use Gdbots\Common\Util\ClassUtils;
+use Gdbots\Pbj\Util\ClassUtil;
 use Gdbots\Pbjx\Exception\SchedulerOperationFailed;
 use Gdbots\Schemas\Pbjx\Enum\Code;
 
@@ -48,10 +48,7 @@ final class SchedulerTable
                     'Enabled'       => true,
                     'AttributeName' => self::TTL_KEY_NAME,
                 ],
-                'ProvisionedThroughput'   => [
-                    'ReadCapacityUnits'  => 2,
-                    'WriteCapacityUnits' => 2,
-                ],
+                'BillingMode'             => 'PAY_PER_REQUEST',
             ]);
 
             $client->waitUntil('TableExists', ['TableName' => $tableName]);
@@ -59,7 +56,7 @@ final class SchedulerTable
             throw new SchedulerOperationFailed(
                 sprintf(
                     '%s::Unable to create table [%s] in region [%s].',
-                    ClassUtils::getShortName($this),
+                    ClassUtil::getShortName($this),
                     $tableName,
                     $client->getRegion()
                 ),
@@ -88,7 +85,7 @@ final class SchedulerTable
             throw new SchedulerOperationFailed(
                 sprintf(
                     '%s::Unable to describe table [%s] in region [%s].',
-                    ClassUtils::getShortName($this),
+                    ClassUtil::getShortName($this),
                     $tableName,
                     $client->getRegion()
                 ),

@@ -3,30 +3,29 @@ declare(strict_types=1);
 
 namespace Gdbots\Pbjx;
 
-use Gdbots\Schemas\Pbjx\Mixin\Request\Request;
-use Gdbots\Schemas\Pbjx\Mixin\Response\Response;
+use Gdbots\Pbj\Message;
 
 interface RequestBus
 {
     /**
      * Processes a request and returns the response from the handler.
      *
-     * @param Request $request
+     * @param Message $request
      *
-     * @return Response
+     * @return Message
      */
-    public function request(Request $request): Response;
+    public function request(Message $request): Message;
 
     /**
      * Processes a request directly.  DO NOT use this method in the
      * application as this is intended for the transports, consumers
      * and workers of the Pbjx system.
      *
+     * @param Message $request
+     *
+     * @return Message
+     *
      * @internal
-     *
-     * @param Request $request
-     *
-     * @return Response
      */
-    public function receiveRequest(Request $request): Response;
+    public function receiveRequest(Message $request): Message;
 }

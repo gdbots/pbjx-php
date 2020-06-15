@@ -3,38 +3,25 @@ declare(strict_types=1);
 
 namespace Gdbots\Pbjx;
 
-use Gdbots\Common\Util\ClassUtils;
+use Gdbots\Pbj\Message;
+use Gdbots\Pbj\Util\ClassUtil;
 use Gdbots\Pbjx\Transport\Transport;
 use Gdbots\Schemas\Pbjx\Enum\Code;
-use Gdbots\Schemas\Pbjx\Mixin\Request\Request;
-use Gdbots\Schemas\Pbjx\Mixin\Response\Response;
+use Gdbots\Schemas\Pbjx\Mixin\Response\ResponseV1Mixin;
 use Gdbots\Schemas\Pbjx\Request\RequestFailedResponseV1;
 
 final class SimpleRequestBus implements RequestBus
 {
-    /** @var ServiceLocator */
-    private $locator;
+    private ServiceLocator $locator;
+    private Transport $transport;
 
-    /** @var Transport */
-    private $transport;
-
-    /** @var RequestHandler[] */
-    private $handlers = [];
-
-    /**
-     * @param ServiceLocator $locator
-     * @param Transport      $transport
-     */
     public function __construct(ServiceLocator $locator, Transport $transport)
     {
         $this->locator = $locator;
         $this->transport = $transport;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function request(Request $request): Response
+    public function request(Message $request): Message
     {
         return $this->transport->sendRequest($request->freeze());
     }
@@ -45,29 +32,26 @@ final class SimpleRequestBus implements RequestBus
      *
      * {@inheritdoc}
      */
-    public function receiveRequest(Request $request): Response
+    public function receiveRequest(Message $request): Message
     {
-        $curie = $request::schema()->getCurie();
-        $curieStr = $curie->toString();
-
-        if (isset($this->handlers[$curieStr])) {
-            $handler = $this->handlers[$curieStr];
-        } else {
-            try {
-                $handler = $this->locator->getRequestHandler($curie);
-            } catch (\Throwable $e) {
-                return $this->createResponseForFailedRequest($request, $e);
-            }
-
-            $this->handlers[$curieStr] = $handler;
-        }
-
         try {
             $request->freeze();
+            $handler = $this->locator->getRequestHandler($request::schema()->getCurie());
             $response = $handler->handleRequest($request, $this->locator->getPbjx());
-            $response->set('ctx_request_ref', $request->generateMessageRef());
-            if ($request->has('ctx_correlator_ref')) {
-                $response->set('ctx_correlator_ref', $request->get('ctx_correlator_ref'));
+            $response->set(ResponseV1Mixin::CTX_REQUEST_REF_FIELD, $request->generateMessageRef());
+
+            if ($request->has(ResponseV1Mixin::CTX_CORRELATOR_REF_FIELD)) {
+                $response->set(
+                    ResponseV1Mixin::CTX_CORRELATOR_REF_FIELD,
+                    $request->get(ResponseV1Mixin::CTX_CORRELATOR_REF_FIELD)
+                );
+            }
+
+            if ($request->has(ResponseV1Mixin::CTX_TENANT_ID_FIELD)) {
+                $response->set(
+                    ResponseV1Mixin::CTX_TENANT_ID_FIELD,
+                    $request->get(ResponseV1Mixin::CTX_TENANT_ID_FIELD)
+                );
             }
 
             return $response;
@@ -76,30 +60,37 @@ final class SimpleRequestBus implements RequestBus
         }
     }
 
-    /**
-     * @param Request    $request
-     * @param \Throwable $exception
-     *
-     * @return Response
-     */
-    private function createResponseForFailedRequest(Request $request, \Throwable $exception): Response
+    protected function createResponseForFailedRequest(Message $request, \Throwable $exception): Message
     {
         $code = $exception->getCode() > 0 ? $exception->getCode() : Code::UNKNOWN;
 
         $response = RequestFailedResponseV1::create()
-            ->set('ctx_request_ref', $request->generateMessageRef())
-            ->set('ctx_request', $request)
-            ->set('error_code', $code)
-            ->set('error_name', ClassUtils::getShortName($exception))
-            ->set('error_message', substr($exception->getMessage(), 0, 2048))
-            ->set('stack_trace', $exception->getTraceAsString());
+            ->set(RequestFailedResponseV1::CTX_REQUEST_REF_FIELD, $request->generateMessageRef())
+            ->set(RequestFailedResponseV1::CTX_REQUEST_FIELD, $request)
+            ->set(RequestFailedResponseV1::ERROR_CODE_FIELD, $code)
+            ->set(RequestFailedResponseV1::ERROR_NAME_FIELD, ClassUtil::getShortName($exception))
+            ->set(RequestFailedResponseV1::ERROR_MESSAGE_FIELD, substr($exception->getMessage(), 0, 2048))
+            ->set(RequestFailedResponseV1::STACK_TRACE_FIELD, $exception->getTraceAsString());
 
         if ($exception->getPrevious()) {
-            $response->set('prev_error_message', substr($exception->getPrevious()->getMessage(), 0, 2048));
+            $response->set(
+                RequestFailedResponseV1::PREV_ERROR_MESSAGE_FIELD,
+                substr($exception->getPrevious()->getMessage(), 0, 2048)
+            );
         }
 
-        if ($request->has('ctx_correlator_ref')) {
-            $response->set('ctx_correlator_ref', $request->get('ctx_correlator_ref'));
+        if ($request->has(RequestFailedResponseV1::CTX_CORRELATOR_REF_FIELD)) {
+            $response->set(
+                RequestFailedResponseV1::CTX_CORRELATOR_REF_FIELD,
+                $request->get(RequestFailedResponseV1::CTX_CORRELATOR_REF_FIELD)
+            );
+        }
+
+        if ($request->has(RequestFailedResponseV1::CTX_TENANT_ID_FIELD)) {
+            $response->set(
+                RequestFailedResponseV1::CTX_TENANT_ID_FIELD,
+                $request->get(RequestFailedResponseV1::CTX_TENANT_ID_FIELD)
+            );
         }
 
         return $response;

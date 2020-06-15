@@ -3,36 +3,39 @@ declare(strict_types=1);
 
 namespace Gdbots\Tests\Pbjx;
 
-use Gdbots\Tests\Pbjx\Fixtures\GetTimeRequest;
-use Gdbots\Tests\Pbjx\Fixtures\GetTimeRequestHandler;
-use Gdbots\Tests\Pbjx\Fixtures\GetTimeResponse;
+use Gdbots\Pbj\SchemaCurie;
+use Gdbots\Schemas\Pbjx\Request\EchoRequestV1;
+use Gdbots\Schemas\Pbjx\Request\EchoResponseV1;
+use Gdbots\Tests\Pbjx\Fixtures\EchoRequestHandler;
 
 class SimpleRequestBusTest extends AbstractBusTestCase
 {
-    protected function setup()
+    protected function setUp(): void
     {
-        parent::setup();
+        parent::setUp();
         $this->locator->registerRequestHandler(
-            GetTimeRequest::schema()->getCurie(),
-            new GetTimeRequestHandler()
+            SchemaCurie::fromString(EchoRequestV1::SCHEMA_CURIE),
+            new EchoRequestHandler()
         );
     }
 
     public function testRequest()
     {
-        $request = GetTimeRequest::create();
-        /** @var \DateTime $expected */
-        $expected = $request->get('occurred_at')->toDateTime();
-        /** @var GetTimeResponse $response */
+        $request = EchoRequestV1::create();
+        /** @var \DateTimeInterface $expected */
+        $expected = $request->get(EchoRequestV1::OCCURRED_AT_FIELD)->toDateTime();
         $response = $this->pbjx->request($request);
-        $this->assertInstanceOf('Gdbots\Tests\Pbjx\Fixtures\GetTimeResponse', $response);
-        $this->assertSame($expected->format('U.u'), $response->get('time')->format('U.u'));
+        $this->assertInstanceOf(EchoResponseV1::class, $response);
+        $this->assertSame(
+            $expected->format('U.u'),
+            $response->get(EchoResponseV1::MSG_FIELD)
+        );
     }
 
     public function testRequestHandlingFailed()
     {
-        $request = GetTimeRequest::create();
-        $request->set('test_fail', true);
+        $request = EchoRequestV1::create();
+        $request->set(EchoRequestV1::MSG_FIELD, 'fail');
 
         try {
             $this->pbjx->request($request);

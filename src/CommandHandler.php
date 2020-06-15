@@ -3,18 +3,18 @@ declare(strict_types=1);
 
 namespace Gdbots\Pbjx;
 
+use Gdbots\Pbj\Message;
 use Gdbots\Pbjx\DependencyInjection\PbjxHandler;
 use Gdbots\Pbjx\Exception\GdbotsPbjxException;
-use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
 
 interface CommandHandler extends PbjxHandler
 {
     /**
-     * @param Command $command
+     * @param Message $command
      * @param Pbjx    $pbjx
      *
      * @throws GdbotsPbjxException
-     * @throws \Exception
+     * @throws \Throwable
      */
-    public function handleCommand(Command $command, Pbjx $pbjx): void;
+    public function handleCommand(Message $command, Pbjx $pbjx): void;
 }

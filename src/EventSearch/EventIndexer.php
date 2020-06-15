@@ -3,55 +3,27 @@ declare(strict_types=1);
 
 namespace Gdbots\Pbjx\EventSearch;
 
+use Gdbots\Pbj\Message;
 use Gdbots\Pbjx\EventSubscriber;
 use Gdbots\Pbjx\Pbjx;
-use Gdbots\Schemas\Pbjx\Mixin\Indexed\Indexed;
+use Gdbots\Schemas\Pbjx\Mixin\Indexed\IndexedV1Mixin;
 
 final class EventIndexer implements EventSubscriber
 {
-    /**
-     * The EventSearch will need context when indexing an
-     * event.  The "tenant_id" field can be extracted
-     * from the message if it exists and put it into the
-     * context object.
-     *
-     * @var string
-     */
-    private $tenantIdField = null;
-
-    /**
-     * @param string $tenantIdField
-     */
-    public function __construct(?string $tenantIdField = null)
+    public static function getSubscribedEvents()
     {
-        $this->tenantIdField = $tenantIdField;
+        return [
+            IndexedV1Mixin::SCHEMA_CURIE => 'onIndexed',
+        ];
     }
 
-    /**
-     * @param Indexed $event
-     * @param Pbjx    $pbjx
-     */
-    public function onIndexed(Indexed $event, Pbjx $pbjx): void
+    public function onIndexed(Message $event, Pbjx $pbjx): void
     {
         if ($event->isReplay()) {
             return;
         }
 
-        $context = [];
-        if (null !== $this->tenantIdField && $event->has($this->tenantIdField)) {
-            $context['tenant_id'] = (string)$event->get($this->tenantIdField);
-        }
-
+        $context = ['causator' => $event];
         $pbjx->getEventSearch()->indexEvents([$event], $context);
-    }
-
-    /**
-     * @return array
-     */
-    public static function getSubscribedEvents()
-    {
-        return [
-            'gdbots:pbjx:mixin:indexed' => 'onIndexed',
-        ];
     }
 }

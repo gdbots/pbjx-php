@@ -4,23 +4,14 @@ declare(strict_types=1);
 namespace Gdbots\Pbjx\Transport;
 
 use Aws\Firehose\FirehoseClient;
+use Gdbots\Pbj\Message;
 use Gdbots\Pbjx\ServiceLocator;
-use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
-use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
 
 final class FirehoseTransport extends AbstractTransport
 {
-    /** @var FirehoseClient */
-    private $client;
+    private FirehoseClient $client;
+    private Router $router;
 
-    /** @var Router */
-    private $router;
-
-    /**
-     * @param ServiceLocator $locator
-     * @param FirehoseClient $client
-     * @param Router         $router
-     */
     public function __construct(ServiceLocator $locator, FirehoseClient $client, Router $router)
     {
         parent::__construct($locator);
@@ -28,38 +19,29 @@ final class FirehoseTransport extends AbstractTransport
         $this->router = $router;
     }
 
-    /**
-     * @see FirehoseClient::putRecord
-     *
-     * @param Command $command
-     *
-     * @throws \Exception
-     */
-    protected function doSendCommand(Command $command): void
+    protected function doSendCommand(Message $command): void
     {
-        $envelope = new TransportEnvelope($command, 'json');
-        $this->client->putRecord([
-            'DeliveryStreamName' => $this->router->forCommand($command),
-            'Record'             => [
-                // line break here is VERY important - produces json line delimited records
-                // when firehose delivers to s3, es, etc.
-                'Data' => $envelope->toString() . PHP_EOL,
-            ],
-        ]);
+        $this->putRecord($command, $this->router->forCommand($command));
+    }
+
+    protected function doSendEvent(Message $event): void
+    {
+        $this->putRecord($event, $this->router->forEvent($event));
     }
 
     /**
+     * @param Message $message
+     * @param string  $deliveryStreamName
+     *
+     * @throws \Throwable
+     *
      * @see FirehoseClient::putRecord
-     *
-     * @param Event $event
-     *
-     * @throws \Exception
      */
-    protected function doSendEvent(Event $event): void
+    protected function putRecord(Message $message, string $deliveryStreamName): void
     {
-        $envelope = new TransportEnvelope($event, 'json');
+        $envelope = new TransportEnvelope($message, TransportEnvelope::SERIALIZER_JSON);
         $this->client->putRecord([
-            'DeliveryStreamName' => $this->router->forEvent($event),
+            'DeliveryStreamName' => $deliveryStreamName,
             'Record'             => [
                 // line break here is VERY important - produces json line delimited records
                 // when firehose delivers to s3, es, etc.

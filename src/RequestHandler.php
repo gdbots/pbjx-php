@@ -3,21 +3,20 @@ declare(strict_types=1);
 
 namespace Gdbots\Pbjx;
 
+use Gdbots\Pbj\Message;
 use Gdbots\Pbjx\DependencyInjection\PbjxHandler;
 use Gdbots\Pbjx\Exception\GdbotsPbjxException;
-use Gdbots\Schemas\Pbjx\Mixin\Request\Request;
-use Gdbots\Schemas\Pbjx\Mixin\Response\Response;
 
 interface RequestHandler extends PbjxHandler
 {
     /**
-     * @param Request $request
+     * @param Message $request
      * @param Pbjx    $pbjx
      *
-     * @return Response
+     * @return Message
      *
      * @throws GdbotsPbjxException
-     * @throws \Exception
+     * @throws \Throwable
      */
-    public function handleRequest(Request $request, Pbjx $pbjx): Response;
+    public function handleRequest(Message $request, Pbjx $pbjx): Message;
 }

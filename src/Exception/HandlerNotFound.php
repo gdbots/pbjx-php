@@ -8,13 +8,8 @@ use Gdbots\Schemas\Pbjx\Enum\Code;
 
 final class HandlerNotFound extends \LogicException implements GdbotsPbjxException
 {
-    /** @var SchemaCurie */
-    private $curie;
+    private SchemaCurie $curie;
 
-    /**
-     * @param SchemaCurie $curie
-     * @param \Throwable  $previous
-     */
     public function __construct(SchemaCurie $curie, ?\Throwable $previous = null)
     {
         $this->curie = $curie;
@@ -25,9 +20,6 @@ final class HandlerNotFound extends \LogicException implements GdbotsPbjxExcepti
         );
     }
 
-    /**
-     * @return SchemaCurie
-     */
     public function getSchemaCurie(): SchemaCurie
     {
         return $this->curie;

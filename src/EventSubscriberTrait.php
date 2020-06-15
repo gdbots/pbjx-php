@@ -3,25 +3,25 @@ declare(strict_types=1);
 
 namespace Gdbots\Pbjx;
 
-use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
+use Gdbots\Pbj\Message;
 
 trait EventSubscriberTrait
 {
     /**
-     * @param Event $event
-     * @param Pbjx  $pbjx
+     * @param Message $event
+     * @param Pbjx    $pbjx
      */
-    public function onEvent(Event $event, Pbjx $pbjx): void
+    public function onEvent(Message $event, Pbjx $pbjx): void
     {
-        $method = 'on' . ucfirst($event::schema()->getHandlerMethodName(false));
+        $method = $event::schema()->getHandlerMethodName(false, 'on');
         if (is_callable([$this, $method])) {
             $this->$method($event, $pbjx);
         }
     }
 
     /**
-     * @param Event[] $events
-     * @param Pbjx    $pbjx
+     * @param Message[] $events
+     * @param Pbjx      $pbjx
      */
     public function onEvents(array $events, Pbjx $pbjx): void
     {

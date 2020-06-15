@@ -3,10 +3,10 @@ declare(strict_types=1);
 
 namespace Gdbots\Pbjx\EventStore;
 
+use Gdbots\Pbj\Message;
 use Gdbots\Pbj\WellKnown\Identifier;
 use Gdbots\Pbj\WellKnown\Microtime;
 use Gdbots\Pbjx\Pbjx;
-use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
 use Gdbots\Schemas\Pbjx\StreamId;
 
 /**
@@ -21,82 +21,49 @@ use Gdbots\Schemas\Pbjx\StreamId;
  */
 final class TwoPhaseCommitEventStore implements EventStore
 {
-    /** @var Pbjx */
-    private $pbjx;
+    private Pbjx $pbjx;
+    private EventStore $next;
 
-    /** @var EventStore */
-    private $next;
+    /** In some cases you want to disable 2pc (imports/replays for example). */
+    private bool $disabled = false;
 
-    /**
-     * In some cases you want to disable 2pc (imports/replays for example).
-     *
-     * @var bool
-     */
-    private $disabled = false;
-
-    /**
-     * @param Pbjx       $pbjx
-     * @param EventStore $next
-     * @param bool       $disabled
-     */
-    public function __construct(Pbjx $pbjx, EventStore $next, $disabled = false)
+    public function __construct(Pbjx $pbjx, EventStore $next, bool $disabled = false)
     {
         $this->pbjx = $pbjx;
         $this->next = $next;
-        $this->disabled = filter_var($disabled, FILTER_VALIDATE_BOOLEAN);
+        $this->disabled = $disabled;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function createStorage(array $context = []): void
     {
         $this->next->createStorage($context);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function describeStorage(array $context = []): string
     {
         return $this->next->describeStorage($context);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getEvent(Identifier $eventId, array $context = []): Event
+    public function getEvent(Identifier $eventId, array $context = []): Message
     {
         return $this->next->getEvent($eventId, $context);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getEvents(array $eventIds, array $context = []): array
     {
         return $this->next->getEvents($eventIds, $context);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function deleteEvent(Identifier $eventId, array $context = []): void
     {
         $this->next->deleteEvent($eventId, $context);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getStreamSlice(StreamId $streamId, ?Microtime $since = null, int $count = 25, bool $forward = true, bool $consistent = false, array $context = []): StreamSlice
     {
         return $this->next->getStreamSlice($streamId, $since, $count, $forward, $consistent, $context);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function putEvents(StreamId $streamId, array $events, ?string $expectedEtag = null, array $context = []): void
     {
         $this->next->putEvents($streamId, $events, $expectedEtag, $context);
@@ -104,25 +71,19 @@ final class TwoPhaseCommitEventStore implements EventStore
             return;
         }
 
-        /** @var Event $event */
+        /** @var Message $event */
         foreach ($events as $event) {
             $this->pbjx->publish($event->freeze());
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function pipeEvents(StreamId $streamId, callable $receiver, ?Microtime $since = null, ?Microtime $until = null, array $context = []): void
+    public function pipeEvents(StreamId $streamId, ?Microtime $since = null, ?Microtime $until = null, array $context = []): \Generator
     {
-        $this->next->pipeEvents($streamId, $receiver, $since, $until, $context);
+        return $this->next->pipeEvents($streamId, $since, $until, $context);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function pipeAllEvents(callable $receiver, ?Microtime $since = null, ?Microtime $until = null, array $context = []): void
+    public function pipeAllEvents(?Microtime $since = null, ?Microtime $until = null, array $context = []): \Generator
     {
-        $this->next->pipeAllEvents($receiver, $since, $until, $context);
+        return $this->next->pipeAllEvents($since, $until, $context);
     }
 }

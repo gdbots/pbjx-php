@@ -8,85 +8,74 @@ use Aws\DynamoDb\DynamoDbClient;
 use Aws\DynamoDb\WriteRequestBatch;
 use Aws\Exception\AwsException;
 use Aws\ResultInterface;
-use Gdbots\Common\Util\ClassUtils;
-use Gdbots\Common\Util\NumberUtils;
 use Gdbots\Pbj\Marshaler\DynamoDb\ItemMarshaler;
+use Gdbots\Pbj\Message;
+use Gdbots\Pbj\Util\ClassUtil;
+use Gdbots\Pbj\Util\NumberUtil;
 use Gdbots\Pbj\WellKnown\Identifier;
 use Gdbots\Pbj\WellKnown\Microtime;
+use Gdbots\Pbjx\Event\EnrichContextEvent;
 use Gdbots\Pbjx\EventStore\EventStore;
 use Gdbots\Pbjx\EventStore\StreamSlice;
 use Gdbots\Pbjx\Exception\EventNotFound;
 use Gdbots\Pbjx\Exception\EventStoreOperationFailed;
 use Gdbots\Pbjx\Exception\OptimisticCheckFailed;
 use Gdbots\Pbjx\Pbjx;
+use Gdbots\Pbjx\PbjxEvents;
+use Gdbots\Schemas\Ncr\Mixin\Indexed\IndexedV1Mixin;
 use Gdbots\Schemas\Pbjx\Enum\Code;
-use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
-use Gdbots\Schemas\Pbjx\Mixin\Indexed\Indexed;
+use Gdbots\Schemas\Pbjx\Mixin\Event\EventV1Mixin;
 use Gdbots\Schemas\Pbjx\StreamId;
 use GuzzleHttp\Promise\PromiseInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 
 class DynamoDbEventStore implements EventStore
 {
     /**
      * The name of the DynamoDb table to write to.  This is the default value
      * and can change based on context provided.
-     *
-     * @var string
      */
-    protected $tableName;
+    protected string $tableName;
+    protected Pbjx $pbjx;
+    protected DynamoDbClient $client;
+    protected EventDispatcher $dispatcher;
+    protected LoggerInterface $logger;
+    protected ItemMarshaler $marshaler;
 
-    /** @var Pbjx */
-    protected $pbjx;
-
-    /** @var DynamoDbClient */
-    protected $client;
-
-    /** @var LoggerInterface */
-    protected $logger;
-
-    /** @var ItemMarshaler */
-    protected $marshaler;
-
-    /**
-     * @param Pbjx            $pbjx
-     * @param DynamoDbClient  $client
-     * @param string          $tableName
-     * @param LoggerInterface $logger
-     */
-    public function __construct(Pbjx $pbjx, DynamoDbClient $client, string $tableName, ?LoggerInterface $logger = null)
-    {
+    public function __construct(
+        Pbjx $pbjx,
+        DynamoDbClient $client,
+        string $tableName,
+        EventDispatcher $dispatcher,
+        ?LoggerInterface $logger = null
+    ) {
         $this->pbjx = $pbjx;
         $this->client = $client;
         $this->tableName = $tableName;
+        $this->dispatcher = $dispatcher;
         $this->logger = $logger ?: new NullLogger();
         $this->marshaler = new ItemMarshaler();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     final public function createStorage(array $context = []): void
     {
+        $context = $this->enrichContext(__FUNCTION__, $context);
         $table = new EventStoreTable();
         $table->create($this->client, $this->getTableNameForWrite($context));
     }
 
-    /**
-     * {@inheritdoc}
-     */
     final public function describeStorage(array $context = []): string
     {
+        $context = $this->enrichContext(__FUNCTION__, $context);
         $table = new EventStoreTable();
         return $table->describe($this->client, $this->getTableNameForWrite($context));
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    final public function getEvent(Identifier $eventId, array $context = []): Event
+    final public function getEvent(Identifier $eventId, array $context = []): Message
     {
+        $context = $this->enrichContext(__FUNCTION__, $context);
         $tableName = $this->getTableNameForRead($context);
         $key = $this->getItemKeyByEventId($eventId, $context);
         if (null === $key) {
@@ -97,7 +86,7 @@ class DynamoDbEventStore implements EventStore
             $response = $this->client->getItem(['TableName' => $tableName, 'Key' => $key]);
         } catch (\Throwable $e) {
             if ($e instanceof AwsException) {
-                $errorName = $e->getAwsErrorCode() ?: ClassUtils::getShortName($e);
+                $errorName = $e->getAwsErrorCode() ?: ClassUtil::getShortName($e);
                 if ('ResourceNotFoundException' === $errorName) {
                     throw new EventNotFound();
                 } elseif ('ProvisionedThroughputExceededException' === $errorName) {
@@ -106,7 +95,7 @@ class DynamoDbEventStore implements EventStore
                     $code = Code::UNAVAILABLE;
                 }
             } else {
-                $errorName = ClassUtils::getShortName($e);
+                $errorName = ClassUtil::getShortName($e);
                 $code = Code::INTERNAL;
             }
 
@@ -128,7 +117,7 @@ class DynamoDbEventStore implements EventStore
         }
 
         try {
-            /** @var Event $event */
+            $this->marshaler->skipValidation(false);
             $event = $this->marshaler->unmarshal($response['Item']);
         } catch (\Throwable $e) {
             $this->logger->error(
@@ -148,18 +137,17 @@ class DynamoDbEventStore implements EventStore
         return $event;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     final public function getEvents(array $eventIds, array $context = []): array
     {
+        $context = $this->enrichContext(__FUNCTION__, $context);
+
         // todo: optimize using batchGetItem
         $events = [];
 
         foreach ($eventIds as $eventId) {
             try {
                 $event = $this->getEvent($eventId, $context);
-                $events[(string)$event->get('event_id')] = $event;
+                $events[(string)$event->get(EventV1Mixin::EVENT_ID_FIELD)] = $event;
             } catch (EventNotFound $nf) {
                 // missing events are not exception worthy at this time
             } catch (\Throwable $e) {
@@ -170,11 +158,9 @@ class DynamoDbEventStore implements EventStore
         return $events;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     final public function deleteEvent(Identifier $eventId, array $context = []): void
     {
+        $context = $this->enrichContext(__FUNCTION__, $context);
         $tableName = $this->getTableNameForWrite($context);
         $key = $this->getItemKeyByEventId($eventId, $context);
         if (null === $key) {
@@ -185,7 +171,7 @@ class DynamoDbEventStore implements EventStore
             $this->client->deleteItem(['TableName' => $tableName, 'Key' => $key]);
         } catch (\Throwable $e) {
             if ($e instanceof AwsException) {
-                $errorName = $e->getAwsErrorCode() ?: ClassUtils::getShortName($e);
+                $errorName = $e->getAwsErrorCode() ?: ClassUtil::getShortName($e);
                 if ('ResourceNotFoundException' === $errorName) {
                     // if it's already deleted, it's fine
                     return;
@@ -195,7 +181,7 @@ class DynamoDbEventStore implements EventStore
                     $code = Code::UNAVAILABLE;
                 }
             } else {
-                $errorName = ClassUtils::getShortName($e);
+                $errorName = ClassUtil::getShortName($e);
                 $code = Code::INTERNAL;
             }
 
@@ -213,15 +199,14 @@ class DynamoDbEventStore implements EventStore
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     final public function getStreamSlice(StreamId $streamId, ?Microtime $since = null, int $count = 25, bool $forward = true, bool $consistent = false, array $context = []): StreamSlice
     {
-        $context['stream_id'] = $streamId->toString();
+        $context['stream_id'] = $streamId;
+        $context = $this->enrichContext(__FUNCTION__, $context);
         $tableName = $this->getTableNameForRead($context);
         $reindexing = filter_var($context['reindexing'] ?? false, FILTER_VALIDATE_BOOLEAN);
-        $count = NumberUtils::bound($count, 1, 100);
+        $skipValidation = filter_var($context['skip_validation'] ?? true, FILTER_VALIDATE_BOOLEAN);
+        $count = NumberUtil::bound($count, 1, 100);
 
         if ($forward) {
             $since = null !== $since ? $since->toString() : '0';
@@ -237,7 +222,7 @@ class DynamoDbEventStore implements EventStore
             ],
             'KeyConditionExpression'    => sprintf('#hash = :v_id AND #range %s :v_date', $forward ? '>' : '<'),
             'ExpressionAttributeValues' => [
-                ':v_id'   => ['S' => (string)$streamId],
+                ':v_id'   => ['S' => $this->streamIdToHashKey($streamId)],
                 ':v_date' => ['N' => $since],
             ],
             'ScanIndexForward'          => $forward,
@@ -274,14 +259,14 @@ class DynamoDbEventStore implements EventStore
             $response = $this->client->query($params);
         } catch (\Throwable $e) {
             if ($e instanceof AwsException) {
-                $errorName = $e->getAwsErrorCode() ?: ClassUtils::getShortName($e);
+                $errorName = $e->getAwsErrorCode() ?: ClassUtil::getShortName($e);
                 if ('ProvisionedThroughputExceededException' === $errorName) {
                     $code = Code::RESOURCE_EXHAUSTED;
                 } else {
                     $code = Code::UNAVAILABLE;
                 }
             } else {
-                $errorName = ClassUtils::getShortName($e);
+                $errorName = ClassUtil::getShortName($e);
                 $code = Code::INTERNAL;
             }
 
@@ -302,6 +287,7 @@ class DynamoDbEventStore implements EventStore
         }
 
         $events = [];
+        $this->marshaler->skipValidation($skipValidation);
         foreach ($response['Items'] as $item) {
             try {
                 $events[] = $this->marshaler->unmarshal($item);
@@ -318,13 +304,11 @@ class DynamoDbEventStore implements EventStore
                 );
             }
         }
+        $this->marshaler->skipValidation(false);
 
         return new StreamSlice($events, $streamId, $forward, $consistent, $response['Count'] >= $count);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     final public function putEvents(StreamId $streamId, array $events, ?string $expectedEtag = null, array $context = []): void
     {
         if (!count($events)) {
@@ -332,7 +316,8 @@ class DynamoDbEventStore implements EventStore
             return;
         }
 
-        $context['stream_id'] = $streamId->toString();
+        $context['stream_id'] = $streamId;
+        $context = $this->enrichContext(__FUNCTION__, $context);
 
         if (null !== $expectedEtag) {
             $this->optimisticCheck($streamId, $expectedEtag, $context);
@@ -346,7 +331,7 @@ class DynamoDbEventStore implements EventStore
                 throw new EventStoreOperationFailed(
                     sprintf(
                         '%s while putting events into DynamoDb table [%s] for stream [%s].',
-                        $e->getAwsErrorCode() ?: ClassUtils::getShortName($e),
+                        $e->getAwsErrorCode() ?: ClassUtil::getShortName($e),
                         $tableName,
                         $streamId
                     ),
@@ -356,12 +341,13 @@ class DynamoDbEventStore implements EventStore
             },
         ]);
 
-        /** @var Event[] $events */
+        $this->marshaler->skipValidation(false);
+        $hashKey = $this->streamIdToHashKey($streamId);
         foreach ($events as $event) {
             $this->pbjx->triggerLifecycle($event);
             $item = $this->marshaler->marshal($event);
-            $item[EventStoreTable::HASH_KEY_NAME] = ['S' => (string)$streamId];
-            if ($event instanceof Indexed) {
+            $item[EventStoreTable::HASH_KEY_NAME] = ['S' => $hashKey];
+            if ($event::schema()->hasMixin(IndexedV1Mixin::SCHEMA_CURIE)) {
                 $item[EventStoreTable::INDEXED_KEY_NAME] = ['BOOL' => true];
             }
             $this->beforePutItem($item, $streamId, $event, $context);
@@ -371,41 +357,55 @@ class DynamoDbEventStore implements EventStore
         $batch->flush();
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    final public function pipeEvents(StreamId $streamId, callable $receiver, ?Microtime $since = null, ?Microtime $until = null, array $context = []): void
+    final public function pipeEvents(StreamId $streamId, ?Microtime $since = null, ?Microtime $until = null, array $context = []): \Generator
     {
+        $context['stream_id'] = $streamId;
+        $context = $this->enrichContext(__FUNCTION__, $context);
         $reindexing = filter_var($context['reindexing'] ?? false, FILTER_VALIDATE_BOOLEAN);
 
         do {
             $slice = $this->getStreamSlice($streamId, $since, 100, true, false, $context);
             $since = $slice->getLastOccurredAt();
 
+            /** @var Message $event */
             foreach ($slice as $event) {
-                if (null !== $until && $event->get('occurred_at')->toFloat() >= $until->toFloat()) {
+                if (null !== $until && $event->get(EventV1Mixin::OCCURRED_AT_FIELD)->toFloat() >= $until->toFloat()) {
                     return;
                 }
 
-                if ($reindexing && !$event instanceof Indexed) {
+                if ($reindexing && !$event::schema()->hasMixin(IndexedV1Mixin::SCHEMA_CURIE)) {
                     continue;
                 }
 
-                $receiver($event, $streamId);
+                yield $event;
             }
         } while ($slice->hasMore());
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    final public function pipeAllEvents(callable $receiver, ?Microtime $since = null, ?Microtime $until = null, array $context = []): void
+    final public function pipeAllEvents(?Microtime $since = null, ?Microtime $until = null, array $context = []): \Generator
+    {
+        $context = $this->enrichContext(__FUNCTION__, $context);
+        $generator = $this->doPipeAllEvents($since, $until, $context);
+
+        /** @var \SplQueue $queue */
+        $queue = $generator->current();
+
+        do {
+            $generator->next();
+            while (!$queue->isEmpty()) {
+                yield $queue->dequeue();
+            }
+        } while ($generator->valid());
+    }
+
+    protected function doPipeAllEvents(?Microtime $since = null, ?Microtime $until = null, array $context = []): \Generator
     {
         $tableName = $this->getTableNameForRead($context);
-        $skipErrors = filter_var($context['skip_errors'] ?? false, FILTER_VALIDATE_BOOLEAN);
         $reindexing = filter_var($context['reindexing'] ?? false, FILTER_VALIDATE_BOOLEAN);
-        $totalSegments = NumberUtils::bound($context['total_segments'] ?? 16, 1, 64);
-        $concurrency = NumberUtils::bound($context['concurrency'] ?? 25, 1, 100);
+        $skipErrors = filter_var($context['skip_errors'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        $skipValidation = filter_var($context['skip_validation'] ?? true, FILTER_VALIDATE_BOOLEAN);
+        $totalSegments = NumberUtil::bound($context['total_segments'] ?? 16, 1, 64);
+        $concurrency = NumberUtil::bound($context['concurrency'] ?? 25, 1, 100);
 
         $params = ['ExpressionAttributeNames' => [], 'ExpressionAttributeValues' => []];
         $filterExpressions = [];
@@ -464,16 +464,19 @@ class DynamoDbEventStore implements EventStore
             $pending[] = $this->client->getCommand('Scan', $params);
         }
 
+        $this->marshaler->skipValidation($skipValidation);
+        $queue = new \SplQueue();
+        yield $queue;
+
         $fulfilled = function (ResultInterface $result, string $iterKey) use (
-            $receiver, $tableName, $context, $params, &$pending, &$iter2seg
+            $queue, $tableName, $context, $params, &$pending, &$iter2seg
         ) {
             $segment = $iter2seg['prev'][$iterKey];
-
             foreach ($result['Items'] as $item) {
                 $streamId = null;
 
                 try {
-                    $streamId = StreamId::fromString($item[EventStoreTable::HASH_KEY_NAME]['S']);
+                    $streamId = $this->hashKeyToStreamId($item[EventStoreTable::HASH_KEY_NAME]['S']);
                     $event = $this->marshaler->unmarshal($item);
                 } catch (\Throwable $e) {
                     $this->logger->error(
@@ -492,7 +495,7 @@ class DynamoDbEventStore implements EventStore
                     continue;
                 }
 
-                $receiver($event, $streamId);
+                $queue->enqueue([$event, $streamId]);
             }
 
             if ($result['LastEvaluatedKey']) {
@@ -517,7 +520,7 @@ class DynamoDbEventStore implements EventStore
         ) {
             $segment = $iter2seg['prev'][$iterKey];
 
-            $errorName = $exception->getAwsErrorCode() ?: ClassUtils::getShortName($exception);
+            $errorName = $exception->getAwsErrorCode() ?: ClassUtil::getShortName($exception);
             if ('ProvisionedThroughputExceededException' === $errorName) {
                 $code = Code::RESOURCE_EXHAUSTED;
             } else {
@@ -541,6 +544,7 @@ class DynamoDbEventStore implements EventStore
                 return;
             }
 
+            $this->marshaler->skipValidation(false);
             $aggregatePromise->reject(
                 new EventStoreOperationFailed(
                     sprintf(
@@ -569,7 +573,51 @@ class DynamoDbEventStore implements EventStore
             $pool->promise()->wait();
             $iter2seg['prev'] = $iter2seg['next'];
             $iter2seg['next'] = [];
+            yield;
         }
+
+        yield;
+        $this->marshaler->skipValidation(false);
+    }
+
+    protected function enrichContext(string $operation, array $context): array
+    {
+        if (isset($context['already_enriched'])) {
+            return $context;
+        }
+
+        $event = new EnrichContextEvent('event_store', $operation, $context);
+        $context = $this->dispatcher->dispatch($event, PbjxEvents::ENRICH_CONTEXT)->all();
+        $context['already_enriched'] = true;
+        return $context;
+    }
+
+    /**
+     * Override to modify the stream id at write time.
+     * Needed because the format of StreamId changed in
+     * gdbots/schemas v2.x to include vendor: prefix.
+     *
+     * @param StreamId $streamId
+     *
+     * @return string
+     */
+    protected function streamIdToHashKey(StreamId $streamId): string
+    {
+        return $streamId->toString();
+    }
+
+    /**
+     * Override to modify the stream id at read time.
+     * Needed because the format of StreamId changed in
+     * gdbots/schemas v2.x to include vendor: prefix.
+     *
+     * @param string $key
+     *
+     * @return StreamId
+     */
+    protected function hashKeyToStreamId(string $key): StreamId
+    {
+        return StreamId::fromString($key);
     }
 
     /**
@@ -604,10 +652,10 @@ class DynamoDbEventStore implements EventStore
      *
      * @param array    $item
      * @param StreamId $streamId
-     * @param Event    $event
+     * @param Message  $event
      * @param array    $context
      */
-    protected function beforePutItem(array &$item, StreamId $streamId, Event $event, array $context): void
+    protected function beforePutItem(array &$item, StreamId $streamId, Message $event, array $context): void
     {
         // override to customize
     }
@@ -643,14 +691,14 @@ class DynamoDbEventStore implements EventStore
             $response = $this->client->query($params);
         } catch (\Throwable $e) {
             if ($e instanceof AwsException) {
-                $errorName = $e->getAwsErrorCode() ?: ClassUtils::getShortName($e);
+                $errorName = $e->getAwsErrorCode() ?: ClassUtil::getShortName($e);
                 if ('ProvisionedThroughputExceededException' === $errorName) {
                     $code = Code::RESOURCE_EXHAUSTED;
                 } else {
                     $code = Code::UNAVAILABLE;
                 }
             } else {
-                $errorName = ClassUtils::getShortName($e);
+                $errorName = ClassUtil::getShortName($e);
                 $code = Code::INTERNAL;
             }
 
@@ -704,7 +752,7 @@ class DynamoDbEventStore implements EventStore
         $event = $slice->getIterator()->current();
 
         // todo: review this etag strategy (need to make this more explicit/obvious)
-        $eventId = (string)$event->get('event_id');
+        $eventId = (string)$event->get(EventV1Mixin::EVENT_ID_FIELD);
         if ($eventId === $expectedEtag || md5($eventId) === $expectedEtag) {
             return;
         }

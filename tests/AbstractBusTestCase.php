@@ -9,13 +9,10 @@ use PHPUnit\Framework\TestCase;
 
 abstract class AbstractBusTestCase extends TestCase
 {
-    /** @var RegisteringServiceLocator */
-    protected $locator;
+    protected ?RegisteringServiceLocator $locator = null;
+    protected ?Pbjx $pbjx = null;
 
-    /** @var Pbjx */
-    protected $pbjx;
-
-    protected function setup()
+    protected function setUp(): void
     {
         $this->locator = new RegisteringServiceLocator();
         $this->pbjx = $this->locator->getPbjx();

@@ -3,27 +3,23 @@ declare(strict_types=1);
 
 namespace Gdbots\Tests\Pbjx\EventStore;
 
+use Gdbots\Pbj\Message;
 use Gdbots\Pbj\WellKnown\Microtime;
 use Gdbots\Pbjx\EventStore\InMemoryEventStore;
+use Gdbots\Pbjx\Exception\EventNotFound;
 use Gdbots\Pbjx\Pbjx;
 use Gdbots\Pbjx\RegisteringServiceLocator;
-use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
+use Gdbots\Schemas\Pbjx\Event\HealthCheckedV1;
 use Gdbots\Schemas\Pbjx\StreamId;
-use Gdbots\Tests\Pbjx\Fixtures\SimpleEvent;
 use PHPUnit\Framework\TestCase;
 
 class InMemoryEventStoreTest extends TestCase
 {
-    /** @var RegisteringServiceLocator */
-    protected $locator;
+    protected ?RegisteringServiceLocator $locator = null;
+    protected ?Pbjx $pbjx = null;
+    protected ?InMemoryEventStore $store = null;
 
-    /** @var Pbjx */
-    protected $pbjx;
-
-    /** @var InMemoryEventStore */
-    protected $store;
-
-    protected function setup()
+    protected function setUp(): void
     {
         $this->locator = new RegisteringServiceLocator();
         $this->pbjx = $this->locator->getPbjx();
@@ -31,21 +27,21 @@ class InMemoryEventStoreTest extends TestCase
         $this->locator->setEventStore($this->store);
     }
 
-    public function testGetStreamSlice()
+    public function testGetStreamSlice(): void
     {
-        $streamId = StreamId::fromString('test');
+        $streamId = StreamId::fromString('acme:test');
         $store = $this->pbjx->getEventStore();
         $since = Microtime::create();
 
         $store->putEvents($streamId, [
-            SimpleEvent::fromArray([
-                'occurred_at' => '1489129155504330',
-                'name'        => 'past event',
+            HealthCheckedV1::fromArray([
+                HealthCheckedV1::OCCURRED_AT_FIELD => '1489129155504330',
+                HealthCheckedV1::MSG_FIELD         => 'past event',
             ]),
 
-            SimpleEvent::fromArray([
-                'occurred_at' => '2489129155504330',
-                'name'        => 'future event',
+            HealthCheckedV1::fromArray([
+                HealthCheckedV1::OCCURRED_AT_FIELD => '2489129155504330',
+                HealthCheckedV1::MSG_FIELD         => 'future event',
             ]),
         ]);
 
@@ -62,52 +58,52 @@ class InMemoryEventStoreTest extends TestCase
         $this->assertSame(2, $slice->count());
     }
 
-    public function testGetEvent()
+    public function testGetEvent(): void
     {
-        $streamId = StreamId::fromString('test');
+        $streamId = StreamId::fromString('acme:test');
         $store = $this->pbjx->getEventStore();
 
         $expectedEvents = [
-            SimpleEvent::fromArray([
-                'occurred_at' => '1489129155504330',
-                'name'        => 'past event',
+            HealthCheckedV1::fromArray([
+                HealthCheckedV1::OCCURRED_AT_FIELD => '1489129155504330',
+                HealthCheckedV1::MSG_FIELD         => 'past event',
             ]),
 
-            SimpleEvent::fromArray([
-                'occurred_at' => '2489129155504330',
-                'name'        => 'future event',
+            HealthCheckedV1::fromArray([
+                HealthCheckedV1::OCCURRED_AT_FIELD => '2489129155504330',
+                HealthCheckedV1::MSG_FIELD         => 'future event',
             ]),
         ];
         $store->putEvents($streamId, $expectedEvents);
 
-        $actualEvent = $store->getEvent($expectedEvents[0]->get('event_id'));
+        $actualEvent = $store->getEvent($expectedEvents[0]->get(HealthCheckedV1::EVENT_ID_FIELD));
         $this->assertTrue($expectedEvents[0]->equals($actualEvent));
 
-        $actualEvent = $store->getEvent($expectedEvents[1]->get('event_id'));
+        $actualEvent = $store->getEvent($expectedEvents[1]->get(HealthCheckedV1::EVENT_ID_FIELD));
         $this->assertTrue($expectedEvents[1]->equals($actualEvent));
     }
 
-    public function testGetEvent2()
+    public function testGetEvent2(): void
     {
-        $streamId = StreamId::fromString('test');
+        $streamId = StreamId::fromString('acme:test');
         $store = $this->pbjx->getEventStore();
 
         $expectedEvents = [
-            SimpleEvent::fromArray([
-                'occurred_at' => '1489129155504330',
-                'name'        => 'past event',
+            HealthCheckedV1::fromArray([
+                HealthCheckedV1::OCCURRED_AT_FIELD => '1489129155504330',
+                HealthCheckedV1::MSG_FIELD         => 'past event',
             ]),
 
-            SimpleEvent::fromArray([
-                'occurred_at' => '2489129155504330',
-                'name'        => 'future event',
+            HealthCheckedV1::fromArray([
+                HealthCheckedV1::OCCURRED_AT_FIELD => '2489129155504330',
+                HealthCheckedV1::MSG_FIELD         => 'future event',
             ]),
         ];
         $store->putEvents($streamId, $expectedEvents);
 
         $eventIds = [
-            $expectedEvents[0]->get('event_id'),
-            $expectedEvents[1]->get('event_id'),
+            $expectedEvents[0]->get(HealthCheckedV1::EVENT_ID_FIELD),
+            $expectedEvents[1]->get(HealthCheckedV1::EVENT_ID_FIELD),
         ];
 
         $actualEvents = array_values($store->getEvents($eventIds));
@@ -115,32 +111,30 @@ class InMemoryEventStoreTest extends TestCase
         $this->assertTrue($expectedEvents[1]->equals($actualEvents[1]));
     }
 
-    /**
-     * @expectedException \Gdbots\Pbjx\Exception\EventNotFound
-     */
-    public function testDeleteEvent()
+    public function testDeleteEvent(): void
     {
-        $streamId = StreamId::fromString('test');
+        $this->expectException(EventNotFound::class);
+        $streamId = StreamId::fromString('acme:test');
         $store = $this->pbjx->getEventStore();
 
-        $expectedEvent = SimpleEvent::fromArray([
-            'occurred_at' => '1489129155504330',
-            'name'        => 'past event',
+        $expectedEvent = HealthCheckedV1::fromArray([
+            HealthCheckedV1::OCCURRED_AT_FIELD => '1489129155504330',
+            HealthCheckedV1::MSG_FIELD         => 'past event',
         ]);
         $store->putEvents($streamId, [$expectedEvent]);
 
-        $store->deleteEvent($expectedEvent->get('event_id'));
-        $store->getEvent($expectedEvent->get('event_id'));
+        $store->deleteEvent($expectedEvent->get(HealthCheckedV1::EVENT_ID_FIELD));
+        $store->getEvent($expectedEvent->get(HealthCheckedV1::EVENT_ID_FIELD));
     }
 
-    public function testPutEvents()
+    public function testPutEvents(): void
     {
-        $streamId = StreamId::fromString('test.put');
+        $streamId = StreamId::fromString('acme:test.put');
         $start = Microtime::create();
         $events = [];
 
         for ($i = 0; $i < 10; $i++) {
-            $events[] = SimpleEvent::create()->set('name', 'iter' . $i);
+            $events[] = HealthCheckedV1::create()->set(HealthCheckedV1::MSG_FIELD, 'iter' . $i);
         }
 
         // make sure stream contains all events after put
@@ -163,35 +157,33 @@ class InMemoryEventStoreTest extends TestCase
         }
     }
 
-    public function testPipeEvents()
+    public function testPipeEvents(): void
     {
-        $streamId = StreamId::fromString('test.pipe');
+        $streamId = StreamId::fromString('acme:test.pipe');
         $events = [];
 
         for ($i = 0; $i < 100; $i++) {
-            $events['iter' . $i] = SimpleEvent::create()->set('name', 'iter' . $i);
+            $events['iter' . $i] = HealthCheckedV1::create()->set(HealthCheckedV1::MSG_FIELD, 'iter' . $i);
         }
 
-        $receiver = function (Event $event, StreamId $streamId) use (&$events) {
-            unset($events[$event->get('name')]);
-        };
-
         $this->store->putEvents($streamId, $events);
-        $this->store->pipeEvents($streamId, $receiver);
+        foreach ($this->store->pipeEvents($streamId) as $event) {
+            unset($events[$event->get(HealthCheckedV1::MSG_FIELD)]);
+        };
         $this->assertEmpty($events);
     }
 
-    public function testPipeAllEvents()
+    public function testPipeAllEvents(): void
     {
         $this->store->clear();
         $expected = 0;
 
         for ($i = 0; $i < 10; $i++) {
-            $streamId = StreamId::fromString('test.pipe-all:' . $i);
+            $streamId = StreamId::fromString('acme:test.pipe-all:' . $i);
             $events = [];
 
             for ($j = 0; $j < 100; $j++) {
-                $events[] = SimpleEvent::create()->set('name', 'iter' . $j);
+                $events[] = HealthCheckedV1::create()->set(HealthCheckedV1::MSG_FIELD, 'iter' . $j);
                 $expected++;
             }
 
@@ -202,18 +194,21 @@ class InMemoryEventStoreTest extends TestCase
         $lastStreamId = null;
         $lastIter = 0;
 
-        $receiver = function (Event $event, StreamId $streamId) use (&$actual, &$lastStreamId, &$lastIter) {
+        /**
+         * @var Message  $event
+         * @var StreamId $streamId
+         */
+        foreach ($this->store->pipeAllEvents() as [$event, $streamId]) {
             if ($lastStreamId !== $streamId) {
                 $lastStreamId = $streamId;
                 $lastIter = 0;
             }
 
-            $this->assertSame('iter' . $lastIter, $event->get('name'));
+            $this->assertSame('iter' . $lastIter, $event->get(HealthCheckedV1::MSG_FIELD));
             $actual++;
             $lastIter++;
-        };
+        }
 
-        $this->store->pipeAllEvents($receiver);
         $this->assertSame($expected, $actual);
     }
 }

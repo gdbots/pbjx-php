@@ -3,19 +3,19 @@ declare(strict_types=1);
 
 namespace Gdbots\Tests\Pbjx;
 
+use Gdbots\Pbj\Message;
+use Gdbots\Pbjx\Exception\LogicException;
 use Gdbots\Pbjx\Scheduler\Scheduler;
-use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
-use Gdbots\Tests\Pbjx\Fixtures\FakeCommand;
+use Gdbots\Schemas\Pbjx\Command\CheckHealthV1;
 
 class PbjxSendAtTest extends AbstractBusTestCase
 {
-    protected function setup()
+    protected function setUp(): void
     {
-        parent::setup();
-        $scheduler = new class implements Scheduler
-        {
-            public $lastSendAt;
-            public $lastCancelJobs;
+        parent::setUp();
+        $scheduler = new class implements Scheduler {
+            public array $lastSendAt = [];
+            public array $lastCancelJobs = [];
 
             public function createStorage(): void
             {
@@ -26,7 +26,7 @@ class PbjxSendAtTest extends AbstractBusTestCase
                 return '';
             }
 
-            public function sendAt(Command $command, int $timestamp, ?string $jobId = null): string
+            public function sendAt(Message $command, int $timestamp, ?string $jobId = null): string
             {
                 $this->lastSendAt = [
                     'command'   => $command,
@@ -46,9 +46,9 @@ class PbjxSendAtTest extends AbstractBusTestCase
         $this->locator->setScheduler($scheduler);
     }
 
-    public function testWithValidInput()
+    public function testWithValidInput(): void
     {
-        $command = FakeCommand::create();
+        $command = CheckHealthV1::create();
         $timestamp = strtotime('+1 month');
         $jobId = 'next-month';
 
@@ -67,12 +67,10 @@ class PbjxSendAtTest extends AbstractBusTestCase
         );
     }
 
-    /**
-     * @expectedException \Gdbots\Pbjx\Exception\LogicException
-     */
-    public function testWithTimestampInPast()
+    public function testWithTimestampInPast(): void
     {
-        $command = FakeCommand::create();
+        $this->expectException(LogicException::class);
+        $command = CheckHealthV1::create();
         $this->pbjx->sendAt($command, strtotime('-1 second'), 'mcfly');
     }
 }
