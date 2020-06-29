@@ -2,6 +2,12 @@
 This changelog references the relevant changes done in 3.x versions.
 
 
+## v3.0.1
+* Rethrow exceptions in `SimpleCommandBus`.
+* Make `DynamoDbEventStore::pipeEvents` use a consistent read by default (customizable via `$context['consistent']`).
+* Use DynamoDB transactWriteItems instead of WriteRequestBatch in `DynamoDbEventStore`.
+
+
 ## v3.0.0
 __BREAKING CHANGES__
 

@@ -5,7 +5,6 @@ namespace Gdbots\Pbjx\EventStore\DynamoDb;
 
 use Aws\CommandPool;
 use Aws\DynamoDb\DynamoDbClient;
-use Aws\DynamoDb\WriteRequestBatch;
 use Aws\Exception\AwsException;
 use Aws\ResultInterface;
 use Gdbots\Pbj\Marshaler\DynamoDb\ItemMarshaler;
@@ -323,26 +322,11 @@ class DynamoDbEventStore implements EventStore
             $this->optimisticCheck($streamId, $expectedEtag, $context);
         }
 
-        $tableName = $this->getTableNameForWrite($context);
-        $batch = new WriteRequestBatch($this->client, [
-            'table'     => $tableName,
-            'autoflush' => false,
-            'error'     => function (AwsException $e) use ($streamId, $tableName) {
-                throw new EventStoreOperationFailed(
-                    sprintf(
-                        '%s while putting events into DynamoDb table [%s] for stream [%s].',
-                        $e->getAwsErrorCode() ?: ClassUtil::getShortName($e),
-                        $tableName,
-                        $streamId
-                    ),
-                    Code::DATA_LOSS,
-                    $e
-                );
-            },
-        ]);
-
         $this->marshaler->skipValidation(false);
+        $tableName = $this->getTableNameForWrite($context);
         $hashKey = $this->streamIdToHashKey($streamId);
+
+        $items = [];
         foreach ($events as $event) {
             $this->pbjx->triggerLifecycle($event);
             $item = $this->marshaler->marshal($event);
@@ -351,20 +335,54 @@ class DynamoDbEventStore implements EventStore
                 $item[EventStoreTable::INDEXED_KEY_NAME] = ['BOOL' => true];
             }
             $this->beforePutItem($item, $streamId, $event, $context);
-            $batch->put($item);
+            $items[] = [
+                'Put' => [
+                    'Item'      => $item,
+                    'TableName' => $tableName,
+                ],
+            ];
         }
 
-        $batch->flush();
+        try {
+            $this->client->transactWriteItems([
+                // todo: implement ClientRequestToken
+                'TransactItems' => $items,
+            ]);
+        } catch (\Throwable $e) {
+            if ($e instanceof AwsException) {
+                $errorName = $e->getAwsErrorCode() ?: ClassUtil::getShortName($e);
+                if ('ProvisionedThroughputExceededException' === $errorName) {
+                    $code = Code::RESOURCE_EXHAUSTED;
+                } else {
+                    $code = Code::DATA_LOSS;
+                }
+            } else {
+                $errorName = ClassUtil::getShortName($e);
+                $code = Code::INTERNAL;
+            }
+
+            throw new EventStoreOperationFailed(
+                sprintf(
+                    '%s while putting events into DynamoDb table [%s] for stream [%s].',
+                    $errorName,
+                    $tableName,
+                    $streamId
+                ),
+                $code,
+                $e
+            );
+        }
     }
 
     final public function pipeEvents(StreamId $streamId, ?Microtime $since = null, ?Microtime $until = null, array $context = []): \Generator
     {
         $context['stream_id'] = $streamId;
         $context = $this->enrichContext(__FUNCTION__, $context);
+        $consistent = filter_var($context['consistent'] ?? true, FILTER_VALIDATE_BOOLEAN);
         $reindexing = filter_var($context['reindexing'] ?? false, FILTER_VALIDATE_BOOLEAN);
 
         do {
-            $slice = $this->getStreamSlice($streamId, $since, 100, true, false, $context);
+            $slice = $this->getStreamSlice($streamId, $since, 100, true, $consistent, $context);
             $since = $slice->getLastOccurredAt();
 
             /** @var Message $event */

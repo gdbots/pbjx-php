@@ -44,7 +44,7 @@ class LogAndDispatchExceptionHandler implements ExceptionHandler
         // we don't need to log it, something up the chain will.
         /*
         $this->logBusException($event, LogLevel::ERROR);
-        $this->dispatcher->dispatch(PbjxEvents::REQUEST_BUS_EXCEPTION, $event);
+        $this->dispatcher->dispatch($event, PbjxEvents::REQUEST_BUS_EXCEPTION);
         */
     }
 
