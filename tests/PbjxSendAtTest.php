@@ -17,16 +17,16 @@ class PbjxSendAtTest extends AbstractBusTestCase
             public array $lastSendAt = [];
             public array $lastCancelJobs = [];
 
-            public function createStorage(): void
+            public function createStorage(array $context = []): void
             {
             }
 
-            public function describeStorage(): string
+            public function describeStorage(array $context = []): string
             {
                 return '';
             }
 
-            public function sendAt(Message $command, int $timestamp, ?string $jobId = null): string
+            public function sendAt(Message $command, int $timestamp, ?string $jobId = null, array $context = []): string
             {
                 $this->lastSendAt = [
                     'command'   => $command,
@@ -37,7 +37,7 @@ class PbjxSendAtTest extends AbstractBusTestCase
                 return $jobId ?: 'jobid';
             }
 
-            public function cancelJobs(array $jobIds): void
+            public function cancelJobs(array $jobIds, array $context = []): void
             {
                 $this->lastCancelJobs = $jobIds;
             }

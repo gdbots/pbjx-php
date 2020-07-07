@@ -82,23 +82,25 @@ interface Pbjx
      * @param Message $command   The command to send.
      * @param int     $timestamp Unix timestamp (in the future) when the command should be sent.
      * @param string  $jobId     Optional identifier for the job (existing job with the same id will be canceled).
+     * @param array   $context   Data that helps the Scheduler decide where to read/write data from.
      *
      * @return string Returns the jobId (can be used for cancellation)
      *
      * @throws GdbotsPbjxException
      * @throws \Throwable
      */
-    public function sendAt(Message $command, int $timestamp, ?string $jobId = null): string;
+    public function sendAt(Message $command, int $timestamp, ?string $jobId = null, array $context = []): string;
 
     /**
      * Cancels previously scheduled commands by their job ids.
      *
      * @param string[] $jobIds
+     * @param array    $context Data that helps the Scheduler decide where to read/write data from.
      *
      * @throws GdbotsPbjxException
      * @throws \Throwable
      */
-    public function cancelJobs(array $jobIds): void;
+    public function cancelJobs(array $jobIds, array $context = []): void;
 
     /**
      * Publishes events to all subscribers.

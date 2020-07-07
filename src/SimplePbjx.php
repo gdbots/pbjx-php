@@ -145,7 +145,7 @@ final class SimplePbjx implements Pbjx
         $this->locator->getCommandBus()->send($command);
     }
 
-    public function sendAt(Message $command, int $timestamp, ?string $jobId = null): string
+    public function sendAt(Message $command, int $timestamp, ?string $jobId = null, array $context = []): string
     {
         if ($timestamp <= time()) {
             throw new LogicException('Pbjx->sendAt requires a timestamp in the future.');
@@ -157,12 +157,12 @@ final class SimplePbjx implements Pbjx
 
         $this->triggerLifecycle($command);
         $command->freeze();
-        return $this->locator->getScheduler()->sendAt($command, $timestamp, $jobId);
+        return $this->locator->getScheduler()->sendAt($command, $timestamp, $jobId, $context);
     }
 
-    public function cancelJobs(array $jobIds): void
+    public function cancelJobs(array $jobIds, array $context = []): void
     {
-        $this->locator->getScheduler()->cancelJobs($jobIds);
+        $this->locator->getScheduler()->cancelJobs($jobIds, $context);
     }
 
     public function publish(Message $event): void
