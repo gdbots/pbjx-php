@@ -5,7 +5,6 @@ namespace Gdbots\Pbjx\EventStore;
 
 use Gdbots\Pbj\Message;
 use Gdbots\Pbj\WellKnown\Microtime;
-use Gdbots\Schemas\Pbjx\Mixin\Event\EventV1Mixin;
 use Gdbots\Schemas\Pbjx\StreamId;
 
 final class StreamSlice implements \JsonSerializable, \IteratorAggregate, \Countable
@@ -106,6 +105,6 @@ final class StreamSlice implements \JsonSerializable, \IteratorAggregate, \Count
         $event = end($this->events);
         reset($this->events);
 
-        return $event instanceof Message ? $event->get(EventV1Mixin::OCCURRED_AT_FIELD) : null;
+        return $event instanceof Message ? $event->get('occurred_at') : null;
     }
 }

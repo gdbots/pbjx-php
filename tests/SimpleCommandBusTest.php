@@ -13,7 +13,7 @@ class SimpleCommandBusTest extends AbstractBusTestCase
 {
     public function testSend()
     {
-        $command = CheckHealthV1::create()->set(CheckHealthV1::MSG_FIELD, 'homer');
+        $command = CheckHealthV1::create()->set('msg', 'homer');
         $handler = new CheckHealthHandler();
         $this->locator->registerCommandHandler($command::schema()->getCurie(), $handler);
         $this->pbjx->send($command);

@@ -13,7 +13,7 @@ class SimpleEventBusTest extends AbstractBusTestCase
 {
     public function testPublish(): void
     {
-        $event = HealthCheckedV1::create()->set(HealthCheckedV1::MSG_FIELD, 'homer');
+        $event = HealthCheckedV1::create()->set('msg', 'homer');
         $that = $this;
         $dispatcher = $this->locator->getDispatcher();
 
@@ -37,7 +37,7 @@ class SimpleEventBusTest extends AbstractBusTestCase
 
     public function testEventExecutionFailed(): void
     {
-        $event = HealthCheckedV1::create()->set(HealthCheckedV1::MSG_FIELD, 'homer');
+        $event = HealthCheckedV1::create()->set('msg', 'homer');
         $dispatcher = $this->locator->getDispatcher();
         $schemaId = $event::schema()->getId();
         $handled = false;
@@ -69,7 +69,7 @@ class SimpleEventBusTest extends AbstractBusTestCase
 
     public function testEventBusExceptionEvent()
     {
-        $event = HealthCheckedV1::create()->set(HealthCheckedV1::MSG_FIELD, 'marge');
+        $event = HealthCheckedV1::create()->set('msg', 'marge');
         $that = $this;
         $dispatcher = $this->locator->getDispatcher();
         $schemaId = $event::schema()->getId();
@@ -92,10 +92,7 @@ class SimpleEventBusTest extends AbstractBusTestCase
             PbjxEvents::EVENT_BUS_EXCEPTION,
             function (BusExceptionEvent $exceptionEvent) use ($that, $event) {
                 $domainEvent = $exceptionEvent->getMessage();
-                $that->assertSame(
-                    $domainEvent->get(EventExecutionFailedV1::EVENT_FIELD)->get(HealthCheckedV1::MSG_FIELD),
-                    $event->get(HealthCheckedV1::MSG_FIELD)
-                );
+                $that->assertSame($domainEvent->get('event')->get('msg'), $event->get('msg'));
             }
         );
 

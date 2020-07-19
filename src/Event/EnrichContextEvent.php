@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace Gdbots\Pbjx\Event;
 
 use Gdbots\Pbj\Message;
-use Gdbots\Schemas\Pbjx\Mixin\Event\EventV1Mixin;
 
 final class EnrichContextEvent
 {
@@ -21,8 +20,8 @@ final class EnrichContextEvent
         if (isset($context['causator']) && $context['causator'] instanceof Message) {
             $this->causator = $context['causator'];
 
-            if (!isset($context['tenant_id']) && $this->causator->has(EventV1Mixin::CTX_TENANT_ID_FIELD)) {
-                $context['tenant_id'] = $this->causator->get(EventV1Mixin::CTX_TENANT_ID_FIELD);
+            if (!isset($context['tenant_id']) && $this->causator->has('ctx_tenant_id')) {
+                $context['tenant_id'] = $this->causator->get('ctx_tenant_id');
             }
         }
 

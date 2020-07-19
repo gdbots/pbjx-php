@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 3.x versions.
 
 
+## v3.1.1
+* Remove use of mixin/message constants for fields and schema refs as it's too noisy and isn't enough of a help to warrant it.
+
+
 ## v3.1.0
 * Add optional context arg to `Pbjx::sendAt` and `Pbjx::cancelJobs` and the `Scheduler` methods to allow for customization and remove final keyword so multi-tenant apps can dynamically change table or state machine.
 * Add `EventDispatcher` requirement to `DynamoDbScheduler` constructor.

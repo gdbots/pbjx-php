@@ -18,7 +18,6 @@ use Gdbots\QueryParser\Node\Field;
 use Gdbots\QueryParser\Node\Numbr;
 use Gdbots\QueryParser\ParsedQuery;
 use Gdbots\Schemas\Pbjx\Enum\SearchEventsSort;
-use Gdbots\Schemas\Pbjx\Mixin\Event\EventV1Mixin;
 use Gdbots\Schemas\Pbjx\Mixin\SearchEventsRequest\SearchEventsRequestV1Mixin;
 
 class QueryFactory
@@ -50,13 +49,13 @@ class QueryFactory
 
         $dateFilters = [
             [
-                'query'    => SearchEventsRequestV1Mixin::OCCURRED_AFTER_FIELD,
-                'field'    => EventV1Mixin::OCCURRED_AT_FIELD,
+                'query'    => 'occurred_after',
+                'field'    => 'occurred_at',
                 'operator' => ComparisonOperator::GT(),
             ],
             [
-                'query'    => SearchEventsRequestV1Mixin::OCCURRED_BEFORE_FIELD,
-                'field'    => EventV1Mixin::OCCURRED_AT_FIELD,
+                'query'    => 'occurred_before',
+                'field'    => 'occurred_at',
                 'operator' => ComparisonOperator::LT(),
             ],
         ];
@@ -107,21 +106,21 @@ class QueryFactory
      */
     protected function createSortedQuery(AbstractQuery $query, Message $request): Query
     {
-        switch ($request->get(SearchEventsRequestV1Mixin::SORT_FIELD)->getValue()) {
+        switch ($request->get('sort')->getValue()) {
             case SearchEventsSort::DATE_DESC:
                 $query = Query::create($query);
-                $query->setSort([EventV1Mixin::OCCURRED_AT_FIELD => 'desc']);
+                $query->setSort(['occurred_at' => 'desc']);
                 break;
 
             case SearchEventsSort::DATE_ASC:
                 $query = Query::create($query);
-                $query->setSort([EventV1Mixin::OCCURRED_AT_FIELD => 'asc']);
+                $query->setSort(['occurred_at' => 'asc']);
                 break;
 
             default:
                 // recency scores higher
                 // @link https://www.elastic.co/guide/en/elasticsearch/guide/current/decay-functions.html
-                $before = $request->get(SearchEventsRequestV1Mixin::OCCURRED_BEFORE_FIELD) ?: new \DateTime('now', new \DateTimeZone('UTC'));
+                $before = $request->get('occurred_before') ?: new \DateTime('now', new \DateTimeZone('UTC'));
                 $query = (new FunctionScore())
                     ->setQuery($query)
                     ->addFunction(FunctionScore::DECAY_EXPONENTIAL, [

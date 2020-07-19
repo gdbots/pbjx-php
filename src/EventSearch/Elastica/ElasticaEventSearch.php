@@ -19,9 +19,6 @@ use Gdbots\Pbjx\Exception\EventSearchOperationFailed;
 use Gdbots\Pbjx\PbjxEvents;
 use Gdbots\QueryParser\ParsedQuery;
 use Gdbots\Schemas\Pbjx\Enum\Code;
-use Gdbots\Schemas\Pbjx\Mixin\Event\EventV1Mixin;
-use Gdbots\Schemas\Pbjx\Mixin\SearchEventsRequest\SearchEventsRequestV1Mixin;
-use Gdbots\Schemas\Pbjx\Mixin\SearchEventsResponse\SearchEventsResponseV1Mixin;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Ramsey\Uuid\Rfc4122\UuidV1;
@@ -167,10 +164,10 @@ TEXT;
 
             try {
                 /** @var \DateTimeInterface $occurredAt */
-                $occurredAt = $event->get(EventV1Mixin::OCCURRED_AT_FIELD)->toDateTime();
+                $occurredAt = $event->get('occurred_at')->toDateTime();
                 $indexName = $this->indexManager->getIndexNameForWrite($event);
                 $document = $this->marshaler->marshal($event)
-                    ->setId($event->get(EventV1Mixin::EVENT_ID_FIELD)->toString())
+                    ->setId($event->get('event_id')->toString())
                     ->set(
                         IndexManager::OCCURRED_AT_ISO_FIELD_NAME,
                         $occurredAt->format(DateUtil::ISO8601_ZULU)
@@ -187,7 +184,7 @@ TEXT;
 
                 $this->logger->error($message, [
                     'exception'  => $e,
-                    'event_id'   => $event->get(EventV1Mixin::EVENT_ID_FIELD)->toString(),
+                    'event_id'   => $event->get('event_id')->toString(),
                     'pbj'        => $event->toArray(),
                     'index_name' => $indexName,
                 ]);
@@ -281,8 +278,8 @@ TEXT;
         $search = new Search($this->getClientForRead($context));
         $search->addIndices($this->indexManager->getIndexNamesForSearch($request));
 
-        $page = $request->get(SearchEventsRequestV1Mixin::PAGE_FIELD);
-        $perPage = $request->get(SearchEventsRequestV1Mixin::COUNT_FIELD);
+        $page = $request->get('page');
+        $perPage = $request->get('count');
         $offset = ($page - 1) * $perPage;
         $offset = NumberUtil::bound($offset, 0, 10000);
         $options = [
@@ -303,14 +300,14 @@ TEXT;
                     'exception'  => $e,
                     'pbj_schema' => $request->schema()->getId()->toString(),
                     'pbj'        => $request->toArray(),
-                    'query'      => $request->get(SearchEventsRequestV1Mixin::Q_FIELD),
+                    'query'      => $request->get('q'),
                 ]
             );
 
             throw new EventSearchOperationFailed(
                 sprintf(
                     'ElasticSearch query [%s] failed with message: %s',
-                    $request->get(SearchEventsRequestV1Mixin::Q_FIELD),
+                    $request->get('q'),
                     ClassUtil::getShortName($e) . '::' . $e->getMessage()
                 ),
                 Code::INTERNAL,
@@ -333,11 +330,11 @@ TEXT;
         $this->marshaler->skipValidation(false);
 
         $response
-            ->set(SearchEventsResponseV1Mixin::TOTAL_FIELD, $results->getTotalHits())
-            ->set(SearchEventsResponseV1Mixin::HAS_MORE_FIELD, ($offset + $perPage) < $results->getTotalHits() && $offset < 10000)
-            ->set(SearchEventsResponseV1Mixin::TIME_TAKEN_FIELD, (int)($results->getResponse()->getQueryTime() * 1000))
-            ->set(SearchEventsResponseV1Mixin::MAX_SCORE_FIELD, (float)$results->getMaxScore())
-            ->addToList(SearchEventsResponseV1Mixin::EVENTS_FIELD, $events);
+            ->set('total', $results->getTotalHits())
+            ->set('has_more', ($offset + $perPage) < $results->getTotalHits() && $offset < 10000)
+            ->set('time_taken', (int)($results->getResponse()->getQueryTime() * 1000))
+            ->set('max_score', (float)$results->getMaxScore())
+            ->addToList('events', $events);
     }
 
     /**

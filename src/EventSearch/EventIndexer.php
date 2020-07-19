@@ -6,14 +6,13 @@ namespace Gdbots\Pbjx\EventSearch;
 use Gdbots\Pbj\Message;
 use Gdbots\Pbjx\EventSubscriber;
 use Gdbots\Pbjx\Pbjx;
-use Gdbots\Schemas\Pbjx\Mixin\Indexed\IndexedV1Mixin;
 
 final class EventIndexer implements EventSubscriber
 {
     public static function getSubscribedEvents()
     {
         return [
-            IndexedV1Mixin::SCHEMA_CURIE => 'onIndexed',
+            'gdbots:pbjx:mixin:indexed' => 'onIndexed',
         ];
     }
 

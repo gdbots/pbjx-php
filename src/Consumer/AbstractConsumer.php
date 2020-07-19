@@ -9,9 +9,6 @@ use Gdbots\Pbj\Util\NumberUtil;
 use Gdbots\Pbj\Util\StringUtil;
 use Gdbots\Pbjx\PbjxEvents;
 use Gdbots\Pbjx\ServiceLocator;
-use Gdbots\Schemas\Pbjx\Mixin\Command\CommandV1Mixin;
-use Gdbots\Schemas\Pbjx\Mixin\Event\EventV1Mixin;
-use Gdbots\Schemas\Pbjx\Mixin\Request\RequestV1Mixin;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Symfony\Contracts\EventDispatcher\Event;
@@ -151,17 +148,17 @@ abstract class AbstractConsumer
 
     final protected function handleMessage(Message $message): ?Message
     {
-        if ($message::schema()->hasMixin(CommandV1Mixin::SCHEMA_CURIE)) {
+        if ($message::schema()->hasMixin('gdbots:pbjx:mixin:command')) {
             $this->handleCommand($message);
             return null;
         }
 
-        if ($message::schema()->hasMixin(EventV1Mixin::SCHEMA_CURIE)) {
+        if ($message::schema()->hasMixin('gdbots:pbjx:mixin:event')) {
             $this->handleEvent($message);
             return null;
         }
 
-        if ($message::schema()->hasMixin(RequestV1Mixin::SCHEMA_CURIE)) {
+        if ($message::schema()->hasMixin('gdbots:pbjx:mixin:request')) {
             return $this->handleRequest($message);
         }
     }
