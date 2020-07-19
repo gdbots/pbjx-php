@@ -18,7 +18,6 @@ use Gdbots\QueryParser\Node\Field;
 use Gdbots\QueryParser\Node\Numbr;
 use Gdbots\QueryParser\ParsedQuery;
 use Gdbots\Schemas\Pbjx\Enum\SearchEventsSort;
-use Gdbots\Schemas\Pbjx\Mixin\SearchEventsRequest\SearchEventsRequestV1Mixin;
 
 class QueryFactory
 {

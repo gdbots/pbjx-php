@@ -11,7 +11,6 @@ use Gdbots\Pbj\Message;
 use Gdbots\Pbj\MessageResolver;
 use Gdbots\Pbjx\Exception\EventSearchOperationFailed;
 use Gdbots\Schemas\Pbjx\Enum\Code;
-use Gdbots\Schemas\Pbjx\Mixin\SearchEventsRequest\SearchEventsRequestV1Mixin;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
