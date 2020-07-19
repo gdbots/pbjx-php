@@ -78,17 +78,14 @@ final class SimpleEventBus implements EventBus
                 $code = $e->getCode() > 0 ? $e->getCode() : Code::UNKNOWN;
 
                 $failedEvent = EventExecutionFailedV1::create()
-                    ->set(EventExecutionFailedV1::EVENT_FIELD, $event)
-                    ->set(EventExecutionFailedV1::ERROR_CODE_FIELD, $code)
-                    ->set(EventExecutionFailedV1::ERROR_NAME_FIELD, ClassUtil::getShortName($e))
-                    ->set(EventExecutionFailedV1::ERROR_MESSAGE_FIELD, substr($e->getMessage(), 0, 2048))
-                    ->set(EventExecutionFailedV1::STACK_TRACE_FIELD, $e->getTraceAsString());
+                    ->set('event', $event)
+                    ->set('error_code', $code)
+                    ->set('error_name', ClassUtil::getShortName($e))
+                    ->set('error_message', substr($e->getMessage(), 0, 2048))
+                    ->set('stack_trace', $e->getTraceAsString());
 
                 if ($e->getPrevious()) {
-                    $failedEvent->set(
-                        EventExecutionFailedV1::PREV_ERROR_MESSAGE_FIELD,
-                        substr($e->getPrevious()->getMessage(), 0, 2048)
-                    );
+                    $failedEvent->set('prev_error_message', substr($e->getPrevious()->getMessage(), 0, 2048));
                 }
 
                 $this->pbjx->copyContext($event, $failedEvent);

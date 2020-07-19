@@ -16,9 +16,6 @@ use Gdbots\Pbjx\Exception\InvalidArgumentException;
 use Gdbots\Pbjx\Exception\LogicException;
 use Gdbots\Pbjx\Exception\RequestHandlingFailed;
 use Gdbots\Pbjx\Exception\TooMuchRecursion;
-use Gdbots\Schemas\Pbjx\Mixin\Command\CommandV1Mixin;
-use Gdbots\Schemas\Pbjx\Mixin\Event\EventV1Mixin;
-use Gdbots\Schemas\Pbjx\Mixin\Request\RequestV1Mixin;
 use Gdbots\Schemas\Pbjx\Request\RequestFailedResponseV1;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
@@ -99,16 +96,11 @@ final class SimplePbjx implements Pbjx
 
         $schema = $to::schema();
 
-        if (!$to->has(CommandV1Mixin::CTX_CAUSATOR_REF_FIELD)
-            && $schema->hasField(CommandV1Mixin::CTX_CAUSATOR_REF_FIELD)
-        ) {
-            $to->set(CommandV1Mixin::CTX_CAUSATOR_REF_FIELD, $from->generateMessageRef());
+        if (!$to->has('ctx_causator_ref') && $schema->hasField('ctx_causator_ref')) {
+            $to->set('ctx_causator_ref', $from->generateMessageRef());
         }
 
-        $clone = [
-            CommandV1Mixin::CTX_APP_FIELD,
-            CommandV1Mixin::CTX_CLOUD_FIELD,
-        ];
+        $clone = ['ctx_app', 'ctx_cloud'];
 
         foreach ($clone as $field) {
             if (!$to->has($field) && $from->has($field) && $schema->hasField($field)) {
@@ -117,13 +109,13 @@ final class SimplePbjx implements Pbjx
         }
 
         $simple = [
-            CommandV1Mixin::CTX_TENANT_ID_FIELD,
-            CommandV1Mixin::CTX_CORRELATOR_REF_FIELD,
-            CommandV1Mixin::CTX_USER_REF_FIELD,
-            CommandV1Mixin::CTX_IP_FIELD,
-            CommandV1Mixin::CTX_IPV6_FIELD,
-            CommandV1Mixin::CTX_UA_FIELD,
-            CommandV1Mixin::CTX_MSG_FIELD,
+            'ctx_tenant_id',
+            'ctx_correlator_ref',
+            'ctx_user_ref',
+            'ctx_ip',
+            'ctx_ipv6',
+            'ctx_ua',
+            'ctx_msg',
         ];
 
         foreach ($simple as $field) {
@@ -137,8 +129,8 @@ final class SimplePbjx implements Pbjx
 
     public function send(Message $command): void
     {
-        if (!$command::schema()->hasMixin(CommandV1Mixin::SCHEMA_CURIE)) {
-            throw new LogicException('Pbjx->send requires a message using "' . CommandV1Mixin::SCHEMA_CURIE . '".');
+        if (!$command::schema()->hasMixin('gdbots:pbjx:mixin:command')) {
+            throw new LogicException('Pbjx->send requires a message using "gdbots:pbjx:mixin:command".');
         }
 
         $this->triggerLifecycle($command);
@@ -151,8 +143,8 @@ final class SimplePbjx implements Pbjx
             throw new LogicException('Pbjx->sendAt requires a timestamp in the future.');
         }
 
-        if (!$command::schema()->hasMixin(CommandV1Mixin::SCHEMA_CURIE)) {
-            throw new LogicException('Pbjx->sendAt requires a message using "' . CommandV1Mixin::SCHEMA_CURIE . '".');
+        if (!$command::schema()->hasMixin('gdbots:pbjx:mixin:command')) {
+            throw new LogicException('Pbjx->sendAt requires a message using "gdbots:pbjx:mixin:command".');
         }
 
         $this->triggerLifecycle($command);
@@ -167,8 +159,8 @@ final class SimplePbjx implements Pbjx
 
     public function publish(Message $event): void
     {
-        if (!$event::schema()->hasMixin(EventV1Mixin::SCHEMA_CURIE)) {
-            throw new LogicException('Pbjx->publish requires a message using "' . EventV1Mixin::SCHEMA_CURIE . '".');
+        if (!$event::schema()->hasMixin('gdbots:pbjx:mixin:event')) {
+            throw new LogicException('Pbjx->publish requires a message using "gdbots:pbjx:mixin:event".');
         }
 
         $this->triggerLifecycle($event);
@@ -177,8 +169,8 @@ final class SimplePbjx implements Pbjx
 
     public function request(Message $request): Message
     {
-        if (!$request::schema()->hasMixin(RequestV1Mixin::SCHEMA_CURIE)) {
-            throw new LogicException('Pbjx->request requires a message using "' . RequestV1Mixin::SCHEMA_CURIE . '".');
+        if (!$request::schema()->hasMixin('gdbots:pbjx:mixin:request')) {
+            throw new LogicException('Pbjx->request requires a message using "gdbots:pbjx:mixin:request".');
         }
 
         $this->triggerLifecycle($request);

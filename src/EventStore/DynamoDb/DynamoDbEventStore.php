@@ -21,9 +21,7 @@ use Gdbots\Pbjx\Exception\EventStoreOperationFailed;
 use Gdbots\Pbjx\Exception\OptimisticCheckFailed;
 use Gdbots\Pbjx\Pbjx;
 use Gdbots\Pbjx\PbjxEvents;
-use Gdbots\Schemas\Ncr\Mixin\Indexed\IndexedV1Mixin;
 use Gdbots\Schemas\Pbjx\Enum\Code;
-use Gdbots\Schemas\Pbjx\Mixin\Event\EventV1Mixin;
 use Gdbots\Schemas\Pbjx\StreamId;
 use GuzzleHttp\Promise\PromiseInterface;
 use Psr\Log\LoggerInterface;
@@ -146,7 +144,7 @@ class DynamoDbEventStore implements EventStore
         foreach ($eventIds as $eventId) {
             try {
                 $event = $this->getEvent($eventId, $context);
-                $events[(string)$event->get(EventV1Mixin::EVENT_ID_FIELD)] = $event;
+                $events[(string)$event->get('event_id')] = $event;
             } catch (EventNotFound $nf) {
                 // missing events are not exception worthy at this time
             } catch (\Throwable $e) {
@@ -331,7 +329,7 @@ class DynamoDbEventStore implements EventStore
             $this->pbjx->triggerLifecycle($event);
             $item = $this->marshaler->marshal($event);
             $item[EventStoreTable::HASH_KEY_NAME] = ['S' => $hashKey];
-            if ($event::schema()->hasMixin(IndexedV1Mixin::SCHEMA_CURIE)) {
+            if ($event::schema()->hasMixin('gdbots:ncr:mixin:indexed')) {
                 $item[EventStoreTable::INDEXED_KEY_NAME] = ['BOOL' => true];
             }
             $this->beforePutItem($item, $streamId, $event, $context);
@@ -387,11 +385,11 @@ class DynamoDbEventStore implements EventStore
 
             /** @var Message $event */
             foreach ($slice as $event) {
-                if (null !== $until && $event->get(EventV1Mixin::OCCURRED_AT_FIELD)->toFloat() >= $until->toFloat()) {
+                if (null !== $until && $event->get('occurred_at')->toFloat() >= $until->toFloat()) {
                     return;
                 }
 
-                if ($reindexing && !$event::schema()->hasMixin(IndexedV1Mixin::SCHEMA_CURIE)) {
+                if ($reindexing && !$event::schema()->hasMixin('gdbots:ncr:mixin:indexed')) {
                     continue;
                 }
 
@@ -770,7 +768,7 @@ class DynamoDbEventStore implements EventStore
         $event = $slice->getIterator()->current();
 
         // todo: review this etag strategy (need to make this more explicit/obvious)
-        $eventId = (string)$event->get(EventV1Mixin::EVENT_ID_FIELD);
+        $eventId = (string)$event->get('event_id');
         if ($eventId === $expectedEtag || md5($eventId) === $expectedEtag) {
             return;
         }

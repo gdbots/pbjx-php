@@ -18,13 +18,10 @@ class EchoRequestHandler implements RequestHandler
 
     public function handleRequest(Message $request, Pbjx $pbjx): Message
     {
-        if ('fail' === $request->get(EchoRequestV1::MSG_FIELD)) {
+        if ('fail' === $request->get('msg')) {
             throw new \Exception('test fail');
         }
 
-        return EchoResponseV1::create()->set(
-            EchoResponseV1::MSG_FIELD,
-            $request->get(EchoRequestV1::OCCURRED_AT_FIELD)->toDateTime()->format('U.u')
-        );
+        return EchoResponseV1::create()->set('msg', $request->get('occurred_at')->toDateTime()->format('U.u'));
     }
 }

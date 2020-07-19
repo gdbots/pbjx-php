@@ -23,19 +23,16 @@ class SimpleRequestBusTest extends AbstractBusTestCase
     {
         $request = EchoRequestV1::create();
         /** @var \DateTimeInterface $expected */
-        $expected = $request->get(EchoRequestV1::OCCURRED_AT_FIELD)->toDateTime();
+        $expected = $request->get('occurred_at')->toDateTime();
         $response = $this->pbjx->request($request);
         $this->assertInstanceOf(EchoResponseV1::class, $response);
-        $this->assertSame(
-            $expected->format('U.u'),
-            $response->get(EchoResponseV1::MSG_FIELD)
-        );
+        $this->assertSame($expected->format('U.u'), $response->get('msg'));
     }
 
     public function testRequestHandlingFailed()
     {
         $request = EchoRequestV1::create();
-        $request->set(EchoRequestV1::MSG_FIELD, 'fail');
+        $request->set('msg', 'fail');
 
         try {
             $this->pbjx->request($request);

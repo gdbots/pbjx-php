@@ -5,7 +5,6 @@ namespace Gdbots\Pbjx\Event;
 
 use Gdbots\Pbj\Message;
 use Gdbots\Pbjx\Exception\LogicException;
-use Gdbots\Schemas\Pbjx\Mixin\Response\ResponseV1Mixin;
 use Psr\EventDispatcher\StoppableEventInterface;
 
 class GetResponseEvent extends PbjxEvent implements StoppableEventInterface
@@ -40,30 +39,20 @@ class GetResponseEvent extends PbjxEvent implements StoppableEventInterface
             throw new LogicException('Response can only be set one time.');
         }
 
-        if (!$response->has(ResponseV1Mixin::CTX_REQUEST_FIELD)) {
-            $response->set(ResponseV1Mixin::CTX_REQUEST_FIELD, $this->message);
+        if (!$response->has('ctx_request')) {
+            $response->set('ctx_request', $this->message);
         }
 
-        if (!$response->has(ResponseV1Mixin::CTX_REQUEST_REF_FIELD)) {
-            $response->set(ResponseV1Mixin::CTX_REQUEST_REF_FIELD, $this->message->generateMessageRef());
+        if (!$response->has('ctx_request_ref')) {
+            $response->set('ctx_request_ref', $this->message->generateMessageRef());
         }
 
-        if (!$response->has(ResponseV1Mixin::CTX_CORRELATOR_REF_FIELD)
-            && $this->message->has(ResponseV1Mixin::CTX_CORRELATOR_REF_FIELD)
-        ) {
-            $response->set(
-                ResponseV1Mixin::CTX_CORRELATOR_REF_FIELD,
-                $this->message->get(ResponseV1Mixin::CTX_CORRELATOR_REF_FIELD)
-            );
+        if (!$response->has('ctx_correlator_ref') && $this->message->has('ctx_correlator_ref')) {
+            $response->set('ctx_correlator_ref', $this->message->get('ctx_correlator_ref'));
         }
 
-        if (!$response->has(ResponseV1Mixin::CTX_TENANT_ID_FIELD)
-            && $this->message->has(ResponseV1Mixin::CTX_TENANT_ID_FIELD)
-        ) {
-            $response->set(
-                ResponseV1Mixin::CTX_TENANT_ID_FIELD,
-                $this->message->get(ResponseV1Mixin::CTX_TENANT_ID_FIELD)
-            );
+        if (!$response->has('ctx_tenant_id') && $this->message->has('ctx_tenant_id')) {
+            $response->set('ctx_tenant_id', $this->message->get('ctx_tenant_id'));
         }
 
         $this->response = $response;

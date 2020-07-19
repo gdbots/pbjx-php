@@ -15,7 +15,6 @@ use Gdbots\Pbjx\Exception\SchedulerOperationFailed;
 use Gdbots\Pbjx\PbjxEvents;
 use Gdbots\Pbjx\Scheduler\Scheduler;
 use Gdbots\Schemas\Pbjx\Enum\Code;
-use Gdbots\Schemas\Pbjx\Mixin\Command\CommandV1Mixin;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Symfony\Component\EventDispatcher\EventDispatcher;
@@ -98,16 +97,16 @@ class DynamoDbScheduler implements Scheduler
             // a command will not be sent in the same context as we currently
             // have so unset these fields and let the task handler (a lambda generally)
             // populate these fields right before processing.
-            unset($payload[CommandV1Mixin::COMMAND_ID_FIELD]);
-            unset($payload[CommandV1Mixin::OCCURRED_AT_FIELD]);
-            unset($payload[CommandV1Mixin::EXPECTED_ETAG_FIELD]);
-            // unset($payload[CommandV1Mixin::CTX_RETRIES_FIELD]);
-            unset($payload[CommandV1Mixin::CTX_CORRELATOR_REF_FIELD]);
-            unset($payload[CommandV1Mixin::CTX_APP_FIELD]);
-            unset($payload[CommandV1Mixin::CTX_CLOUD_FIELD]);
-            unset($payload[CommandV1Mixin::CTX_IP_FIELD]);
-            unset($payload[CommandV1Mixin::CTX_IPV6_FIELD]);
-            unset($payload[CommandV1Mixin::CTX_UA_FIELD]);
+            unset($payload['command_id']);
+            unset($payload['occurred_at']);
+            unset($payload['expected_etag']);
+            // unset($payload['ctx_retries']);
+            unset($payload['ctx_correlator_ref']);
+            unset($payload['ctx_app']);
+            unset($payload['ctx_cloud']);
+            unset($payload['ctx_ip']);
+            unset($payload['ctx_ipv6']);
+            unset($payload['ctx_ua']);
 
             $params = [
                 'TableName'    => $tableName,
