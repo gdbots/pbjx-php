@@ -7,7 +7,6 @@ use Gdbots\Pbj\Message;
 use Gdbots\Pbj\Util\ClassUtil;
 use Gdbots\Pbjx\Transport\Transport;
 use Gdbots\Schemas\Pbjx\Enum\Code;
-use Gdbots\Schemas\Pbjx\Mixin\Response\ResponseV1Mixin;
 use Gdbots\Schemas\Pbjx\Request\RequestFailedResponseV1;
 
 final class SimpleRequestBus implements RequestBus
@@ -41,17 +40,11 @@ final class SimpleRequestBus implements RequestBus
             $response->set('ctx_request_ref', $request->generateMessageRef());
 
             if ($request->has('ctx_correlator_ref')) {
-                $response->set(
-                    'ctx_correlator_ref',
-                    $request->get('ctx_correlator_ref')
-                );
+                $response->set('ctx_correlator_ref', $request->get('ctx_correlator_ref'));
             }
 
             if ($request->has('ctx_tenant_id')) {
-                $response->set(
-                    'ctx_tenant_id',
-                    $request->get('ctx_tenant_id')
-                );
+                $response->set('ctx_tenant_id', $request->get('ctx_tenant_id'));
             }
 
             return $response;
@@ -73,24 +66,15 @@ final class SimpleRequestBus implements RequestBus
             ->set('stack_trace', $exception->getTraceAsString());
 
         if ($exception->getPrevious()) {
-            $response->set(
-                'prev_error_message',
-                substr($exception->getPrevious()->getMessage(), 0, 2048)
-            );
+            $response->set('prev_error_message', substr($exception->getPrevious()->getMessage(), 0, 2048));
         }
 
         if ($request->has('ctx_correlator_ref')) {
-            $response->set(
-                'ctx_correlator_ref',
-                $request->get('ctx_correlator_ref')
-            );
+            $response->set('ctx_correlator_ref', $request->get('ctx_correlator_ref'));
         }
 
         if ($request->has('ctx_tenant_id')) {
-            $response->set(
-                'ctx_tenant_id',
-                $request->get('ctx_tenant_id')
-            );
+            $response->set('ctx_tenant_id', $request->get('ctx_tenant_id'));
         }
 
         return $response;
