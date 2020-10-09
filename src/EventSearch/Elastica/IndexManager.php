@@ -214,7 +214,10 @@ class IndexManager
         $index = new Index($client, $name);
 
         try {
-            $index->setMapping($this->createMapping());
+            $index->setMapping($this->createMapping(), [
+                'ignore_unavailable' => true,
+                'allow_no_indices'   => true,
+            ]);
         } catch (\Throwable $e) {
             if (false !== strpos($e->getMessage(), 'no such index')) {
                 $this->logger->info(sprintf('No index exists yet [%s] in ElasticSearch. Ignoring.', $name));
