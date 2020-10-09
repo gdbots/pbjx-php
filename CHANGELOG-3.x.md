@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 3.x versions.
 
 
+## v3.1.3
+* In `IndexManager::updateIndex` add `ignore_unavailable` and `allow_no_indices` (with true) when running `$index->setMapping(...)` since a missing index is not an error in this scenario.
+
+
 ## v3.1.2
 * More mixin reference removal.
 
