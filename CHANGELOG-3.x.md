@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 3.x versions.
 
 
+## v3.1.4
+* Add `tenant_id` to `DynamoDbScheduler` statemachine execution input.
+
+
 ## v3.1.3
 * In `IndexManager::updateIndex` add `ignore_unavailable` and `allow_no_indices` (with true) when running `$index->setMapping(...)` since a missing index is not an error in this scenario.
 

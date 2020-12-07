@@ -88,7 +88,8 @@ class DynamoDbScheduler implements Scheduler
         $jobId = $jobId ?: TimeUuidIdentifier::generate()->toString();
         $stateMachineArn = $this->getStateMachineArn($context);
         $tableName = $this->getTableName($context);
-        $executionArn = $this->startExecution($stateMachineArn, $timestamp, $jobId);
+        $tenantId = $command->get('ctx_tenant_id');
+        $executionArn = $this->startExecution($stateMachineArn, $timestamp, $jobId, $tenantId);
 
         try {
             $command->freeze();
@@ -213,21 +214,29 @@ class DynamoDbScheduler implements Scheduler
      * Starts the execution in the state machine and returns
      * the generated executionArn from AWS.
      *
-     * @param string $stateMachineArn
-     * @param int    $timestamp
-     * @param string $jobId
+     * @param string  $stateMachineArn
+     * @param int     $timestamp
+     * @param string  $jobId
+     * @param ?string $tenantId
      *
      * @return string
      *
      * @throws SchedulerOperationFailed
      */
-    protected function startExecution(string $stateMachineArn, int $timestamp, string $jobId): string
-    {
+    protected function startExecution(
+        string $stateMachineArn,
+        int $timestamp,
+        string $jobId,
+        ?string $tenantId = null
+    ): string {
         $start = new \DateTime('now', new \DateTimeZone('UTC'));
         $sendAt = new \DateTime("@{$timestamp}");
         $span = (int)$start->diff($sendAt)->format('%a');
 
         $input = ['job_id' => $jobId];
+        if (!empty($tenantId)) {
+            $input['tenant_id'] = $tenantId;
+        }
 
         /*
          * AWS Step Functions have a one year maximum execution time.
