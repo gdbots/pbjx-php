@@ -1,8 +1,6 @@
 pbjx-php
 =============
 
-[![Build Status](https://api.travis-ci.org/gdbots/pbjx-php.svg)](https://travis-ci.org/gdbots/pbjx-php)
-
 This library provides the messaging tools for [Pbj](https://github.com/gdbots/pbj-php).
 
 > __Pbj__ stands for "Private Business Json".

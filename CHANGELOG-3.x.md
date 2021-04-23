@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 3.x versions.
 
 
+## v3.1.5
+* Add (re)connect timeout handling in elastica client and transport since it's not yet configurable in elastica itself.
+
+
 ## v3.1.4
 * Add `tenant_id` to `DynamoDbScheduler` statemachine execution input.
 
