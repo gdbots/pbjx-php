@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 3.x versions.
 
 
+## v3.1.6
+* Fix invalid `gdbots:ncr:mixin:indexed` check with `gdbots:pbjx:mixin:indexed`.
+
+
 ## v3.1.5
 * Add (re)connect timeout handling in elastica client and transport since it's not yet configurable in elastica itself.
 

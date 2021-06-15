@@ -186,7 +186,7 @@ TEXT;
                     return;
                 }
 
-                if ($reindexing && !$event::schema()->hasMixin('gdbots:ncr:mixin:indexed')) {
+                if ($reindexing && !$event::schema()->hasMixin('gdbots:pbjx:mixin:indexed')) {
                     continue;
                 }
 
