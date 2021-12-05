@@ -96,7 +96,7 @@ final class TransportEnvelope implements \JsonSerializable
         return $this->toString();
     }
 
-    public function jsonSerialize()
+    public function jsonSerialize(): array
     {
         return [
             'serializer' => $this->serializer,

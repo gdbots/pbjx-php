@@ -36,7 +36,7 @@ final class RequestHandlingFailed extends \RuntimeException implements GdbotsPbj
         return $this->response->get('ctx_request');
     }
 
-    public function jsonSerialize()
+    public function jsonSerialize(): array
     {
         return $this->response->toArray();
     }

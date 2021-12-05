@@ -15,7 +15,7 @@
     "phpunit/phpunit": "^9.5",
     "aws/aws-sdk-php": "^3.138",
     "gdbots/acme-schemas": "^2.1",
-    "ruflin/elastica": "^7.0"
+    "ruflin/elastica": "^7.1"
   },
   "autoload": {
     "psr-4": {

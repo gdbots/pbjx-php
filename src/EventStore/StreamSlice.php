@@ -60,12 +60,12 @@ final class StreamSlice implements \JsonSerializable, \IteratorAggregate, \Count
         ];
     }
 
-    public function jsonSerialize()
+    public function jsonSerialize(): array
     {
         return $this->toArray();
     }
 
-    public function getIterator()
+    public function getIterator(): \Traversable
     {
         return new \ArrayIterator($this->events);
     }
