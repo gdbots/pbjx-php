@@ -87,13 +87,13 @@ class DynamoDbEventStore implements EventStore
                 if ('ResourceNotFoundException' === $errorName) {
                     throw new EventNotFound();
                 } elseif ('ProvisionedThroughputExceededException' === $errorName) {
-                    $code = Code::RESOURCE_EXHAUSTED;
+                    $code = Code::RESOURCE_EXHAUSTED->value;
                 } else {
-                    $code = Code::UNAVAILABLE;
+                    $code = Code::UNAVAILABLE->value;
                 }
             } else {
                 $errorName = ClassUtil::getShortName($e);
-                $code = Code::INTERNAL;
+                $code = Code::INTERNAL->value;
             }
 
             throw new EventStoreOperationFailed(
@@ -173,13 +173,13 @@ class DynamoDbEventStore implements EventStore
                     // if it's already deleted, it's fine
                     return;
                 } elseif ('ProvisionedThroughputExceededException' === $errorName) {
-                    $code = Code::RESOURCE_EXHAUSTED;
+                    $code = Code::RESOURCE_EXHAUSTED->value;
                 } else {
-                    $code = Code::UNAVAILABLE;
+                    $code = Code::UNAVAILABLE->value;
                 }
             } else {
                 $errorName = ClassUtil::getShortName($e);
-                $code = Code::INTERNAL;
+                $code = Code::INTERNAL->value;
             }
 
             throw new EventStoreOperationFailed(
@@ -258,13 +258,13 @@ class DynamoDbEventStore implements EventStore
             if ($e instanceof AwsException) {
                 $errorName = $e->getAwsErrorCode() ?: ClassUtil::getShortName($e);
                 if ('ProvisionedThroughputExceededException' === $errorName) {
-                    $code = Code::RESOURCE_EXHAUSTED;
+                    $code = Code::RESOURCE_EXHAUSTED->value;
                 } else {
-                    $code = Code::UNAVAILABLE;
+                    $code = Code::UNAVAILABLE->value;
                 }
             } else {
                 $errorName = ClassUtil::getShortName($e);
-                $code = Code::INTERNAL;
+                $code = Code::INTERNAL->value;
             }
 
             throw new EventStoreOperationFailed(

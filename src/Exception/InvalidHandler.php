@@ -19,7 +19,7 @@ final class InvalidHandler extends \UnexpectedValueException implements GdbotsPb
                 get_class($handler),
                 $message
             ),
-            Code::INTERNAL
+            Code::INTERNAL->value
         );
     }
 
@@ -32,7 +32,7 @@ final class InvalidHandler extends \UnexpectedValueException implements GdbotsPb
                 get_class($handler),
                 $message
             ),
-            Code::INTERNAL
+            Code::INTERNAL->value
         );
     }
 }

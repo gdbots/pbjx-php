@@ -90,7 +90,7 @@ class ElasticaEventSearch implements EventSearch
                             ClassUtil::getShortName($e),
                             $indexName
                         ),
-                        Code::INTERNAL,
+                        Code::INTERNAL->value,
                         $e
                     );
                 }
@@ -207,7 +207,7 @@ TEXT;
                     ClassUtil::getShortName($e),
                     $e->getMessage()
                 ),
-                Code::INTERNAL,
+                Code::INTERNAL->value,
                 $e
             );
         }
@@ -265,7 +265,7 @@ TEXT;
                     ClassUtil::getShortName($e),
                     $e->getMessage()
                 ),
-                Code::INTERNAL,
+                Code::INTERNAL->value,
                 $e
             );
         }
@@ -310,7 +310,7 @@ TEXT;
                     $request->get('q'),
                     ClassUtil::getShortName($e) . '::' . $e->getMessage()
                 ),
-                Code::INTERNAL,
+                Code::INTERNAL->value,
                 $e
             );
         }

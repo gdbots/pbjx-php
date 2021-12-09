@@ -55,7 +55,7 @@ final class SimpleRequestBus implements RequestBus
 
     protected function createResponseForFailedRequest(Message $request, \Throwable $exception): Message
     {
-        $code = $exception->getCode() > 0 ? $exception->getCode() : Code::UNKNOWN;
+        $code = $exception->getCode() > 0 ? $exception->getCode() : Code::UNKNOWN->value;
 
         $response = RequestFailedResponseV1::create()
             ->set('ctx_request_ref', $request->generateMessageRef())

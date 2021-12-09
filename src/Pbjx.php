@@ -26,10 +26,11 @@ interface Pbjx
      * the trigger process.  The PbjxEvent object will have a reference to the parent event
      * and the depth of the recursion.
      *
-     * @param Message   $message   The message that will be processed.
-     * @param string    $suffix    A string indicating the lifecycle phase (bind, validate, enrich, etc.)
-     * @param PbjxEvent $event     An event object containing the message.
-     * @param bool      $recursive If true, all field values with MessageType are also triggered.
+     * @param Message        $message   The message that will be processed.
+     * @param string         $suffix    A string indicating the lifecycle phase (bind, validate, enrich, etc.)
+     * @param PbjxEvent|null $event     An event object containing the message.
+     * @param bool           $recursive If true, all field values with MessageType are also triggered.
+     * @param bool           $throw     If true, exceptions are thrown, otherwise they are logged.
      *
      * @return static
      *
@@ -38,7 +39,7 @@ interface Pbjx
      * @throws TooMuchRecursion
      * @throws \Throwable
      */
-    public function trigger(Message $message, string $suffix, ?PbjxEvent $event = null, bool $recursive = true): self;
+    public function trigger(Message $message, string $suffix, ?PbjxEvent $event = null, bool $recursive = true, bool $throw = true): static;
 
     /**
      * Runs the "standard" lifecycle for a message prior to send, publish or request.
@@ -54,7 +55,7 @@ interface Pbjx
      *
      * @throws \Throwable
      */
-    public function triggerLifecycle(Message $message, bool $recursive = true): self;
+    public function triggerLifecycle(Message $message, bool $recursive = true): static;
 
     /**
      * Copies context fields (ip, user agent, correlator, etc.) from one message to another.
@@ -64,7 +65,7 @@ interface Pbjx
      *
      * @return static
      */
-    public function copyContext(Message $from, Message $to): self;
+    public function copyContext(Message $from, Message $to): static;
 
     /**
      * Processes a command asynchronously.
@@ -79,10 +80,10 @@ interface Pbjx
     /**
      * Schedules a command to send at a later time.
      *
-     * @param Message $command   The command to send.
-     * @param int     $timestamp Unix timestamp (in the future) when the command should be sent.
-     * @param string  $jobId     Optional identifier for the job (existing job with the same id will be canceled).
-     * @param array   $context   Data that helps the Scheduler decide where to read/write data from.
+     * @param Message     $command   The command to send.
+     * @param int         $timestamp Unix timestamp (in the future) when the command should be sent.
+     * @param string|null $jobId     Optional identifier for the job (existing job with the same id will be canceled).
+     * @param array       $context   Data that helps the Scheduler decide where to read/write data from.
      *
      * @return string Returns the jobId (can be used for cancellation)
      *

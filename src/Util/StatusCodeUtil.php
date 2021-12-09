@@ -12,7 +12,7 @@ use Gdbots\Schemas\Pbjx\Enum\HttpCode;
  */
 final class StatusCodeUtil
 {
-    public static function vendorToHttp(int $code = Code::OK): int
+    public static function vendorToHttp(Code $code = Code::OK): HttpCode
     {
         if (Code::OK === $code) {
             return HttpCode::HTTP_OK;
@@ -65,9 +65,9 @@ final class StatusCodeUtil
         }
     }
 
-    public static function httpToVendor(int $httpCode = HttpCode::HTTP_OK): int
+    public static function httpToVendor(HttpCode $httpCode = HttpCode::HTTP_OK): Code
     {
-        if ($httpCode < 400) {
+        if ($httpCode->value < 400) {
             return Code::OK;
         }
 
@@ -106,11 +106,11 @@ final class StatusCodeUtil
                 return Code::UNAVAILABLE;
 
             default:
-                if ($httpCode >= 500) {
+                if ($httpCode->value >= 500) {
                     return Code::INTERNAL;
                 }
 
-                if ($httpCode >= 400) {
+                if ($httpCode->value >= 400) {
                     return Code::INVALID_ARGUMENT;
                 }
 

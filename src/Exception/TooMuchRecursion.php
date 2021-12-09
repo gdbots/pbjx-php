@@ -9,6 +9,6 @@ final class TooMuchRecursion extends LogicException implements GdbotsPbjxExcepti
 {
     public function __construct(string $message = '')
     {
-        parent::__construct($message, Code::INVALID_ARGUMENT);
+        parent::__construct($message, Code::INVALID_ARGUMENT->value);
     }
 }

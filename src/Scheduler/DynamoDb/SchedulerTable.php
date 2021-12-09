@@ -60,7 +60,7 @@ final class SchedulerTable
                     $tableName,
                     $client->getRegion()
                 ),
-                Code::INTERNAL,
+                Code::INTERNAL->value,
                 $e
             );
         }
@@ -89,7 +89,7 @@ final class SchedulerTable
                     $tableName,
                     $client->getRegion()
                 ),
-                Code::INTERNAL,
+                Code::INTERNAL->value,
                 $e
             );
         }

@@ -22,7 +22,7 @@ final class RequestHandlingFailed extends \RuntimeException implements GdbotsPbj
                 $this->response->get('error_code'),
                 $this->response->get('error_message')
             ),
-            $this->response->get('error_code', Code::UNKNOWN)
+            $this->response->get('error_code', Code::UNKNOWN->value)
         );
     }
 

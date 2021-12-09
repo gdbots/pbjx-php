@@ -15,7 +15,7 @@ final class HandlerNotFound extends \LogicException implements GdbotsPbjxExcepti
         $this->curie = $curie;
         parent::__construct(
             sprintf('ServiceLocator did not find a handler for curie [%s].', $curie->toString()),
-            Code::UNIMPLEMENTED,
+            Code::UNIMPLEMENTED->value,
             $previous
         );
     }

@@ -226,7 +226,7 @@ class IndexManager
 
             throw new EventSearchOperationFailed(
                 sprintf('Failed to put mapping for index [%s] into ElasticSearch.', $name),
-                Code::INTERNAL,
+                Code::INTERNAL->value,
                 $e
             );
         }
