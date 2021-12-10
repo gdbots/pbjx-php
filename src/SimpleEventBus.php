@@ -75,7 +75,7 @@ final class SimpleEventBus implements EventBus
                     return;
                 }
 
-                $code = $e->getCode() > 0 ? $e->getCode() : Code::UNKNOWN;
+                $code = $e->getCode() > 0 ? $e->getCode() : Code::UNKNOWN->value;
 
                 $failedEvent = EventExecutionFailedV1::create()
                     ->set('event', $event)

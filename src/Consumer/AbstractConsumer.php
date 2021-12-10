@@ -178,7 +178,7 @@ abstract class AbstractConsumer
         return $this->locator->getRequestBus()->receiveRequest($request);
     }
 
-    final public function handleSignals(int $signo, $signinfo = null): void
+    final public function handleSignals(int $signo, mixed $signinfo = null): void
     {
         switch ($signo) {
             case SIGINT:

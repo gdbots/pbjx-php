@@ -33,7 +33,8 @@ final class SimplePbjx implements Pbjx
         PbjxEvent::setPbjx($this);
     }
 
-    public function trigger(Message $message, string $suffix, ?PbjxEvent $event = null, bool $recursive = true): self
+
+    public function trigger(Message $message, string $suffix, ?PbjxEvent $event = null, bool $recursive = true, bool $throw = true): static
     {
         $suffix = '.' . trim($suffix, '.');
         if ('.' === $suffix) {
@@ -63,19 +64,28 @@ final class SimplePbjx implements Pbjx
             }
         }
 
-        $this->dispatcher->dispatch($event, 'gdbots_pbjx.message' . $suffix);
-
+        $eventNames = ['gdbots_pbjx.message' . $suffix];
         foreach ($schema->getMixins() as $mixin) {
-            $this->dispatcher->dispatch($event, $mixin . $suffix);
+            $eventNames[] = $mixin . $suffix;
         }
+        $eventNames[] = $schema->getCurieMajor() . $suffix;
+        $eventNames[] = $schema->getCurie()->toString() . $suffix;
 
-        $this->dispatcher->dispatch($event, $schema->getCurieMajor() . $suffix);
-        $this->dispatcher->dispatch($event, $schema->getCurie()->toString() . $suffix);
+        foreach ($eventNames as $eventName) {
+            try {
+                $this->dispatcher->dispatch($event, $eventName);
+            } catch (\Throwable $e) {
+                if ($throw) {
+                    throw $e;
+                }
+                $this->locator->getExceptionHandler()->onTriggerException($event, $eventName, $e);
+            }
+        }
 
         return $this;
     }
 
-    public function triggerLifecycle(Message $message, bool $recursive = true): self
+    public function triggerLifecycle(Message $message, bool $recursive = true): static
     {
         if ($message->isFrozen()) {
             return $this;
@@ -88,7 +98,7 @@ final class SimplePbjx implements Pbjx
         return $this;
     }
 
-    public function copyContext(Message $from, Message $to): self
+    public function copyContext(Message $from, Message $to): static
     {
         if ($to->isFrozen()) {
             return $this;

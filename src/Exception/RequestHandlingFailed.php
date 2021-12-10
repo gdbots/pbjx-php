@@ -22,7 +22,7 @@ final class RequestHandlingFailed extends \RuntimeException implements GdbotsPbj
                 $this->response->get('error_code'),
                 $this->response->get('error_message')
             ),
-            $this->response->get('error_code', Code::UNKNOWN)
+            $this->response->get('error_code', Code::UNKNOWN->value)
         );
     }
 
@@ -36,7 +36,7 @@ final class RequestHandlingFailed extends \RuntimeException implements GdbotsPbj
         return $this->response->get('ctx_request');
     }
 
-    public function jsonSerialize()
+    public function jsonSerialize(): array
     {
         return $this->response->toArray();
     }

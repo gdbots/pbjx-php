@@ -5,6 +5,7 @@ namespace Gdbots\Pbjx;
 
 use Gdbots\Pbj\Util\ClassUtil;
 use Gdbots\Pbjx\Event\BusExceptionEvent;
+use Gdbots\Pbjx\Event\PbjxEvent;
 use Gdbots\Pbjx\Event\TransportExceptionEvent;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
@@ -24,6 +25,21 @@ class LogAndDispatchExceptionHandler implements ExceptionHandler
         $this->logger = $logger ?: new NullLogger();
         $this->dispatcher = $this->locator->getDispatcher();
         $this->pbjx = $this->locator->getPbjx();
+    }
+
+    public function onTriggerException(PbjxEvent $event, string $eventName, \Throwable $exception): void
+    {
+        $message = sprintf(
+            '%s::Message [{pbj_schema}] threw an exception during [%s] trigger.',
+            ClassUtil::getShortName($exception), $eventName
+        );
+
+        $this->logger->emergency($message, [
+            'exception'  => $exception,
+            'pbj_schema' => $event->getMessage()->schema()->getId()->toString(),
+            'pbj'        => $event->getMessage()->toArray(),
+            'trigger'    => $eventName,
+        ]);
     }
 
     public function onCommandBusException(BusExceptionEvent $event): void

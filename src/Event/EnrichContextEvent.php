@@ -69,7 +69,7 @@ final class EnrichContextEvent
         return isset($this->context[$name]);
     }
 
-    public function get(string $name, $default = null)
+    public function get(string $name, mixed $default = null): mixed
     {
         return $this->context[$name] ?? $default;
     }

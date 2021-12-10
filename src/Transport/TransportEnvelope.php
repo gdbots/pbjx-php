@@ -58,9 +58,9 @@ final class TransportEnvelope implements \JsonSerializable
             throw new \InvalidArgumentException('Envelope is invalid. ' . json_last_error_msg());
         }
 
-        $serializer = isset($envelope['serializer']) ? $envelope['serializer'] : 'php';
+        $serializer = $envelope['serializer'] ?? 'php';
         $isReplay = isset($envelope['is_replay']) ? filter_var($envelope['is_replay'], FILTER_VALIDATE_BOOLEAN) : false;
-        $message = self::getSerializer($serializer)->deserialize(isset($envelope['message']) ? $envelope['message'] : '');
+        $message = self::getSerializer($serializer)->deserialize($envelope['message'] ?? '');
         $message->isReplay($isReplay);
 
         return new self($message, $serializer);
@@ -96,7 +96,7 @@ final class TransportEnvelope implements \JsonSerializable
         return $this->toString();
     }
 
-    public function jsonSerialize()
+    public function jsonSerialize(): array
     {
         return [
             'serializer' => $this->serializer,

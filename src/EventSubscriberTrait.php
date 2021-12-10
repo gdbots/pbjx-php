@@ -7,10 +7,6 @@ use Gdbots\Pbj\Message;
 
 trait EventSubscriberTrait
 {
-    /**
-     * @param Message $event
-     * @param Pbjx    $pbjx
-     */
     public function onEvent(Message $event, Pbjx $pbjx): void
     {
         $method = $event::schema()->getHandlerMethodName(false, 'on');

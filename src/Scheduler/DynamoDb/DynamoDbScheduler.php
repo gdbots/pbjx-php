@@ -136,13 +136,13 @@ class DynamoDbScheduler implements Scheduler
             if ($e instanceof AwsException) {
                 $errorName = $e->getAwsErrorCode() ?: ClassUtil::getShortName($e);
                 if ('ProvisionedThroughputExceededException' === $errorName) {
-                    $code = Code::RESOURCE_EXHAUSTED;
+                    $code = Code::RESOURCE_EXHAUSTED->value;
                 } else {
-                    $code = Code::UNAVAILABLE;
+                    $code = Code::UNAVAILABLE->value;
                 }
             } else {
                 $errorName = ClassUtil::getShortName($e);
-                $code = Code::INTERNAL;
+                $code = Code::INTERNAL->value;
             }
 
             throw new SchedulerOperationFailed(
@@ -187,13 +187,13 @@ class DynamoDbScheduler implements Scheduler
                         // if it's already deleted/canceled, it's fine
                         continue;
                     } else if ('ProvisionedThroughputExceededException' === $errorName) {
-                        $code = Code::RESOURCE_EXHAUSTED;
+                        $code = Code::RESOURCE_EXHAUSTED->value;
                     } else {
-                        $code = Code::UNAVAILABLE;
+                        $code = Code::UNAVAILABLE->value;
                     }
                 } else {
                     $errorName = ClassUtil::getShortName($e);
-                    $code = Code::INTERNAL;
+                    $code = Code::INTERNAL->value;
                 }
 
                 throw new SchedulerOperationFailed(
@@ -273,31 +273,31 @@ class DynamoDbScheduler implements Scheduler
                 $errorName = $e->getAwsErrorCode() ?: ClassUtil::getShortName($e);
                 switch ($errorName) {
                     case 'ExecutionLimitExceeded':
-                        $code = Code::RESOURCE_EXHAUSTED;
+                        $code = Code::RESOURCE_EXHAUSTED->value;
                         break;
 
                     case 'ExecutionAlreadyExists':
-                        $code = Code::ALREADY_EXISTS;
+                        $code = Code::ALREADY_EXISTS->value;
                         break;
 
                     case 'InvalidArn':
                     case 'InvalidExecutionInput':
                     case 'InvalidName':
-                        $code = Code::INVALID_ARGUMENT;
+                        $code = Code::INVALID_ARGUMENT->value;
                         break;
 
                     case 'StateMachineDoesNotExist':
                     case 'StateMachineDeleting':
-                        $code = Code::NOT_FOUND;
+                        $code = Code::NOT_FOUND->value;
                         break;
 
                     default:
-                        $code = Code::UNAVAILABLE;
+                        $code = Code::UNAVAILABLE->value;
                         break;
                 }
             } else {
                 $errorName = ClassUtil::getShortName($e);
-                $code = Code::INTERNAL;
+                $code = Code::INTERNAL->value;
             }
 
             throw new SchedulerOperationFailed(
@@ -330,7 +330,7 @@ class DynamoDbScheduler implements Scheduler
                 'cause'        => 'canceled',
             ]);
         } catch (\Throwable $e) {
-            if (false !== strpos($e->getMessage(), 'ExecutionDoesNotExist')) {
+            if (str_contains($e->getMessage(), 'ExecutionDoesNotExist')) {
                 return;
             }
 

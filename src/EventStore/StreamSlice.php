@@ -34,11 +34,11 @@ final class StreamSlice implements \JsonSerializable, \IteratorAggregate, \Count
     private bool $hasMore = false;
 
     /**
-     * @param Message[] $events     An array of events.
-     * @param StreamId  $streamId   The id of the stream the events are from, e.g. "article:1234"
-     * @param bool      $forward    When true, the events are read from oldest to newest, otherwise newest to oldest.
-     * @param bool      $consistent An eventually consistent read was used to get this slice.
-     * @param bool      $hasMore    True if there are more events in the stream.
+     * @param Message[]     $events     An array of events.
+     * @param StreamId|null $streamId   The id of the stream the events are from, e.g. "article:1234"
+     * @param bool          $forward    When true, the events are read from oldest to newest, otherwise newest to oldest.
+     * @param bool          $consistent An eventually consistent read was used to get this slice.
+     * @param bool          $hasMore    True if there are more events in the stream.
      */
     public function __construct(array $events = [], ?StreamId $streamId = null, bool $forward = true, bool $consistent = false, bool $hasMore = false)
     {
@@ -60,12 +60,12 @@ final class StreamSlice implements \JsonSerializable, \IteratorAggregate, \Count
         ];
     }
 
-    public function jsonSerialize()
+    public function jsonSerialize(): array
     {
         return $this->toArray();
     }
 
-    public function getIterator()
+    public function getIterator(): \Traversable
     {
         return new \ArrayIterator($this->events);
     }

@@ -219,14 +219,14 @@ class IndexManager
                 'allow_no_indices'   => true,
             ]);
         } catch (\Throwable $e) {
-            if (false !== strpos($e->getMessage(), 'no such index')) {
+            if (str_contains($e->getMessage(), 'no such index')) {
                 $this->logger->info(sprintf('No index exists yet [%s] in ElasticSearch. Ignoring.', $name));
                 return;
             }
 
             throw new EventSearchOperationFailed(
                 sprintf('Failed to put mapping for index [%s] into ElasticSearch.', $name),
-                Code::INTERNAL,
+                Code::INTERNAL->value,
                 $e
             );
         }

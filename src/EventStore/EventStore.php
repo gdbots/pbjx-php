@@ -73,12 +73,12 @@ interface EventStore
      *
      * A StreamSlice will always be returned, even when empty or when the stream doesn't exist.
      *
-     * @param StreamId  $streamId   The id of the stream to read from, e.g. "acme:article:1234"
-     * @param Microtime $since      Return events since this time (exclusive greater than if forward=true, less than if forward=false)
-     * @param int       $count      The number of events to return.
-     * @param bool      $forward    When true, the events are read from oldest to newest, otherwise newest to oldest.
-     * @param bool      $consistent An eventually consistent read is used by default unless this is true.
-     * @param array     $context    Data that helps the EventStore decide where to read/write data from.
+     * @param StreamId       $streamId   The id of the stream to read from, e.g. "acme:article:1234"
+     * @param Microtime|null $since      Return events since this time (exclusive greater than if forward=true, less than if forward=false)
+     * @param int            $count      The number of events to return.
+     * @param bool           $forward    When true, the events are read from oldest to newest, otherwise newest to oldest.
+     * @param bool           $consistent An eventually consistent read is used by default unless this is true.
+     * @param array          $context    Data that helps the EventStore decide where to read/write data from.
      *
      * @return StreamSlice
      *
@@ -89,10 +89,10 @@ interface EventStore
     /**
      * Appends an array of events to a stream.
      *
-     * @param StreamId  $streamId     The id of the stream to append to, e.g. "acme:article:1234"
-     * @param Message[] $events       An array of events to append to the stream.
-     * @param string    $expectedEtag Used to perform optimistic concurrency check.
-     * @param array     $context      Data that helps the EventStore decide where to read/write data from.
+     * @param StreamId    $streamId     The id of the stream to append to, e.g. "acme:article:1234"
+     * @param Message[]   $events       An array of events to append to the stream.
+     * @param string|null $expectedEtag Used to perform optimistic concurrency check.
+     * @param array       $context      Data that helps the EventStore decide where to read/write data from.
      *
      * @throws OptimisticCheckFailed
      * @throws GdbotsPbjxException
@@ -102,10 +102,10 @@ interface EventStore
     /**
      * Reads events (forward only) from a stream.
      *
-     * @param StreamId  $streamId The id of the stream to read from, e.g. "acme:article:1234"
-     * @param Microtime $since    Return events greater than this time (exclusive).
-     * @param Microtime $until    Return events less than this time (exclusive).
-     * @param array     $context  Data that helps the EventStore decide where to read/write data from.
+     * @param StreamId       $streamId The id of the stream to read from, e.g. "acme:article:1234"
+     * @param Microtime|null $since    Return events greater than this time (exclusive).
+     * @param Microtime|null $until    Return events less than this time (exclusive).
+     * @param array          $context  Data that helps the EventStore decide where to read/write data from.
      *
      * @return \Generator
      *
@@ -120,9 +120,9 @@ interface EventStore
      * IMPORTANT! The order of events returned will be ordered per stream
      * but not necessarily globally ordered.
      *
-     * @param Microtime $since   Return events greater than this time (exclusive).
-     * @param Microtime $until   Return events less than this time (exclusive).
-     * @param array     $context Data that helps the EventStore decide where to read/write data from.
+     * @param Microtime|null $since   Return events greater than this time (exclusive).
+     * @param Microtime|null $until   Return events less than this time (exclusive).
+     * @param array          $context Data that helps the EventStore decide where to read/write data from.
      *
      * @return \Generator
      *

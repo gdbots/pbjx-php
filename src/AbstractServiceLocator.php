@@ -122,7 +122,7 @@ abstract class AbstractServiceLocator implements ServiceLocator
 
     protected function doGetEventStore(): EventStore
     {
-        throw new LogicException('No EventStore has been configured.', Code::UNIMPLEMENTED);
+        throw new LogicException('No EventStore has been configured.', Code::UNIMPLEMENTED->value);
     }
 
     final public function getEventSearch(): EventSearch
@@ -136,7 +136,7 @@ abstract class AbstractServiceLocator implements ServiceLocator
 
     protected function doGetEventSearch(): EventSearch
     {
-        throw new LogicException('No EventSearch has been configured.', Code::UNIMPLEMENTED);
+        throw new LogicException('No EventSearch has been configured.', Code::UNIMPLEMENTED->value);
     }
 
     final public function getScheduler(): Scheduler
@@ -150,7 +150,7 @@ abstract class AbstractServiceLocator implements ServiceLocator
 
     protected function doGetScheduler(): Scheduler
     {
-        throw new LogicException('No Scheduler has been configured.', Code::UNIMPLEMENTED);
+        throw new LogicException('No Scheduler has been configured.', Code::UNIMPLEMENTED->value);
     }
 
     final protected function getDefaultTransport(): Transport

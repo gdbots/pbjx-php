@@ -74,7 +74,7 @@ final class EventStoreTable
                     $tableName,
                     $client->getRegion()
                 ),
-                Code::INTERNAL,
+                Code::INTERNAL->value,
                 $e
             );
         }
@@ -103,7 +103,7 @@ final class EventStoreTable
                     $tableName,
                     $client->getRegion()
                 ),
-                Code::INTERNAL,
+                Code::INTERNAL->value,
                 $e
             );
         }
