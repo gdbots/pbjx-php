@@ -16,7 +16,7 @@ final class ShardUtil
     public static function determineShard(string $string, int $shards = 256): int
     {
         // first 4 chars of md5 give us a 16 bit keyspace (0-65535)
-        $num = hexdec(substr(md5((string)$string), 0, 4));
+        $num = hexdec(substr(md5($string), 0, 4));
         return $num % $shards;
     }
 }

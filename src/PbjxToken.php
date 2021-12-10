@@ -22,7 +22,7 @@ final class PbjxToken implements \JsonSerializable
      *
      * Will default to PHP time() value if null.
      *
-     * @var int
+     * @var int|null
      */
     public static ?int $timestamp = null;
 

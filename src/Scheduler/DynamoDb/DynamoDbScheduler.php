@@ -330,7 +330,7 @@ class DynamoDbScheduler implements Scheduler
                 'cause'        => 'canceled',
             ]);
         } catch (\Throwable $e) {
-            if (false !== strpos($e->getMessage(), 'ExecutionDoesNotExist')) {
+            if (str_contains($e->getMessage(), 'ExecutionDoesNotExist')) {
                 return;
             }
 

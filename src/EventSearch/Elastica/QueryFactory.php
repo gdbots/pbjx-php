@@ -44,18 +44,18 @@ class QueryFactory
 
     protected function applyDateFilters(Message $request, ParsedQuery $parsedQuery): void
     {
-        $required = BoolOperator::REQUIRED();
+        $required = BoolOperator::REQUIRED;
 
         $dateFilters = [
             [
                 'query'    => 'occurred_after',
                 'field'    => 'occurred_at',
-                'operator' => ComparisonOperator::GT(),
+                'operator' => ComparisonOperator::GT,
             ],
             [
                 'query'    => 'occurred_before',
                 'field'    => 'occurred_at',
-                'operator' => ComparisonOperator::LT(),
+                'operator' => ComparisonOperator::LT,
             ],
         ];
 
@@ -105,7 +105,7 @@ class QueryFactory
      */
     protected function createSortedQuery(AbstractQuery $query, Message $request): Query
     {
-        switch ($request->get('sort')->getValue()) {
+        switch ($request->get('sort')) {
             case SearchEventsSort::DATE_DESC:
                 $query = Query::create($query);
                 $query->setSort(['occurred_at' => 'desc']);

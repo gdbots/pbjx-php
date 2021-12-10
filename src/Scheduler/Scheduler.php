@@ -27,10 +27,10 @@ interface Scheduler
     /**
      * Schedules a command to send at a later time.
      *
-     * @param Message $command   The command to send.
-     * @param int     $timestamp Unix timestamp (in the future) when the command should be sent.
-     * @param string  $jobId     Optional identifier for the job (existing job with the same id will be canceled).
-     * @param array   $context   Data that helps the Scheduler decide where to read/write data from.
+     * @param Message     $command   The command to send.
+     * @param int         $timestamp Unix timestamp (in the future) when the command should be sent.
+     * @param string|null $jobId     Optional identifier for the job (existing job with the same id will be canceled).
+     * @param array       $context   Data that helps the Scheduler decide where to read/write data from.
      *
      * @return string Returns the jobId (can be used for cancellation)
      *

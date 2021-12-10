@@ -9,7 +9,7 @@ use Gdbots\Pbjx\Pbjx;
 
 final class EventIndexer implements EventSubscriber
 {
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             'gdbots:pbjx:mixin:indexed' => 'onIndexed',

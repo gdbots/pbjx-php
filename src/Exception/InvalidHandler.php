@@ -16,7 +16,7 @@ final class InvalidHandler extends \UnexpectedValueException implements GdbotsPb
             sprintf(
                 'The command [%s] could not be handled by [%s]. %s',
                 $command::schema()->getId()->toString(),
-                get_class($handler),
+                $handler::class,
                 $message
             ),
             Code::INTERNAL->value
@@ -29,7 +29,7 @@ final class InvalidHandler extends \UnexpectedValueException implements GdbotsPb
             sprintf(
                 'The request [%s] could not be handled by [%s].  %s',
                 $request::schema()->getId()->toString(),
-                get_class($handler),
+                $handler::class,
                 $message
             ),
             Code::INTERNAL->value
