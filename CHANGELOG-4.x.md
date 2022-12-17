@@ -2,6 +2,11 @@
 This changelog references the relevant changes done in 4.x versions.
 
 
+## v4.1.0
+* Require symfony 6.2.x
+* Fix deprecation notice from elastica for addIndices.
+
+
 ## v4.0.0
 __BREAKING CHANGES__
 

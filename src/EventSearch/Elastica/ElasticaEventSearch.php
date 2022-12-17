@@ -275,8 +275,11 @@ TEXT;
     {
         $context = $this->enrichContext(__FUNCTION__, $context);
         $skipValidation = filter_var($context['skip_validation'] ?? true, FILTER_VALIDATE_BOOLEAN);
-        $search = new Search($this->getClientForRead($context));
-        $search->addIndices($this->indexManager->getIndexNamesForSearch($request));
+        $client = $this->getClientForRead($context);
+        $search = new Search($client);
+
+        $indices = array_map(fn(string $index) => new Index($client, $index), $this->indexManager->getIndexNamesForSearch($request));
+        $search->addIndices($indices);
 
         $page = $request->get('page');
         $perPage = $request->get('count');
@@ -333,7 +336,7 @@ TEXT;
             ->set('total', $results->getTotalHits())
             ->set('has_more', ($offset + $perPage) < $results->getTotalHits() && $offset < 10000)
             ->set('time_taken', (int)($results->getResponse()->getQueryTime() * 1000))
-            ->set('max_score', (float)$results->getMaxScore())
+            ->set('max_score', $results->getMaxScore())
             ->addToList('events', $events);
     }
 
