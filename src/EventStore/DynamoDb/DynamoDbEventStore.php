@@ -482,7 +482,7 @@ class DynamoDbEventStore implements EventStore
         $queue = new \SplQueue();
         yield $queue;
 
-        $fulfilled = function (ResultInterface $result, string $iterKey) use (
+        $fulfilled = function (ResultInterface $result, int|string $iterKey) use (
             $queue, $tableName, $context, $params, &$pending, &$iter2seg
         ) {
             $segment = $iter2seg['prev'][$iterKey];
@@ -529,7 +529,7 @@ class DynamoDbEventStore implements EventStore
             }
         };
 
-        $rejected = function (AwsException $exception, string $iterKey, PromiseInterface $aggregatePromise) use (
+        $rejected = function (AwsException $exception, int|string $iterKey, PromiseInterface $aggregatePromise) use (
             $tableName, $context, $skipErrors, &$iter2seg
         ) {
             $segment = $iter2seg['prev'][$iterKey];

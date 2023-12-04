@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 4.x versions.
 
 
+## v4.1.1
+* Update `DynamoDbEventStore::doPipeAllEvents` to allow iteration key in piping events to be string or int.
+
+
 ## v4.1.0
 * Require symfony 6.2.x
 * Fix deprecation notice from elastica for addIndices.
