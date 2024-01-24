@@ -110,7 +110,7 @@ final class StatusCodeUtil
                     return Code::INTERNAL;
                 }
 
-                if ($httpCode->value >= 400) {
+                if ($httpCode->value > 400) {
                     return Code::INVALID_ARGUMENT;
                 }
 

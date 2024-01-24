@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 4.x versions.
 
 
+## v4.2.0
+* Updates for symfony 6.4.x deprecations.
+
+
 ## v4.1.1
 * Update `DynamoDbEventStore::doPipeAllEvents` to allow iteration key in piping events to be string or int.
 

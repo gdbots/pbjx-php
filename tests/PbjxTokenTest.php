@@ -108,7 +108,7 @@ class PbjxTokenTest extends TestCase
         $this->fail("Created invalid token from: {$token}");
     }
 
-    public function getInvalidSamples(): array
+    public static function getInvalidSamples(): array
     {
         return [
             ['not.a.token'],
